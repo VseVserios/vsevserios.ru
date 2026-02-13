@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Мой профиль{% endblock %}
+
+{% block content %}
+<div class="grid gap-6 lg:grid-cols-3">
+    <div class="lg:col-span-1">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6" data-reveal>
+            <div class="flex items-center gap-4">
+                {% if profile.avatar %}
+                <img class="h-16 w-16 rounded-2xl object-cover" src="{{ profile.avatar.url }}" alt="avatar" />
+                {% else %}
+                <div class="h-16 w-16 rounded-2xl bg-white/10"></div>
+                {% endif %}
+                <div>
+                    <div class="text-lg font-semibold">{{ profile.display_name|default:request.user.username }}</div>
+                    <div class="text-sm text-slate-300">{{ profile.city }}</div>
+                    <div class="mt-1 text-sm text-slate-300">
+                        {% if profile.age %}{{ profile.age }} лет{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 text-sm text-slate-200">{{ profile.bio|linebreaksbr }}</div>
+
+            <div class="mt-5 flex gap-3">
+                <a href="{% url 'edit_profile' %}"
+                    class="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center font-medium text-white hover:bg-white/10">Редактировать</a>
+                <a href="{% url 'onboarding' %}"
+                    class="flex-1 rounded-xl bg-fuchsia-500 px-4 py-3 text-center font-medium text-white hover:bg-fuchsia-400">Онбординг</a>
+            </div>
+
+            <div class="mt-4">
+                <a href="{% url 'blocked_users' %}"
+                    class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10">Мои блокировки ({{ blocks_count }})</a>
+            </div>
+        </div>
+
+        <div class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-6" data-reveal>
+            <div class="text-sm font-medium">Добавить фото</div>
+            <form method="post" action="{% url 'upload_photo' %}" enctype="multipart/form-data"
+                class="mt-3 flex flex-col gap-3">
+                {% csrf_token %}
+                {{ upload_form.image }}
+                <button class="rounded-xl bg-white/10 px-4 py-3 font-medium hover:bg-white/15" data-loading-text="Загружаю…"
+                    type="submit">Загрузить</button>
+            </form>
+        </div>
+
+        <div class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-6" data-reveal>
+            <div class="flex items-center justify-between">
+                <div class="text-sm font-medium">Анкеты</div>
+                <a class="text-sm text-slate-300 hover:text-white" href="{% url 'questionnaire' 'me' %}">Открыть</a>
+            </div>
+
+            <div class="mt-4">
+                <div class="flex items-center justify-between text-sm">
+                    <div class="text-slate-200">Я</div>
+                    <div class="text-slate-300">{{ q_me_answered }} / {{ q_me_total }} ({{ q_me_percent }}%)</div>
+                </div>
+                <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/10" data-progress="{{ q_me_percent }}">
+                    <div class="h-2 rounded-full bg-fuchsia-500" data-progress-bar></div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'questionnaire' 'me' %}"
+                        class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10">Заполнить «Я»</a>
+                </div>
+            </div>
+
+            <div class="mt-5">
+                <div class="flex items-center justify-between text-sm">
+                    <div class="text-slate-200">Мой идеал</div>
+                    <div class="text-slate-300">{{ q_ideal_answered }} / {{ q_ideal_total }} ({{ q_ideal_percent }}%)</div>
+                </div>
+                <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/10" data-progress="{{ q_ideal_percent }}">
+                    <div class="h-2 rounded-full bg-fuchsia-500" data-progress-bar></div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'questionnaire' 'ideal' %}"
+                        class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10">Заполнить «Мой идеал»</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="lg:col-span-2">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6" data-reveal>
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold">Мои фотографии</h2>
+                <div class="flex items-center gap-3">
+                    <a class="text-sm text-slate-300 hover:text-white" href="{% url 'photos_manage' %}">Управление</a>
+                    <div class="text-sm text-slate-300">{{ profile.photos.count }} шт.</div>
+                </div>
+            </div>
+
+            {% if profile.photos.exists %}
+            <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {% for photo in profile.photos.all %}
+                <img class="h-44 w-full rounded-2xl object-cover" src="{{ photo.image.url }}" alt="photo" />
+                {% empty %}
+                <div class="text-sm text-slate-300">Пока нет фото.</div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="mt-4 text-sm text-slate-300">Пока нет фото.</div>
+            {% endif %}
+        </div>
+
+        <div class="mt-6 grid gap-6 lg:grid-cols-2">
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-6" data-reveal>
+                <div class="text-sm font-medium">Короткий чеклист</div>
+                <div class="mt-1 text-xs text-slate-400">Чтобы профиль выглядел сильнее и давал больше мэтчей.</div>
+                <div class="mt-4 space-y-2 text-sm text-slate-200">
+                    <div class="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3">Добавь 3+ фото — так доверия больше.</div>
+                    <div class="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3">Заполни анкеты хотя бы на 70% — рекомендации становятся точнее.</div>
+                    <div class="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3">В био 2–3 факта о тебе + что ищешь.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

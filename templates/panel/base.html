@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Панель{% endblock %}
+
+{% block content %}
+<div class="grid gap-6 lg:grid-cols-12">
+    <aside class="lg:col-span-3">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div class="text-sm font-medium">Навигация</div>
+
+            {% with current=request.resolver_match.url_name %}
+            <nav class="mt-3 space-y-2 text-sm">
+                <a href="{% url 'panel_dashboard' %}"
+                    class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_dashboard' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Дашборд</a>
+                <a href="{% url 'panel_home_pages' %}"
+                    class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_home_pages' or current == 'panel_home_page_create' or current == 'panel_home_page_edit' or current == 'panel_home_block_create' or current == 'panel_home_block_edit' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Главная</a>
+                <a href="{% url 'panel_users' %}"
+                    class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_users' or current == 'panel_user_detail' or current == 'panel_user_set_password' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Пользователи</a>
+                <a href="{% url 'panel_profiles' %}"
+                    class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_profiles' or current == 'panel_profile_detail' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Профили</a>
+                <a href="{% url 'panel_questionnaire_sections' %}"
+                    class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_questionnaire_sections' or current == 'panel_questionnaire_section_create' or current == 'panel_questionnaire_section_edit' or current == 'panel_questionnaire_question_create' or current == 'panel_questionnaire_question_edit' or current == 'panel_questionnaire_choice_create' or current == 'panel_questionnaire_choice_edit' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Анкета</a>
+                <a href="{% url 'panel_photos' %}"
+                    class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_photos' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Фото</a>
+                <a href="{% url 'panel_swipes' %}"
+                    class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_swipes' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Swipe</a>
+                <a href="{% url 'panel_matches' %}"
+                    class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_matches' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Мэтчи</a>
+                <a href="{% url 'panel_messages' %}"
+                    class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_messages' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Сообщения</a>
+
+                <div class="mt-3 border-t border-white/10 pt-3"></div>
+                <a href="{% url 'panel_reports' %}"
+                    class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_reports' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Жалобы</a>
+                <a href="{% url 'panel_blocks' %}"
+                    class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_blocks' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Блокировки</a>
+                <a href="{% url 'panel_bans' %}"
+                    class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_bans' or current == 'panel_ban_create' or current == 'panel_user_ban' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Баны</a>
+            </nav>
+            {% endwith %}
+
+            <div class="mt-5 border-t border-white/10 pt-4">
+                <div class="text-xs text-slate-400">Вошли как</div>
+                <div class="mt-1 text-sm font-medium">{{ request.user.username }}</div>
+                <div class="mt-3 flex gap-2">
+                    <a href="{% url 'me' %}"
+                        class="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-center text-xs font-medium hover:bg-white/10">Профиль</a>
+                    <a href="{% url 'feed' %}"
+                        class="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-center text-xs font-medium hover:bg-white/10">Лента</a>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <section class="lg:col-span-9">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-2xl font-semibold tracking-tight">{% block panel_heading %}Панель{% endblock %}</h1>
+                <p class="mt-1 text-sm text-slate-300">{% block panel_subtitle %}{% endblock %}</p>
+            </div>
+            <div class="flex gap-3">
+                {% block panel_top_actions %}{% endblock %}
+            </div>
+        </div>
+
+        <div class="mt-6">
+            {% block panel_content %}{% endblock %}
+        </div>
+    </section>
+</div>
+{% endblock %}

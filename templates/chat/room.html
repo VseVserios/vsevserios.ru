@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Чат{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+        <h1 class="text-2xl font-semibold tracking-tight">Чат</h1>
+        <p class="mt-1 text-sm text-slate-300">
+            {% if match.is_admin_chat and user.is_superuser %}
+            📢 Административный чат
+            {% endif %}
+            {{ other_name }}
+        </p>
+    </div>
+    <div class="flex flex-col gap-3 sm:flex-row">
+        <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10"
+            href="{% url 'matches' %}">Мэтчи</a>
+        {% if not match.is_admin_chat %}
+        <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10"
+            href="{% url 'public_profile' other.id %}">Профиль</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-4">
+    <div id="messages" class="h-[60vh] sm:h-[55vh] overflow-auto rounded-2xl border border-white/10 bg-slate-950/40 p-4"
+        hx-get="{% url 'chat_messages' match.id %}" hx-trigger="load, every 2s" hx-swap="innerHTML">
+        {% include 'chat/_messages.html' with match=match messages=match.messages.all %}
+    </div>
+
+    <form class="mt-4 flex flex-col gap-3" hx-post="{% url 'chat_send' match.id %}" hx-target="#messages"
+        hx-swap="innerHTML" hx-on::after-request="this.reset()">
+        {% csrf_token %}
+        {{ form.text }}
+        <div class="flex justify-end">
+            <button type="submit"
+                class="rounded-xl bg-fuchsia-500 px-5 py-3 font-medium text-white hover:bg-fuchsia-400">Отправить</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

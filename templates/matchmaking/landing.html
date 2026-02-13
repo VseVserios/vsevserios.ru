@@ -1,0 +1,399 @@
+{% extends 'base.html' %}
+
+{% block title %}Знакомства{% endblock %}
+
+{% block content %}
+{% if cms_blocks %}
+<section class="relative overflow-hidden">
+  {% for block in cms_blocks %}
+    {% if block.type == 'hero' %}
+    <div class="relative grid gap-10 md:grid-cols-2 md:items-center" data-reveal>
+      <div data-reveal>
+        {% if block.badge %}
+        <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
+          <span class="h-2 w-2 rounded-full bg-fuchsia-400"></span>
+          {{ block.badge }}
+        </div>
+        {% endif %}
+
+        {% if block.title %}
+        <h1 class="mt-5 text-4xl font-semibold tracking-tight md:text-6xl">{{ block.title }}</h1>
+        {% endif %}
+
+        {% if block.body %}
+        <p class="mt-5 max-w-xl text-slate-300">{{ block.body }}</p>
+        {% endif %}
+
+        {% if block.primary_button_text or block.secondary_button_text %}
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row" data-reveal>
+          {% if block.primary_button_text and block.primary_button_url %}
+          <a href="{{ block.primary_button_url }}" class="group rounded-xl bg-fuchsia-500 px-6 py-3 text-center font-medium text-white shadow-lg shadow-fuchsia-500/20 transition hover:bg-fuchsia-400 shine">
+            {{ block.primary_button_text }}
+            <span class="ml-1 inline-block transition group-hover:translate-x-0.5">→</span>
+          </a>
+          {% endif %}
+          {% if block.secondary_button_text and block.secondary_button_url %}
+          <a href="{{ block.secondary_button_url }}" class="rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-center font-medium text-white transition hover:bg-white/10">
+            {{ block.secondary_button_text }}
+          </a>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        {% if block.items %}
+        <div class="mt-8 grid gap-3 sm:grid-cols-3" data-reveal>
+          {% for item in block.items %}
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+            {% if item.kicker %}<div class="text-xs text-slate-400">{{ item.kicker }}</div>{% endif %}
+            {% if item.title %}<div class="mt-1 font-medium">{{ item.title }}</div>{% endif %}
+            {% if item.text %}<div class="mt-1 text-sm text-slate-300">{{ item.text }}</div>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="relative" data-reveal>
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/30">
+          {% if block.image %}
+          <img class="h-80 w-full rounded-2xl object-cover" src="{{ block.image.url }}" alt="" />
+          {% else %}
+          <div class="h-80 rounded-2xl bg-gradient-to-br from-fuchsia-500/10 to-indigo-500/10"></div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% elif block.type == 'steps' %}
+    <div class="mt-12 grid gap-6 lg:grid-cols-12" data-reveal>
+      <div class="lg:col-span-12">
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+          {% if block.title %}<div class="text-sm font-medium">{{ block.title }}</div>{% endif %}
+          {% if block.items %}
+          <div class="mt-4 grid gap-3 sm:grid-cols-3">
+            {% for item in block.items %}
+            <div class="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
+              {% if item.kicker %}<div class="text-xs text-slate-400">{{ item.kicker }}</div>{% endif %}
+              {% if item.title %}<div class="mt-1 font-medium">{{ item.title }}</div>{% endif %}
+              {% if item.text %}<div class="mt-1 text-sm text-slate-300">{{ item.text }}</div>{% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% elif block.type == 'list' %}
+    <div class="mt-10 grid gap-6 lg:grid-cols-12" data-reveal>
+      <div class="lg:col-span-12">
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+          {% if block.title %}<div class="text-sm font-medium">{{ block.title }}</div>{% endif %}
+          {% if block.items %}
+          <div class="mt-4 space-y-3 text-sm text-slate-300">
+            {% for item in block.items %}
+            <div class="rounded-2xl border border-white/10 bg-slate-950/30 p-4">{{ item }}</div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% elif block.type == 'grid' %}
+    <div class="mt-10 grid gap-6 lg:grid-cols-12" data-reveal>
+      <div class="lg:col-span-12">
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+          {% if block.title %}<div class="text-sm font-medium">{{ block.title }}</div>{% endif %}
+          {% if block.subtitle %}<div class="mt-1 text-xs text-slate-400">{{ block.subtitle }}</div>{% endif %}
+          {% if block.items %}
+          <div class="mt-4 grid gap-3 sm:grid-cols-3">
+            {% for item in block.items %}
+            <div class="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
+              {% if item.kicker %}<div class="text-xs text-slate-400">{{ item.kicker }}</div>{% endif %}
+              {% if item.title %}<div class="mt-1 font-medium">{{ item.title }}</div>{% endif %}
+              {% if item.text %}<div class="mt-1 text-sm text-slate-300">{{ item.text }}</div>{% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% elif block.type == 'faq' %}
+    <div class="mt-10 grid gap-6 lg:grid-cols-12" data-reveal>
+      <div class="lg:col-span-12">
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+          {% if block.title %}<div class="text-sm font-medium">{{ block.title }}</div>{% endif %}
+          {% if block.items %}
+          <div class="mt-4 space-y-3">
+            {% for item in block.items %}
+            <details class="group rounded-2xl border border-white/10 bg-slate-950/30 p-4" {% if item.open %}open{% endif %}>
+              <summary class="cursor-pointer list-none select-none">
+                <div class="flex items-center justify-between gap-3">
+                  <div class="text-sm font-semibold">{{ item.q }}</div>
+                  <div class="text-xs text-slate-400 group-open:hidden">Открыть</div>
+                  <div class="text-xs text-slate-400 hidden group-open:block">Свернуть</div>
+                </div>
+              </summary>
+              <div class="mt-2 text-sm text-slate-300">{{ item.a }}</div>
+            </details>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% elif block.type == 'cta' %}
+    <div class="mt-10 rounded-3xl border border-white/10 bg-gradient-to-r from-fuchsia-500/15 via-white/0 to-indigo-500/15 p-1" data-reveal>
+      <div class="rounded-3xl bg-slate-950/40 p-8">
+        <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            {% if block.badge %}<div class="text-sm text-slate-300">{{ block.badge }}</div>{% endif %}
+            {% if block.title %}<div class="mt-2 text-2xl font-semibold tracking-tight">{{ block.title }}</div>{% endif %}
+            {% if block.subtitle %}<div class="mt-1 text-sm text-slate-300">{{ block.subtitle }}</div>{% endif %}
+            {% if block.body %}<div class="mt-2 text-sm text-slate-200">{{ block.body }}</div>{% endif %}
+          </div>
+          <div class="flex flex-col gap-3 sm:flex-row">
+            {% if block.primary_button_text and block.primary_button_url %}
+            <a href="{{ block.primary_button_url }}" class="rounded-xl bg-fuchsia-500 px-6 py-3 text-center font-medium text-white transition hover:bg-fuchsia-400 shine">{{ block.primary_button_text }}</a>
+            {% endif %}
+            {% if block.secondary_button_text and block.secondary_button_url %}
+            <a href="{{ block.secondary_button_url }}" class="rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-center font-medium text-white transition hover:bg-white/10">{{ block.secondary_button_text }}</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  {% endfor %}
+</section>
+{% else %}
+<style>
+  @keyframes floaty { 0%, 100% { transform: translate3d(0,0,0) } 50% { transform: translate3d(0,-14px,0) } }
+  @keyframes floaty2 { 0%, 100% { transform: translate3d(0,0,0) } 50% { transform: translate3d(0,18px,0) } }
+  @keyframes pulseGlow { 0%, 100% { opacity: .55 } 50% { opacity: .9 } }
+  @keyframes fadeUp { 0% { opacity: 0; transform: translate3d(0,14px,0) } 100% { opacity: 1; transform: translate3d(0,0,0) } }
+  @media (prefers-reduced-motion: reduce) {
+    .anim-float, .anim-float2, .anim-glow, .anim-fadeup { animation: none !important; }
+  }
+</style>
+
+<section class="relative overflow-hidden">
+  <div class="pointer-events-none absolute inset-0">
+    <div class="anim-glow absolute -top-32 -left-40 h-[28rem] w-[28rem] rounded-full bg-fuchsia-500/20 blur-3xl" style="animation: pulseGlow 6s ease-in-out infinite;"></div>
+    <div class="anim-glow absolute -bottom-40 -right-52 h-[34rem] w-[34rem] rounded-full bg-indigo-500/20 blur-3xl" style="animation: pulseGlow 7s ease-in-out infinite;"></div>
+    <div class="anim-float absolute left-1/2 top-24 h-64 w-64 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" style="animation: floaty 7.5s ease-in-out infinite;"></div>
+  </div>
+
+  <div class="relative grid gap-10 md:grid-cols-2 md:items-center" data-reveal>
+    <div class="anim-fadeup" style="animation: fadeUp .7s ease-out both;" data-reveal>
+      <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
+        <span class="h-2 w-2 rounded-full bg-fuchsia-400"></span>
+        Найди мэтч за пару свайпов
+      </div>
+
+      <h1 class="mt-5 text-4xl font-semibold tracking-tight md:text-6xl">
+        Умные знакомства,
+        <span class="bg-gradient-to-r from-fuchsia-200 via-white to-indigo-200 bg-clip-text text-transparent">которые выглядят дорого</span>
+      </h1>
+
+      <p class="mt-5 max-w-xl text-slate-300">
+        Заполни анкету, свайпай, получай мэтчи и общайся в чате. Быстрое MVP на Django с современным интерфейсом.
+      </p>
+
+      <div class="mt-8 flex flex-col gap-3 sm:flex-row" data-reveal>
+        <a href="{% url 'register' %}" class="group rounded-xl bg-fuchsia-500 px-6 py-3 text-center font-medium text-white shadow-lg shadow-fuchsia-500/20 transition hover:bg-fuchsia-400 shine">
+          Создать аккаунт
+          <span class="ml-1 inline-block transition group-hover:translate-x-0.5">→</span>
+        </a>
+        <a href="{% url 'login' %}" class="rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-center font-medium text-white transition hover:bg-white/10">
+          Войти
+        </a>
+      </div>
+
+      <div class="mt-8 grid gap-3 sm:grid-cols-3" data-reveal>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div class="text-xs text-slate-400">Мгновенно</div>
+          <div class="mt-1 font-medium">Свайпы</div>
+          <div class="mt-1 text-sm text-slate-300">Лайк/пас — в один клик</div>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div class="text-xs text-slate-400">Без воды</div>
+          <div class="mt-1 font-medium">Профили</div>
+          <div class="mt-1 text-sm text-slate-300">Факты, фото, интересы</div>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div class="text-xs text-slate-400">После мэтча</div>
+          <div class="mt-1 font-medium">Чат</div>
+          <div class="mt-1 text-sm text-slate-300">Пиши и договаривайся</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative" data-reveal>
+      <div class="anim-float2 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/30" style="animation: floaty2 8.5s ease-in-out infinite;">
+        <div class="rounded-2xl bg-gradient-to-br from-fuchsia-500/15 via-white/0 to-indigo-500/15 p-6">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="text-xs text-slate-400">Пример карточки</div>
+              <div class="mt-2 text-2xl font-semibold tracking-tight">Аня, 24</div>
+              <div class="mt-1 text-sm text-slate-300">Москва • прогулки • кофе</div>
+            </div>
+            <div class="relative h-12 w-12 overflow-hidden rounded-2xl border border-white/10 bg-white/10">
+              <div class="absolute inset-0 bg-gradient-to-br from-white/20 to-white/0"></div>
+            </div>
+          </div>
+
+          <div class="mt-5 grid grid-cols-3 gap-3">
+            <div class="h-20 rounded-2xl border border-white/10 bg-white/5"></div>
+            <div class="h-20 rounded-2xl border border-white/10 bg-white/5"></div>
+            <div class="h-20 rounded-2xl border border-white/10 bg-white/5"></div>
+          </div>
+
+          <div class="mt-5 text-sm leading-relaxed text-slate-200">
+            Люблю ночной город и путешествия. Ищу человека, с которым будет легко и интересно.
+          </div>
+
+          <div class="mt-6 flex gap-3">
+            <div class="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm text-slate-200 transition hover:bg-white/10">Pass</div>
+            <div class="flex-1 rounded-xl bg-fuchsia-500 px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-fuchsia-400">Like</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-12 grid gap-6 lg:grid-cols-12" data-reveal>
+    <div class="lg:col-span-7">
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="text-sm font-medium">Как это работает</div>
+        <div class="mt-4 grid gap-3 sm:grid-cols-3">
+          <div class="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
+            <div class="text-xs text-slate-400">Шаг 1</div>
+            <div class="mt-1 font-medium">Анкета</div>
+            <div class="mt-1 text-sm text-slate-300">Заполни профиль и добавь фото</div>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
+            <div class="text-xs text-slate-400">Шаг 2</div>
+            <div class="mt-1 font-medium">Свайпы</div>
+            <div class="mt-1 text-sm text-slate-300">Лайкай тех, кто нравится</div>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
+            <div class="text-xs text-slate-400">Шаг 3</div>
+            <div class="mt-1 font-medium">Чат</div>
+            <div class="mt-1 text-sm text-slate-300">При мэтче — общайся сразу</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lg:col-span-5">
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="text-sm font-medium">Почему это удобно</div>
+        <div class="mt-4 space-y-3 text-sm text-slate-300">
+          <div class="rounded-2xl border border-white/10 bg-slate-950/30 p-4">Быстрый интерфейс без лишних экранов</div>
+          <div class="rounded-2xl border border-white/10 bg-slate-950/30 p-4">Акцент на анкете и реальном диалоге</div>
+          <div class="rounded-2xl border border-white/10 bg-slate-950/30 p-4">Модерация: жалобы, блокировки, баны</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-10 grid gap-6 lg:grid-cols-12">
+    <div class="lg:col-span-7">
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+        <div class="text-sm font-medium">Почему мы</div>
+        <div class="mt-1 text-xs text-slate-400">Коротко — чем отличается подход.</div>
+
+        <div class="mt-4 grid gap-3 sm:grid-cols-3">
+          <div class="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
+            <div class="text-xs text-slate-400">Фокус</div>
+            <div class="mt-1 font-medium">на серьёзность</div>
+            <div class="mt-1 text-sm text-slate-300">меньше шума — больше смысла</div>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
+            <div class="text-xs text-slate-400">Подбор</div>
+            <div class="mt-1 font-medium">по анкете</div>
+            <div class="mt-1 text-sm text-slate-300">рекомендации становятся точнее</div>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
+            <div class="text-xs text-slate-400">Контроль</div>
+            <div class="mt-1 font-medium">и безопасность</div>
+            <div class="mt-1 text-sm text-slate-300">жалобы, блокировки, баны</div>
+          </div>
+        </div>
+
+        <div class="mt-5 rounded-2xl border border-white/10 bg-gradient-to-br from-fuchsia-500/10 to-indigo-500/10 p-5" data-reveal>
+          <div class="text-sm font-semibold">Мини‑совет</div>
+          <div class="mt-2 text-sm text-slate-200">Заполни “Я”, потом “Мой идеал” — так совпадения обычно качественнее.</div>
+          <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+            <a href="{% url 'register' %}" class="rounded-xl bg-fuchsia-500 px-5 py-3 text-center font-medium text-white hover:bg-fuchsia-400 shine">Начать</a>
+            <a href="{% url 'login' %}" class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-center font-medium text-white hover:bg-white/10">Войти</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lg:col-span-5">
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+        <div class="text-sm font-medium">FAQ</div>
+        <div class="mt-4 space-y-3">
+          <details class="group rounded-2xl border border-white/10 bg-slate-950/30 p-4" open>
+            <summary class="cursor-pointer list-none select-none">
+              <div class="flex items-center justify-between gap-3">
+                <div class="text-sm font-semibold">Почему анкета важна?</div>
+                <div class="text-xs text-slate-400 group-open:hidden">Открыть</div>
+                <div class="text-xs text-slate-400 hidden group-open:block">Свернуть</div>
+              </div>
+            </summary>
+            <div class="mt-2 text-sm text-slate-300">Чем больше ответов, тем точнее рекомендации и проще начать разговор.</div>
+          </details>
+
+          <details class="group rounded-2xl border border-white/10 bg-slate-950/30 p-4">
+            <summary class="cursor-pointer list-none select-none">
+              <div class="flex items-center justify-between gap-3">
+                <div class="text-sm font-semibold">Как написать первым?</div>
+                <div class="text-xs text-slate-400 group-open:hidden">Открыть</div>
+                <div class="text-xs text-slate-400 hidden group-open:block">Свернуть</div>
+              </div>
+            </summary>
+            <div class="mt-2 text-sm text-slate-300">Вопрос + конкретика (не “как дела?”) обычно работает лучше всего.</div>
+          </details>
+
+          <details class="group rounded-2xl border border-white/10 bg-slate-950/30 p-4">
+            <summary class="cursor-pointer list-none select-none">
+              <div class="flex items-center justify-between gap-3">
+                <div class="text-sm font-semibold">Что с безопасностью?</div>
+                <div class="text-xs text-slate-400 group-open:hidden">Открыть</div>
+                <div class="text-xs text-slate-400 hidden group-open:block">Свернуть</div>
+              </div>
+            </summary>
+            <div class="mt-2 text-sm text-slate-300">Есть жалобы/блокировки/баны, а первые встречи лучше назначать в людных местах.</div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-10 rounded-3xl border border-white/10 bg-gradient-to-r from-fuchsia-500/15 via-white/0 to-indigo-500/15 p-1" data-reveal>
+    <div class="rounded-3xl bg-slate-950/40 p-8">
+      <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div>
+          <div class="text-sm text-slate-300">Готов начать?</div>
+          <div class="mt-2 text-2xl font-semibold tracking-tight">Создай профиль и получи первый мэтч</div>
+          <div class="mt-1 text-sm text-slate-300">Займёт меньше минуты.</div>
+        </div>
+        <div class="flex flex-col gap-3 sm:flex-row">
+          <a href="{% url 'register' %}" class="rounded-xl bg-fuchsia-500 px-6 py-3 text-center font-medium text-white transition hover:bg-fuchsia-400 shine">Регистрация</a>
+          <a href="{% url 'login' %}" class="rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-center font-medium text-white transition hover:bg-white/10">Войти</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+{% endif %}
+{% endblock %}

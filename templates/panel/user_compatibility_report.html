@@ -1,0 +1,264 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Панель — Совместимость{% endblock %}
+
+{% block panel_heading %}Совместимость: {{ user_a.username }} ↔ {{ user_b.username }}{% endblock %}
+{% block panel_subtitle %}Разбор по секциям анкеты и по вопросам.{% endblock %}
+
+{% block panel_top_actions %}
+<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_detail' user_a.id %}">Пользователь A</a>
+<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_detail' user_b.id %}">Пользователь B</a>
+<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_recommendations' user_a.id %}">Рекомендации A</a>
+{% endblock %}
+
+{% block panel_content %}
+<div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+    <div class="flex flex-col gap-4">
+        <div class="grid gap-4 sm:grid-cols-3 sm:items-end">
+            <div class="sm:col-span-1">
+                <div class="text-sm text-slate-300">Общий процент</div>
+                <div class="mt-1 text-4xl font-semibold tracking-tight">
+                    {% if report.overall is not None %}{{ report.overall }}%{% else %}—{% endif %}
+                </div>
+                <div class="mt-2 text-xs text-slate-400">
+                    сравнено: {{ report.a_compared|default:0 }} + {{ report.b_compared|default:0 }}
+                </div>
+            </div>
+            <div class="sm:col-span-2">
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <button type="button" id="btnAtoB" class="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/10">
+                        <div class="text-xs text-slate-400">Я → идеал другого</div>
+                        <div class="mt-1 text-2xl font-semibold">{% if report.a_to_b is not None %}{{ report.a_to_b }}%{% else %}—{% endif %}</div>
+                        <div class="mt-1 text-xs text-slate-400">клик — подробности</div>
+                    </button>
+                    <button type="button" id="btnBtoA" class="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/10">
+                        <div class="text-xs text-slate-400">Другой → мой идеал</div>
+                        <div class="mt-1 text-2xl font-semibold">{% if report.b_to_a is not None %}{{ report.b_to_a }}%{% else %}—{% endif %}</div>
+                        <div class="mt-1 text-xs text-slate-400">клик — подробности</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid gap-6 lg:grid-cols-2">
+            <div>
+                <div class="mb-2 text-xs text-slate-400">Насколько я подхожу идеалу другого</div>
+                <canvas id="compatChartAtoB" height="160"></canvas>
+            </div>
+            <div>
+                <div class="mb-2 text-xs text-slate-400">Насколько другой подходит моему идеалу</div>
+                <canvas id="compatChartBtoA" height="160"></canvas>
+            </div>
+        </div>
+
+        <div class="text-xs text-slate-400">
+            Шкала: 0–100% (одинаковая для обоих графиков)
+        </div>
+    </div>
+</div>
+
+{{ chart_labels|json_script:"chart-labels" }}
+{{ chart_values_a_to_b|json_script:"chart-values-a" }}
+{{ chart_values_b_to_a|json_script:"chart-values-b" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    (function () {
+        const elA = document.getElementById('compatChartAtoB');
+        const elB = document.getElementById('compatChartBtoA');
+        if (!elA || !elB) return;
+
+        const labels = JSON.parse(document.getElementById('chart-labels').textContent);
+        const valuesA = JSON.parse(document.getElementById('chart-values-a').textContent).map((v) => (v === null ? 0 : v));
+        const valuesB = JSON.parse(document.getElementById('chart-values-b').textContent).map((v) => (v === null ? 0 : v));
+
+        function createChart(el, values, colorBg, colorBorder, onClick) {
+            return new Chart(el, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Совместимость по секциям (%)',
+                        data: values,
+                        backgroundColor: colorBg,
+                        borderColor: colorBorder,
+                        borderWidth: 1,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    onClick,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: true },
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { stepSize: 20 },
+                        }
+                    }
+                }
+            });
+        }
+
+        function setMode(mode) {
+            const aWrap = document.getElementById('detailsAtoB');
+            const bWrap = document.getElementById('detailsBtoA');
+            const btnA = document.getElementById('btnAtoB');
+            const btnB = document.getElementById('btnBtoA');
+            if (!aWrap || !bWrap || !btnA || !btnB) return;
+
+            const activeCls = 'ring-2 ring-fuchsia-400/70 bg-white/10';
+            const inactiveCls = 'bg-white/5';
+
+            if (mode === 'a') {
+                aWrap.classList.remove('hidden');
+                bWrap.classList.add('hidden');
+                btnA.classList.add(...activeCls.split(' '));
+                btnB.classList.remove(...activeCls.split(' '));
+                btnA.classList.remove(inactiveCls);
+                btnB.classList.add(inactiveCls);
+            } else {
+                bWrap.classList.remove('hidden');
+                aWrap.classList.add('hidden');
+                btnB.classList.add(...activeCls.split(' '));
+                btnA.classList.remove(...activeCls.split(' '));
+                btnB.classList.remove(inactiveCls);
+                btnA.classList.add(inactiveCls);
+            }
+        }
+
+        function revealSection(sectionId, mode) {
+            setMode(mode);
+            const el = document.getElementById('section-' + mode + '-' + sectionId);
+            if (el) {
+                el.open = true;
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        const chartA = createChart(
+            elA,
+            valuesA,
+            'rgba(217, 70, 239, 0.45)',
+            'rgba(217, 70, 239, 0.9)',
+            function (_, elements) {
+                if (!elements || !elements.length) return;
+                const idx = elements[0].index;
+                const sectionId = (window.__compatSectionIds || [])[idx];
+                if (sectionId) revealSection(sectionId, 'a');
+            }
+        );
+        const chartB = createChart(
+            elB,
+            valuesB,
+            'rgba(14, 165, 233, 0.35)',
+            'rgba(14, 165, 233, 0.85)',
+            function (_, elements) {
+                if (!elements || !elements.length) return;
+                const idx = elements[0].index;
+                const sectionId = (window.__compatSectionIds || [])[idx];
+                if (sectionId) revealSection(sectionId, 'b');
+            }
+        );
+
+        document.getElementById('btnAtoB')?.addEventListener('click', function () { setMode('a'); });
+        document.getElementById('btnBtoA')?.addEventListener('click', function () { setMode('b'); });
+
+        setMode('a');
+    })();
+</script>
+
+<div class="mt-6 space-y-6">
+    {% if sections %}
+    {{ sections|json_script:"compat-sections" }}
+    <script>
+        (function () {
+            try {
+                const sections = JSON.parse(document.getElementById('compat-sections').textContent);
+                window.__compatSectionIds = sections.map((s) => s.id);
+            } catch (e) {}
+        })();
+    </script>
+
+    <div id="detailsAtoB">
+        {% for section in sections %}
+        <details id="section-a-{{ section.id }}" class="rounded-3xl border border-white/10 bg-white/5 p-6">
+            <summary class="cursor-pointer select-none">
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <div class="text-lg font-semibold">{{ section.title }}</div>
+                        <div class="mt-1 text-xs text-slate-400">{{ section.id }}</div>
+                        <div class="mt-2 text-sm text-slate-300">
+                            Я → идеал другого: {% if section.a_to_b is not None %}{{ section.a_to_b }}%{% else %}—{% endif %}
+                        </div>
+                        <div class="mt-1 text-xs text-slate-400">сравнено: {{ section.a_compared|default:0 }}</div>
+                    </div>
+                </div>
+            </summary>
+
+            <div class="mt-5 space-y-3">
+                {% for q in section.questions %}
+                <div class="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
+                    <div class="text-sm text-slate-100">{{ q.text }}</div>
+                    <div class="mt-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                        <div class="text-xs text-slate-400">Я → идеал другого</div>
+                        {% if q.a_to_b %}
+                        <div class="mt-2 text-sm text-slate-200">Ожидание: <span class="text-white">{{ q.a_to_b.expected_label }}</span></div>
+                        <div class="mt-1 text-sm text-slate-200">Факт: <span class="text-white">{{ q.a_to_b.actual_label }}</span></div>
+                        <div class="mt-2 text-xs text-slate-400">Балл: {{ q.a_to_b.score_percent }}%</div>
+                        {% else %}
+                        <div class="mt-2 text-sm text-slate-400">—</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </details>
+        {% endfor %}
+    </div>
+
+    <div id="detailsBtoA" class="hidden">
+        {% for section in sections %}
+        <details id="section-b-{{ section.id }}" class="rounded-3xl border border-white/10 bg-white/5 p-6">
+            <summary class="cursor-pointer select-none">
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <div class="text-lg font-semibold">{{ section.title }}</div>
+                        <div class="mt-1 text-xs text-slate-400">{{ section.id }}</div>
+                        <div class="mt-2 text-sm text-slate-300">
+                            Другой → мой идеал: {% if section.b_to_a is not None %}{{ section.b_to_a }}%{% else %}—{% endif %}
+                        </div>
+                        <div class="mt-1 text-xs text-slate-400">сравнено: {{ section.b_compared|default:0 }}</div>
+                    </div>
+                </div>
+            </summary>
+
+            <div class="mt-5 space-y-3">
+                {% for q in section.questions %}
+                <div class="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
+                    <div class="text-sm text-slate-100">{{ q.text }}</div>
+                    <div class="mt-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                        <div class="text-xs text-slate-400">Другой → мой идеал</div>
+                        {% if q.b_to_a %}
+                        <div class="mt-2 text-sm text-slate-200">Ожидание: <span class="text-white">{{ q.b_to_a.expected_label }}</span></div>
+                        <div class="mt-1 text-sm text-slate-200">Факт: <span class="text-white">{{ q.b_to_a.actual_label }}</span></div>
+                        <div class="mt-2 text-xs text-slate-400">Балл: {{ q.b_to_a.score_percent }}%</div>
+                        {% else %}
+                        <div class="mt-2 text-sm text-slate-400">—</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </details>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-8 text-sm text-slate-300">Нет данных для сравнения (возможно, анкеты не заполнены).</div>
+    {% endif %}
+</div>
+{% endblock %}

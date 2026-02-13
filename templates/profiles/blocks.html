@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои блокировки{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-3xl">
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <div class="text-2xl font-semibold tracking-tight">Мои блокировки</div>
+                <div class="mt-1 text-sm text-slate-300">Снятие блокировки откроет доступ к профилю и мэтчам.</div>
+            </div>
+            <a href="{% url 'me' %}" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium hover:bg-white/10">Назад</a>
+        </div>
+    </div>
+
+    <div class="mt-6 space-y-3">
+        {% for row in rows %}
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    {% if row.other_avatar_url %}
+                    <img class="h-14 w-14 rounded-2xl object-cover" src="{{ row.other_avatar_url }}" alt="avatar" />
+                    {% else %}
+                    <div class="h-14 w-14 rounded-2xl bg-white/10"></div>
+                    {% endif %}
+                    <div>
+                        <div class="font-medium">{{ row.other_name }}</div>
+                        <div class="mt-1 text-xs text-slate-400">@{{ row.other.username }} · {{ row.block.created_at|date:'d.m.Y H:i' }}</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <a class="text-sm text-slate-300 hover:text-white" href="{% url 'public_profile' row.other.id %}">Профиль</a>
+                    <form method="post" action="{% url 'unblock_user' row.other.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'blocked_users' %}" />
+                        <button type="submit" class="rounded-2xl bg-rose-500/15 px-4 py-2 text-sm font-medium text-rose-200 hover:bg-rose-500/25">Разблокировать</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-8 text-sm text-slate-300">Пока нет заблокированных пользователей.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

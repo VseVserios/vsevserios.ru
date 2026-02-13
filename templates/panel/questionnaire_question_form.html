@@ -1,0 +1,95 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Панель — Вопрос анкеты{% endblock %}
+
+{% block panel_heading %}{% if question %}Вопрос: {{ question.code }}{% else %}Новый вопрос{% endif %}{% endblock %}
+{% block panel_subtitle %}Раздел: {{ section.title }}{% endblock %}
+
+{% block panel_top_actions %}
+<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{{ back_url }}">Назад</a>
+{% if question %}
+{% if question.input_type != 'text' %}
+<a class="rounded-xl bg-fuchsia-500 px-4 py-2 text-sm font-medium text-white hover:bg-fuchsia-400" href="{% url 'panel_questionnaire_choice_create' question.id %}">Новый ответ</a>
+{% endif %}
+{% endif %}
+{% endblock %}
+
+{% block panel_content %}
+<div class="grid gap-6 lg:grid-cols-2">
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="text-sm font-medium">{% if question %}Редактирование вопроса{% else %}Создание вопроса{% endif %}</div>
+
+        <form method="post" class="mt-4 space-y-5">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div>
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.errors %}
+                <div class="mt-1 text-sm text-rose-300">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {% if form.non_field_errors %}
+            <div class="text-sm text-rose-300">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <button type="submit" class="rounded-xl bg-fuchsia-500 px-5 py-3 font-medium text-white hover:bg-fuchsia-400">Сохранить</button>
+        </form>
+    </div>
+
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="flex items-center justify-between">
+            <div class="text-sm font-medium">Ответы</div>
+            {% if question %}
+            {% if question.input_type != 'text' %}
+            <a class="text-sm text-slate-300 hover:text-white" href="{% url 'panel_questionnaire_choice_create' question.id %}">Добавить</a>
+            {% endif %}
+            {% endif %}
+        </div>
+
+        {% if question and question.input_type == 'text' %}
+        <div class="mt-4 rounded-2xl border border-white/10 bg-slate-950/40 p-4 text-sm text-slate-300">
+            Это вопрос со свободным вводом. Варианты ответов не используются.
+        </div>
+        {% else %}
+        <div class="mt-4 overflow-hidden rounded-2xl border border-white/10">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-950/40 text-slate-300">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-medium">Порядок</th>
+                        <th class="px-4 py-3 text-left font-medium">Value</th>
+                        <th class="px-4 py-3 text-left font-medium">Label</th>
+                        <th class="px-4 py-3 text-left font-medium"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/10">
+                    {% for c in choices %}
+                    <tr class="hover:bg-white/5">
+                        <td class="px-4 py-3 text-slate-300">{{ c.order }}</td>
+                        <td class="px-4 py-3 text-slate-300">{{ c.value }}</td>
+                        <td class="px-4 py-3 text-slate-300">{{ c.label }}</td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center justify-end gap-2">
+                                <a class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium hover:bg-white/10" href="{% url 'panel_questionnaire_choice_edit' c.id %}">Редактировать</a>
+                                <form method="post" action="{% url 'panel_questionnaire_choice_delete' c.id %}" data-confirm="Удалить ответ «{{ c.value }}»?" data-loading-text="Удаляю…">
+                                    {% csrf_token %}
+                                    <button type="submit" class="rounded-xl bg-rose-500/15 px-3 py-2 text-xs font-medium text-rose-200 hover:bg-rose-500/25" data-loading-text="Удаляю…">Удалить</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td class="px-4 py-8 text-center text-slate-300" colspan="4">{% if question %}Ответов пока нет.{% else %}Сначала создай вопрос.{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

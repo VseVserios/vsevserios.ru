@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои фото{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-5xl" data-reveal>
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Мои фото</h1>
+      <p class="mt-1 text-sm text-slate-300">Загружай, удаляй и меняй порядок. Любое фото можно поставить на аватар.</p>
+    </div>
+    <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'me' %}">Назад</a>
+  </div>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-12">
+    <div class="lg:col-span-4">
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+        <div class="text-sm font-medium">Добавить фото</div>
+        <form method="post" action="{% url 'upload_photo' %}" enctype="multipart/form-data" class="mt-4 space-y-3" data-loading-text="Загружаю…">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'photos_manage' %}" />
+          {{ upload_form.image }}
+          <button type="submit" class="w-full rounded-xl bg-fuchsia-500 px-4 py-3 font-medium text-white hover:bg-fuchsia-400 shine" data-loading-text="Загружаю…">Загрузить</button>
+        </form>
+      </div>
+
+      <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+        <div class="text-sm font-medium">Подсказка</div>
+        <div class="mt-3 space-y-2 text-sm text-slate-200">
+          <div class="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3">Лучше всего: 1–2 фото лица + 1 фото в полный рост.</div>
+          <div class="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3">Светлые и чёткие фото обычно получают больше реакций.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lg:col-span-8">
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+        <div class="flex items-center justify-between">
+          <div class="text-sm font-medium">Галерея</div>
+          <div class="text-sm text-slate-300">{{ photos|length }} шт.</div>
+        </div>
+
+        {% if photos %}
+        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {% for p in photos %}
+          <div class="overflow-hidden rounded-3xl border border-white/10 bg-slate-950/30" data-reveal>
+            <img class="h-56 w-full object-cover" src="{{ p.image.url }}" alt="photo" />
+            <div class="p-4">
+              <div class="flex flex-wrap items-center gap-2">
+                <form method="post" action="{% url 'photo_move' p.id 'up' %}" class="inline" data-loading-text="…">
+                  {% csrf_token %}
+                  <button type="submit" class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium hover:bg-white/10" data-loading-text="…">Вверх</button>
+                </form>
+                <form method="post" action="{% url 'photo_move' p.id 'down' %}" class="inline" data-loading-text="…">
+                  {% csrf_token %}
+                  <button type="submit" class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium hover:bg-white/10" data-loading-text="…">Вниз</button>
+                </form>
+
+                <form method="post" action="{% url 'photo_set_avatar' p.id %}" class="inline" data-loading-text="Ставлю…">
+                  {% csrf_token %}
+                  <button type="submit" class="rounded-xl bg-white/10 px-3 py-2 text-xs font-medium hover:bg-white/15" data-loading-text="Ставлю…">На аватар</button>
+                </form>
+
+                <form method="post" action="{% url 'photo_delete' p.id %}" class="ml-auto inline" data-confirm="Удалить фото?" data-loading-text="Удаляю…">
+                  {% csrf_token %}
+                  <button type="submit" class="rounded-xl bg-rose-500/15 px-3 py-2 text-xs font-medium text-rose-200 hover:bg-rose-500/25" data-loading-text="Удаляю…">Удалить</button>
+                </form>
+              </div>
+              <div class="mt-2 text-xs text-slate-400">Порядок: {{ p.order }} · {{ p.created_at|date:'d.m.Y H:i' }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="mt-4 rounded-3xl border border-white/10 bg-slate-950/30 p-8 text-center">
+          <div class="text-lg font-semibold">Фото пока нет</div>
+          <div class="mt-2 text-sm text-slate-300">Загрузи первое фото — так профиль будет выглядеть живее.</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

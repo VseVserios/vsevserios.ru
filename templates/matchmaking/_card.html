@@ -1,0 +1,110 @@
+<div id="card" class="w-full max-w-xl" data-reveal>
+    {% if candidate %}
+    <div class="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+        <div class="relative">
+            {% if candidate.avatar %}
+            <img class="h-72 w-full object-cover transition duration-500 sm:h-96" src="{{ candidate.avatar.url }}" alt="avatar" />
+            {% else %}
+            <div class="h-72 w-full bg-gradient-to-br from-fuchsia-500/15 to-indigo-500/15 sm:h-96"></div>
+            {% endif %}
+            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 to-transparent p-5">
+                <div class="text-3xl font-semibold tracking-tight">
+                    {{ candidate.display_name|default:candidate.user.username }}{% if candidate.age %}, {{ candidate.age }}{% endif %}
+                </div>
+                <div class="mt-1 text-sm text-slate-200">{{ candidate.city }}</div>
+            </div>
+        </div>
+
+        <div class="p-5">
+            {% if match_name %}
+            <div class="mb-4 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+                Мэтч! Теперь вы можете написать {{ match_name }}.
+            </div>
+            {% endif %}
+            {% if recommendation and recommendation.score is not None %}
+            <div class="mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                <div>Совпадение</div>
+                <div class="text-lg font-semibold">{{ recommendation.score }}%</div>
+            </div>
+            {% endif %}
+
+            {% if recommendation %}
+            <div class="mb-4 grid grid-cols-2 gap-3">
+                <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10"
+                    href="{% url 'recommendation_compatibility' candidate.user_id %}">Совместимость</a>
+                <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10"
+                    href="{% url 'recommendation_excel' candidate.user_id %}">Скачать Excel</a>
+            </div>
+            {% endif %}
+
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-200">
+                {{ candidate.bio|default:'—'|linebreaksbr }}
+            </div>
+
+            {% if candidate.photos.exists %}
+            <div class="mt-4 grid grid-cols-3 gap-3">
+                {% for photo in candidate.photos.all|slice:':3' %}
+                <img class="h-24 w-full rounded-2xl object-cover" src="{{ photo.image.url }}" alt="photo" />
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="mt-5 grid grid-cols-2 gap-3">
+                <form method="post" action="{% url 'swipe' candidate.user_id 'pass' %}" data-swipe="pass"
+                    hx-post="{% url 'swipe' candidate.user_id 'pass' %}" hx-target="#card" hx-swap="outerHTML" hx-indicator="#swipe-indicator" data-loading-text="Отправляю…">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 font-medium hover:bg-white/10" data-loading-text="Отправляю…">
+                        Pass
+                    </button>
+                </form>
+
+                <form method="post" action="{% url 'swipe' candidate.user_id 'like' %}" data-swipe="like"
+                    hx-post="{% url 'swipe' candidate.user_id 'like' %}" hx-target="#card" hx-swap="outerHTML" hx-indicator="#swipe-indicator" data-loading-text="Отправляю…">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="w-full rounded-2xl bg-fuchsia-500 px-4 py-4 font-semibold text-white hover:bg-fuchsia-400 shine" data-loading-text="Отправляю…">
+                        Like
+                    </button>
+                </form>
+            </div>
+
+            <div class="mt-3 flex items-center justify-between">
+                <form method="post" action="{% url 'swipe_undo' %}" hx-post="{% url 'swipe_undo' %}" hx-target="#card"
+                    hx-swap="outerHTML" hx-indicator="#swipe-indicator" data-loading-text="Возвращаю…">
+                    {% csrf_token %}
+                    <button type="submit" class="text-sm text-slate-300 hover:text-white" data-loading-text="Возвращаю…">Undo</button>
+                </form>
+
+                <div class="hidden text-xs text-slate-400 sm:block">←/A Pass · →/D Like · Backspace Undo</div>
+            </div>
+
+            <div id="swipe-indicator" class="mt-3 hidden text-sm text-slate-300">Загрузка…</div>
+
+            <div class="mt-4 text-center">
+                <a class="text-sm text-slate-300 underline underline-offset-4 hover:text-white"
+                    href="{% url 'public_profile' candidate.user_id %}">Открыть профиль</a>
+            </div>
+
+            <div class="mt-4 flex items-center justify-between">
+                <a class="text-sm text-slate-300 hover:text-white" href="{% url 'report_user' candidate.user_id %}">Пожаловаться</a>
+                <form method="post" action="{% url 'block_user' candidate.user_id %}" hx-post="{% url 'block_user' candidate.user_id %}" hx-target="#card" hx-swap="outerHTML" hx-indicator="#swipe-indicator" data-confirm="Заблокировать пользователя?" data-loading-text="Блокирую…">
+                    {% csrf_token %}
+                    <button type="submit" class="text-sm text-rose-200 hover:text-rose-100" data-loading-text="Блокирую…">Заблокировать</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-8 text-center">
+        <div class="text-xl font-semibold">Рекомендаций пока нет</div>
+        <div class="mt-2 text-sm text-slate-300">Когда модератор отправит рекомендации, они появятся здесь.</div>
+        <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <a class="rounded-xl bg-fuchsia-500 px-5 py-3 font-medium text-white hover:bg-fuchsia-400"
+                href="{% url 'matches' %}">Мэтчи</a>
+            <a class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 font-medium text-white hover:bg-white/10"
+                href="{% url 'me' %}">Профиль</a>
+        </div>
+    </div>
+    {% endif %}
+</div>

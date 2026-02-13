@@ -1,0 +1,87 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Панель — Раздел анкеты{% endblock %}
+
+{% block panel_heading %}{% if section %}Раздел: {{ section.title }}{% else %}Новый раздел{% endif %}{% endblock %}
+{% block panel_subtitle %}Редактирование раздела анкеты и управление вопросами.{% endblock %}
+
+{% block panel_top_actions %}
+<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{{ back_url }}">Назад</a>
+{% if section %}
+<a class="rounded-xl bg-fuchsia-500 px-4 py-2 text-sm font-medium text-white hover:bg-fuchsia-400" href="{% url 'panel_questionnaire_question_create' section.id %}">Новый вопрос</a>
+{% endif %}
+{% endblock %}
+
+{% block panel_content %}
+<div class="grid gap-6 lg:grid-cols-2">
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="text-sm font-medium">{% if section %}Редактирование раздела{% else %}Создание раздела{% endif %}</div>
+
+        <form method="post" class="mt-4 space-y-5">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div>
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.errors %}
+                <div class="mt-1 text-sm text-rose-300">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {% if form.non_field_errors %}
+            <div class="text-sm text-rose-300">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <button type="submit" class="rounded-xl bg-fuchsia-500 px-5 py-3 font-medium text-white hover:bg-fuchsia-400">Сохранить</button>
+        </form>
+    </div>
+
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="flex items-center justify-between">
+            <div class="text-sm font-medium">Вопросы</div>
+            {% if section %}
+            <a class="text-sm text-slate-300 hover:text-white" href="{% url 'panel_questionnaire_question_create' section.id %}">Добавить</a>
+            {% endif %}
+        </div>
+
+        <div class="mt-4 overflow-hidden rounded-2xl border border-white/10">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-950/40 text-slate-300">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-medium">Порядок</th>
+                        <th class="px-4 py-3 text-left font-medium">Код</th>
+                        <th class="px-4 py-3 text-left font-medium">Текст</th>
+                        <th class="px-4 py-3 text-left font-medium"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/10">
+                    {% for q in questions %}
+                    <tr class="hover:bg-white/5">
+                        <td class="px-4 py-3 text-slate-300">{{ q.order }}</td>
+                        <td class="px-4 py-3 text-slate-300">{{ q.code }}</td>
+                        <td class="px-4 py-3">
+                            <a class="font-medium hover:underline" href="{% url 'panel_questionnaire_question_edit' q.id %}">{{ q.text }}</a>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center justify-end gap-2">
+                                <a class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium hover:bg-white/10" href="{% url 'panel_questionnaire_question_edit' q.id %}">Редактировать</a>
+                                <form method="post" action="{% url 'panel_questionnaire_question_delete' q.id %}" data-confirm="Удалить вопрос «{{ q.code }}»?" data-loading-text="Удаляю…">
+                                    {% csrf_token %}
+                                    <button type="submit" class="rounded-xl bg-rose-500/15 px-3 py-2 text-xs font-medium text-rose-200 hover:bg-rose-500/25" data-loading-text="Удаляю…">Удалить</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td class="px-4 py-8 text-center text-slate-300" colspan="4">{% if section %}Вопросов пока нет.{% else %}Сначала создай раздел.{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

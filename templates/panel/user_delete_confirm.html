@@ -1,0 +1,39 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Панель — Удаление пользователя{% endblock %}
+
+{% block panel_heading %}Удалить пользователя{% endblock %}
+{% block panel_subtitle %}Это действие необратимо.{% endblock %}
+
+{% block panel_top_actions %}
+<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_detail' target_user.id %}">Назад</a>
+{% endblock %}
+
+{% block panel_content %}
+<div class="max-w-2xl rounded-3xl border border-rose-500/30 bg-rose-500/10 p-6">
+    <div class="text-sm text-rose-100">Вы действительно хотите удалить пользователя?</div>
+    <div class="mt-2 text-xl font-semibold text-white">{{ target_user.username }}</div>
+
+    <div class="mt-4 space-y-2 text-sm text-slate-200">
+        <div><span class="text-slate-300">ID:</span> {{ target_user.id }}</div>
+        <div><span class="text-slate-300">Email:</span> {{ target_user.email|default:'—' }}</div>
+        {% if profile %}
+        <div><span class="text-slate-300">Профиль:</span> {{ profile.display_name|default:target_user.username }}</div>
+        {% endif %}
+    </div>
+
+    <div class="mt-6 rounded-2xl border border-white/10 bg-slate-950/30 p-4 text-sm text-slate-200">
+        <div class="font-medium">Важно</div>
+        <div class="mt-2 text-slate-300">
+            При удалении аккаунта будут также удалены связанные данные (матчи, свайпы, сообщения, анкета и т.п.)
+            в соответствии с настройками связей в базе.
+        </div>
+    </div>
+
+    <form method="post" class="mt-6 flex gap-3">
+        {% csrf_token %}
+        <button type="submit" class="flex-1 rounded-xl bg-rose-500 px-5 py-3 font-medium text-white hover:bg-rose-400">Да, удалить</button>
+        <a href="{% url 'panel_user_detail' target_user.id %}" class="flex-1 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-center font-medium text-white hover:bg-white/10">Отмена</a>
+    </form>
+</div>
+{% endblock %}

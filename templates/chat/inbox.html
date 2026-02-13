@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Чат{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+        <h1 class="text-2xl font-semibold tracking-tight">Чат</h1>
+        {% if user.is_superuser %}
+        <p class="mt-1 text-sm text-slate-300">Административные чаты со всеми пользователями.</p>
+        {% else %}
+        <p class="mt-1 text-sm text-slate-300">Диалоги доступны только с мэтчами.</p>
+        {% endif %}
+    </div>
+    <div class="flex flex-col gap-3 sm:flex-row">
+        {% if user.is_superuser %}
+        <button type="button" onclick="showNewsletterModal()"
+            class="rounded-xl border border-fuchsia-500/50 bg-fuchsia-500/10 px-4 py-2 text-sm font-medium hover:bg-fuchsia-500/20">
+            📢 Рассылка
+        </button>
+        {% endif %}
+        <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10"
+            href="{% url 'matches' %}">Мэтчи</a>
+    </div>
+</div>
+
+<div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {% for row in rows %}
+    <a href="{% url 'chat_room' row.match.id %}"
+        class="group rounded-3xl border border-white/10 bg-white/5 p-5 hover:bg-white/10">
+        <div class="flex items-center gap-4">
+            {% if row.other_avatar_url %}
+            <img class="h-14 w-14 rounded-2xl object-cover" src="{{ row.other_avatar_url }}" alt="avatar" />
+            {% else %}
+            <div class="h-14 w-14 rounded-2xl bg-white/10"></div>
+            {% endif %}
+            <div class="flex-1">
+                <div class="font-semibold group-hover:text-white flex items-center gap-2">
+                    {% if row.match.is_admin_chat and user.is_superuser %}
+                    <span class="text-xs bg-fuchsia-500/20 text-fuchsia-300 px-2 py-1 rounded">АДМИН</span>
+                    {% endif %}
+                    {{ row.other_name }}
+                </div>
+                {% if row.last_message_text %}
+                <div class="text-sm text-slate-300">{{ row.last_message_text }}</div>
+                {% else %}
+                <div class="text-sm text-slate-300">Открыть диалог</div>
+                {% endif %}
+            </div>
+        </div>
+    </a>
+    {% empty %}
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-8 text-sm text-slate-300 sm:col-span-2 lg:col-span-3">
+        {% if user.is_superuser %}
+        Пока нет пользователей для чата.
+        {% else %}
+        Пока нет диалогов. Сначала получи мэтч.
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal для рассылки -->
+{% if user.is_superuser %}
+<div id="newsletterModal" style="display: none;" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 rounded-2xl border border-white/10 p-6 max-w-md w-full">
+        <h2 class="text-xl font-semibold mb-4">Отправить рассылку всем</h2>
+        <form method="post" action="{% url 'chat_send_newsletter' %}" onsubmit="return validateNewsletter()">
+            {% csrf_token %}
+            <textarea name="message_text" id="newsletterText" placeholder="Введите текст сообщения..."
+                class="w-full bg-slate-800 border border-white/10 rounded-lg p-3 text-white placeholder-slate-400 focus:outline-none focus:border-fuchsia-500 min-h-32 resize-none"
+                required></textarea>
+            <div class="mt-4 text-sm text-slate-400">
+                Сообщение будет отправлено <strong id="userCount">0</strong> пользователям
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="closeNewsletterModal()"
+                    class="flex-1 rounded-lg border border-white/10 bg-white/5 px-4 py-2 font-medium hover:bg-white/10">
+                    Отмена
+                </button>
+                <button type="submit"
+                    class="flex-1 rounded-lg bg-fuchsia-500 px-4 py-2 font-medium text-white hover:bg-fuchsia-400">
+                    Отправить
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showNewsletterModal() {
+    document.getElementById('newsletterModal').style.display = 'flex';
+    // Подсчитываем количество чатов
+    const chatCount = document.querySelectorAll('[href*="chat_room"]').length;
+    document.getElementById('userCount').textContent = chatCount;
+}
+
+function closeNewsletterModal() {
+    document.getElementById('newsletterModal').style.display = 'none';
+    document.getElementById('newsletterText').value = '';
+}
+
+function validateNewsletter() {
+    const text = document.getElementById('newsletterText').value.trim();
+    if (!text) {
+        alert('Пожалуйста, введите текст сообщения');
+        return false;
+    }
+    return true;
+}
+
+// Закрытие модала при клике вне его
+document.getElementById('newsletterModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeNewsletterModal();
+    }
+});
+</script>
+{% endif %}
+
+{% endblock %}

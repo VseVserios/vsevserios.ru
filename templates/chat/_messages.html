@@ -1,0 +1,21 @@
+<div class="space-y-3">
+    {% for msg in messages %}
+    {% if msg.sender_id == request.user.id %}
+    <div class="flex justify-end">
+        <div class="max-w-[80%] rounded-2xl bg-fuchsia-500/25 px-4 py-3 text-sm text-slate-100">
+            <div class="whitespace-pre-wrap">{{ msg.text }}</div>
+            <div class="mt-1 text-xs text-slate-200/70">{{ msg.created_at|date:'H:i' }}</div>
+        </div>
+    </div>
+    {% else %}
+    <div class="flex justify-start">
+        <div class="max-w-[80%] rounded-2xl bg-white/10 px-4 py-3 text-sm text-slate-100">
+            <div class="whitespace-pre-wrap">{{ msg.text }}</div>
+            <div class="mt-1 text-xs text-slate-300">{{ msg.created_at|date:'H:i' }}</div>
+        </div>
+    </div>
+    {% endif %}
+    {% empty %}
+    <div class="text-center text-sm text-slate-400">Сообщений пока нет. Напиши первым.</div>
+    {% endfor %}
+</div>

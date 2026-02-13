@@ -1,0 +1,62 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Панель — Профили{% endblock %}
+
+{% block panel_heading %}Профили{% endblock %}
+{% block panel_subtitle %}Поиск и редактирование анкет.{% endblock %}
+
+{% block panel_content %}
+<div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+    <form method="get" class="grid gap-3 sm:grid-cols-3 sm:items-end">
+        <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm text-slate-200" for="q">Поиск</label>
+            <input id="q" name="q" value="{{ q }}" placeholder="username / имя / город" />
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="submit" class="rounded-xl bg-fuchsia-500 px-4 py-3 text-sm font-medium text-white hover:bg-fuchsia-400">Искать</button>
+            <a href="{% url 'panel_profiles' %}" class="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium hover:bg-white/10">Сброс</a>
+        </div>
+    </form>
+</div>
+
+<div class="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+    <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-950/40 text-slate-300">
+                <tr>
+                    <th class="px-4 py-3 text-left font-medium">ID</th>
+                    <th class="px-4 py-3 text-left font-medium">Пользователь</th>
+                    <th class="px-4 py-3 text-left font-medium">Имя</th>
+                    <th class="px-4 py-3 text-left font-medium">Город</th>
+                    <th class="px-4 py-3 text-left font-medium">Пол</th>
+                    <th class="px-4 py-3 text-left font-medium">Ищу</th>
+                    <th class="px-4 py-3 text-left font-medium">Обновлён</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/10">
+                {% for p in page_obj.object_list %}
+                <tr class="hover:bg-white/5">
+                    <td class="px-4 py-3 text-slate-300">{{ p.id }}</td>
+                    <td class="px-4 py-3">
+                        <a class="font-medium hover:underline" href="{% url 'panel_user_detail' p.user_id %}">{{ p.user.username }}</a>
+                    </td>
+                    <td class="px-4 py-3">
+                        <a class="font-medium hover:underline" href="{% url 'panel_profile_detail' p.id %}">{{ p.display_name|default:'—' }}</a>
+                    </td>
+                    <td class="px-4 py-3 text-slate-300">{{ p.city|default:'—' }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ p.get_gender_display|default:'—' }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ p.get_looking_for_display|default:'—' }}</td>
+                    <td class="px-4 py-3 text-slate-400">{{ p.updated_at|date:'d.m.Y H:i' }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td class="px-4 py-8 text-center text-slate-300" colspan="7">Ничего не найдено.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'panel/_pagination.html' with page_obj=page_obj base_qs=base_qs %}
+{% endblock %}

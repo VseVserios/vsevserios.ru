@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}Анкеты{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-4xl">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Анкета</h1>
+            <p class="mt-1 text-sm text-slate-300">
+                {% if kind == 'me' %}Я{% else %}Мой идеал{% endif %}
+            </p>
+        </div>
+
+        <div class="flex gap-2">
+            <a href="{% url 'questionnaire' 'me' %}"
+                class="rounded-xl px-4 py-2 text-sm font-medium {% if kind == 'me' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">
+                Я
+            </a>
+            <a href="{% url 'questionnaire' 'ideal' %}"
+                class="rounded-xl px-4 py-2 text-sm font-medium {% if kind == 'ideal' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">
+                Мой идеал
+            </a>
+        </div>
+    </div>
+
+    <div class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-6">
+        <div class="flex items-center justify-between">
+            <div class="text-sm font-medium">Прогресс</div>
+            <div class="text-sm text-slate-300">{{ answered }} / {{ total }} ({{ percent }}%)</div>
+        </div>
+        <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/10" data-progress="{{ percent }}">
+            <div class="h-2 rounded-full bg-fuchsia-500" data-progress-bar></div>
+        </div>
+
+        <div class="mt-4 text-xs text-slate-400">
+            Другая анкета: {% if other_kind == 'me' %}Я{% else %}Мой идеал{% endif %} — {{ other_answered }} / {{ other_total }} ({{ other_percent }}%)
+        </div>
+    </div>
+
+    <form method="post" class="mt-6">
+        {% csrf_token %}
+
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-6" data-wizard data-kind="{{ kind }}">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <div class="text-xs text-slate-400" id="wizard-step-counter"></div>
+                    <div class="mt-1 text-sm text-slate-300" id="wizard-section-title"></div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="wizard-prev"
+                        class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10">
+                        Предыдущий
+                    </button>
+                    <button type="button" id="wizard-next"
+                        class="rounded-xl bg-fuchsia-500 px-4 py-2 text-sm font-medium text-white hover:bg-fuchsia-400">
+                        Следующий
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/10">
+                <div id="wizard-progress-bar" class="h-2 rounded-full bg-fuchsia-500" style="width: 0%"></div>
+            </div>
+
+            <div class="mt-4 flex gap-2 overflow-x-auto pb-1">
+                {% for section in sections %}
+                <button type="button" data-wizard-section="{{ section.id }}"
+                    class="shrink-0 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-slate-100 hover:bg-white/10">
+                    <span class="inline-flex items-center gap-2">
+                        <span>{{ section.title }}</span>
+                        {% if section.hint %}
+                        <span class="group relative inline-flex items-center">
+                            <span tabindex="0" class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-slate-950/40 text-[11px] font-semibold text-slate-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/60">?</span>
+                            <span class="pointer-events-none absolute left-1/2 top-full z-10 mt-2 w-64 -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-950/95 p-3 text-xs text-slate-200 opacity-0 shadow-xl backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100">
+                                {{ section.hint }}
+                            </span>
+                        </span>
+                        {% endif %}
+                    </span>
+                </button>
+                {% endfor %}
+            </div>
+
+            <div class="mt-6">
+                {% for section in sections %}
+                {% for q in section.questions %}
+                <div class="rounded-3xl border border-white/10 bg-slate-950/30 p-6" data-wizard-item
+                    data-section-id="{{ section.id }}" data-section-title="{{ section.title }}">
+                    <div class="flex items-center gap-2">
+                        <div class="text-xs text-slate-400">{{ section.title }}</div>
+                        {% if section.hint %}
+                        <span class="group relative inline-flex items-center">
+                            <span tabindex="0" class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-slate-950/40 text-[11px] font-semibold text-slate-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/60">?</span>
+                            <span class="pointer-events-none absolute left-0 top-full z-10 mt-2 w-72 rounded-2xl border border-white/10 bg-slate-950/95 p-3 text-xs text-slate-200 opacity-0 shadow-xl backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100">
+                                {{ section.hint }}
+                            </span>
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% if section.hint %}
+                    <div class="group relative mt-2">
+                        <div tabindex="0" class="text-lg font-semibold leading-snug focus:outline-none">{{ q.text }}</div>
+                        <div class="pointer-events-none absolute left-0 top-full z-10 mt-2 w-80 rounded-2xl border border-white/10 bg-slate-950/95 p-3 text-xs text-slate-200 opacity-0 shadow-xl backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100">
+                            {{ section.hint }}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="mt-2 text-lg font-semibold leading-snug">{{ q.text }}</div>
+                    {% endif %}
+                    {% if q.input_type == 'text' %}
+                    <div class="mt-1 text-xs text-slate-400">Свободный ввод</div>
+                    <div class="mt-5">
+                        {{ q.field }}
+                    </div>
+                    {% else %}
+                    {% if q.is_multiple %}
+                    <div class="mt-1 text-xs text-slate-400">Можно выбрать несколько вариантов</div>
+                    {% endif %}
+
+                    <div class="mt-5 grid gap-3">
+                        {% for choice in q.field %}
+                        <div class="relative">
+                            {{ choice.tag }}
+                            <label for="{{ choice.id_for_label }}"
+                                class="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100 transition hover:bg-white/10 peer-checked:border-fuchsia-400/60 peer-checked:bg-fuchsia-500/10">
+                                <span
+                                    class="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full border border-white/10 bg-slate-950/40 text-xs text-slate-200 peer-checked:border-fuchsia-400/60 peer-checked:bg-fuchsia-500/20 peer-checked:text-fuchsia-200">
+                                    {% if q.is_multiple %}✓{% else %}●{% endif %}
+                                </span>
+                                <span class="leading-snug">{{ choice.choice_label }}</span>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if q.field.errors %}
+                    <div
+                        class="mt-3 rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                        {{ q.field.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="sticky bottom-4 mt-6">
+            <div class="rounded-2xl border border-white/10 bg-slate-950/70 p-4 backdrop-blur">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="text-sm text-slate-300">Можно сохранять в любой момент.</div>
+                    <div class="flex flex-wrap gap-3">
+                        <button type="button" id="wizard-prev-bottom"
+                            class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 font-medium text-white hover:bg-white/10">Предыдущий</button>
+                        <button type="button" id="wizard-next-bottom"
+                            class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 font-medium text-white hover:bg-white/10">Следующий</button>
+                        <button type="submit"
+                            class="rounded-xl bg-fuchsia-500 px-5 py-3 font-medium text-white hover:bg-fuchsia-400">Сохранить</button>
+                        <a href="{% url 'me' %}"
+                            class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-center font-medium text-white hover:bg-white/10">К профилю</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    (function () {
+        const root = document.querySelector('[data-wizard]');
+        if (!root) return;
+
+        const items = Array.from(root.querySelectorAll('[data-wizard-item]'));
+        if (!items.length) return;
+
+        const kind = root.getAttribute('data-kind') || '';
+        const storageKey = 'questionnaire_wizard:' + kind;
+
+        function clamp(n, a, b) {
+            return Math.max(a, Math.min(b, n));
+        }
+
+        let current = parseInt(sessionStorage.getItem(storageKey) || '0', 10);
+        current = Number.isFinite(current) ? clamp(current, 0, items.length - 1) : 0;
+
+        const counterEl = document.getElementById('wizard-step-counter');
+        const sectionEl = document.getElementById('wizard-section-title');
+        const barEl = document.getElementById('wizard-progress-bar');
+
+        const prevBtns = [document.getElementById('wizard-prev'), document.getElementById('wizard-prev-bottom')].filter(Boolean);
+        const nextBtns = [document.getElementById('wizard-next'), document.getElementById('wizard-next-bottom')].filter(Boolean);
+
+        function setDisabled(btn, disabled) {
+            btn.disabled = disabled;
+            if (disabled) {
+                btn.classList.add('opacity-60');
+            } else {
+                btn.classList.remove('opacity-60');
+            }
+        }
+
+        function updateSectionPills(activeSectionId) {
+            root.querySelectorAll('[data-wizard-section]').forEach((btn) => {
+                const isActive = btn.getAttribute('data-wizard-section') === activeSectionId;
+                btn.classList.toggle('bg-fuchsia-500', isActive);
+                btn.classList.toggle('text-white', isActive);
+                btn.classList.toggle('bg-white/5', !isActive);
+                btn.classList.toggle('text-slate-100', !isActive);
+            });
+        }
+
+        function show(i, opts) {
+            current = clamp(i, 0, items.length - 1);
+            sessionStorage.setItem(storageKey, String(current));
+
+            items.forEach((el, idx) => {
+                el.classList.toggle('hidden', idx !== current);
+            });
+
+            const active = items[current];
+            const sectionTitle = active.getAttribute('data-section-title') || '';
+            const sectionId = active.getAttribute('data-section-id') || '';
+
+            if (counterEl) counterEl.textContent = 'Вопрос ' + (current + 1) + ' из ' + items.length;
+            if (sectionEl) sectionEl.textContent = sectionTitle;
+            if (barEl) barEl.style.width = Math.round(((current + 1) / items.length) * 100) + '%';
+
+            prevBtns.forEach((b) => setDisabled(b, current === 0));
+            nextBtns.forEach((b) => setDisabled(b, current === items.length - 1));
+
+            updateSectionPills(sectionId);
+
+            const scroll = !(opts && opts.noScroll);
+            if (scroll) active.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        }
+
+        prevBtns.forEach((btn) => btn.addEventListener('click', () => show(current - 1)));
+        nextBtns.forEach((btn) => btn.addEventListener('click', () => show(current + 1)));
+
+        root.addEventListener('click', (e) => {
+            const t = e.target;
+            if (!(t instanceof HTMLElement)) return;
+            const secBtn = t.closest('[data-wizard-section]');
+            if (!secBtn) return;
+            const id = secBtn.getAttribute('data-wizard-section');
+            const idx = items.findIndex((el) => el.getAttribute('data-section-id') === id);
+            if (idx !== -1) show(idx);
+        });
+
+        root.addEventListener('change', (e) => {
+            const el = e.target;
+            if (!(el instanceof HTMLInputElement)) return;
+            if (el.type === 'radio' && current < items.length - 1) {
+                setTimeout(() => show(current + 1), 180);
+            }
+        });
+
+        show(current, { noScroll: true });
+    })();
+</script>
+{% endblock %}

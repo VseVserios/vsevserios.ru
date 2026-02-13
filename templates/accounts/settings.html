@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Настройки{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-3xl" data-reveal>
+  <div class="flex items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Настройки</h1>
+      <p class="mt-1 text-sm text-slate-300">Аккаунт, внешний вид профиля, безопасность.</p>
+    </div>
+    <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'me' %}">Профиль</a>
+  </div>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-12">
+    <div class="lg:col-span-4" data-reveal>
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="text-sm font-medium">Разделы</div>
+        <div class="mt-4 grid gap-2 text-sm">
+          <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="{% url 'account_settings' %}">Аккаунт</a>
+          <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="{% url 'notifications' %}">Уведомления в сайте</a>
+          <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="{% url 'password_change' %}">Сменить пароль</a>
+          <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="{% url 'edit_profile' %}">Внешний вид профиля</a>
+          <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="{% url 'photos_manage' %}">Фотографии</a>
+        </div>
+
+        <div class="mt-4 text-xs text-slate-400">Подсказка: смена email не подтверждает его автоматически.</div>
+      </div>
+    </div>
+
+    <div class="lg:col-span-8" data-reveal>
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="text-sm font-medium">Аккаунт</div>
+        <form method="post" class="mt-4 space-y-4" data-loading-text="Сохраняю…">
+          {% csrf_token %}
+          <input type="hidden" name="settings_kind" value="account" />
+
+          <div>
+            {{ form.username.label_tag }}
+            {{ form.username }}
+            {% if form.username.errors %}
+            <div class="mt-1 text-sm text-rose-300">{{ form.username.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div>
+            {{ form.email.label_tag }}
+            {{ form.email }}
+            {% if form.email.errors %}
+            <div class="mt-1 text-sm text-rose-300">{{ form.email.errors }}</div>
+            {% endif %}
+          </div>
+
+          {% if form.non_field_errors %}
+          <div class="text-sm text-rose-300">{{ form.non_field_errors }}</div>
+          {% endif %}
+
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <button type="submit" class="flex-1 rounded-xl bg-fuchsia-500 px-4 py-3 font-medium text-white hover:bg-fuchsia-400 shine" data-loading-text="Сохраняю…">Сохранить</button>
+            <a href="{% url 'password_change' %}" class="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center font-medium hover:bg-white/10">Сменить пароль</a>
+          </div>
+        </form>
+      </div>
+
+      <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+        <div class="text-sm font-medium">Тема</div>
+        <div class="mt-2 text-sm text-slate-300">Выбери внешний вид интерфейса.</div>
+
+        <form method="post" class="mt-4 space-y-4" data-loading-text="Сохраняю…">
+          {% csrf_token %}
+          <input type="hidden" name="settings_kind" value="theme" />
+
+          <div>
+            <label class="mb-1 block text-sm text-slate-200">Тема</label>
+            <select name="ui_theme" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white">
+              <option value="dark" {% if profile.ui_theme == 'dark' %}selected{% endif %}>Тёмная</option>
+              <option value="light" {% if profile.ui_theme == 'light' %}selected{% endif %}>Светлая</option>
+            </select>
+          </div>
+
+          <button type="submit" class="w-full rounded-xl bg-white/10 px-4 py-3 font-medium hover:bg-white/15" data-loading-text="Сохраняю…">Применить</button>
+        </form>
+      </div>
+
+      <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+        <div class="text-sm font-medium">Уведомления</div>
+        <div class="mt-2 text-sm text-slate-300">Настрой, какие письма мы можем отправлять.</div>
+
+        <form method="post" class="mt-4 space-y-3" data-loading-text="Сохраняю…">
+          {% csrf_token %}
+          <input type="hidden" name="settings_kind" value="notifications" />
+
+          <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3 text-sm">
+            <input type="checkbox" name="notify_email_matches" class="h-4 w-4" {% if profile.notify_email_matches %}checked{% endif %}>
+            <span>Мэтчи</span>
+          </label>
+          <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3 text-sm">
+            <input type="checkbox" name="notify_email_messages" class="h-4 w-4" {% if profile.notify_email_messages %}checked{% endif %}>
+            <span>Новые сообщения</span>
+          </label>
+          <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3 text-sm">
+            <input type="checkbox" name="notify_email_marketing" class="h-4 w-4" {% if profile.notify_email_marketing %}checked{% endif %}>
+            <span>Новости продукта (редко)</span>
+          </label>
+
+          <button type="submit" class="w-full rounded-xl bg-white/10 px-4 py-3 font-medium hover:bg-white/15" data-loading-text="Сохраняю…">Сохранить уведомления</button>
+        </form>
+      </div>
+
+      <div class="mt-6 rounded-3xl border border-white/10 bg-gradient-to-br from-fuchsia-500/10 to-indigo-500/10 p-6" data-reveal>
+        <div class="text-sm font-semibold">Быстрые ссылки</div>
+        <div class="mt-3 grid gap-3 sm:grid-cols-2">
+          <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10" href="{% url 'edit_profile' %}">Редактировать профиль</a>
+          <a class="rounded-2xl bg-fuchsia-500 px-4 py-3 text-center text-sm font-medium text-white hover:bg-fuchsia-400 shine" href="{% url 'photos_manage' %}">Управлять фото</a>
+        </div>
+      </div>
+
+      <div class="mt-6 rounded-3xl border border-rose-400/20 bg-rose-500/10 p-6" data-reveal>
+        <div class="text-sm font-semibold text-rose-100">Опасная зона</div>
+        <div class="mt-2 text-sm text-rose-100/80">Действия ниже могут ограничить доступ к аккаунту. Требуется пароль.</div>
+
+        <div class="mt-4 grid gap-4">
+          <form method="post" action="{% url 'account_deactivate' %}" class="space-y-3">
+            {% csrf_token %}
+            <div class="text-sm font-medium text-rose-100">Деактивировать аккаунт</div>
+            <input type="password" name="password" placeholder="Текущий пароль" autocomplete="current-password" />
+            <button type="submit" class="w-full rounded-xl bg-rose-500 px-4 py-3 font-medium text-white hover:bg-rose-400">Деактивировать</button>
+          </form>
+
+          <form method="post" action="{% url 'account_delete' %}" class="space-y-3">
+            {% csrf_token %}
+            <div class="text-sm font-medium text-rose-100">Удалить аккаунт навсегда</div>
+            <input type="password" name="password" placeholder="Текущий пароль" autocomplete="current-password" />
+            <button type="submit" class="w-full rounded-xl border border-rose-300/30 bg-rose-500/20 px-4 py-3 font-medium text-rose-100 hover:bg-rose-500/25">Удалить аккаунт</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

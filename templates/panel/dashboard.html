@@ -1,0 +1,129 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Панель — Дашборд{% endblock %}
+
+{% block panel_heading %}Дашборд{% endblock %}
+{% block panel_subtitle %}Обзор проекта и быстрые действия.{% endblock %}
+
+{% block panel_content %}
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <a href="{% url 'panel_users' %}" class="rounded-3xl border border-white/10 bg-white/5 p-5 hover:bg-white/10">
+        <div class="text-sm text-slate-300">Пользователи</div>
+        <div class="mt-2 text-3xl font-semibold tracking-tight">{{ users_count }}</div>
+        <div class="mt-1 text-xs text-slate-400">Активных: {{ active_users_count }}</div>
+    </a>
+    <a href="{% url 'panel_profiles' %}" class="rounded-3xl border border-white/10 bg-white/5 p-5 hover:bg-white/10">
+        <div class="text-sm text-slate-300">Профили</div>
+        <div class="mt-2 text-3xl font-semibold tracking-tight">{{ profiles_count }}</div>
+        <div class="mt-1 text-xs text-slate-400">Всего анкет</div>
+    </a>
+    <a href="{% url 'panel_photos' %}" class="rounded-3xl border border-white/10 bg-white/5 p-5 hover:bg-white/10">
+        <div class="text-sm text-slate-300">Фото</div>
+        <div class="mt-2 text-3xl font-semibold tracking-tight">{{ photos_count }}</div>
+        <div class="mt-1 text-xs text-slate-400">Загружено</div>
+    </a>
+    <a href="{% url 'panel_swipes' %}" class="rounded-3xl border border-white/10 bg-white/5 p-5 hover:bg-white/10">
+        <div class="text-sm text-slate-300">Swipe</div>
+        <div class="mt-2 text-3xl font-semibold tracking-tight">{{ swipes_count }}</div>
+        <div class="mt-1 text-xs text-slate-400">Всего действий</div>
+    </a>
+    <a href="{% url 'panel_matches' %}" class="rounded-3xl border border-white/10 bg-white/5 p-5 hover:bg-white/10">
+        <div class="text-sm text-slate-300">Мэтчи</div>
+        <div class="mt-2 text-3xl font-semibold tracking-tight">{{ matches_count }}</div>
+        <div class="mt-1 text-xs text-slate-400">Совпадений</div>
+    </a>
+    <a href="{% url 'panel_messages' %}" class="rounded-3xl border border-white/10 bg-white/5 p-5 hover:bg-white/10">
+        <div class="text-sm text-slate-300">Сообщения</div>
+        <div class="mt-2 text-3xl font-semibold tracking-tight">{{ messages_count }}</div>
+        <div class="mt-1 text-xs text-slate-400">Всего</div>
+    </a>
+    <a href="{% url 'panel_reports' %}" class="rounded-3xl border border-white/10 bg-white/5 p-5 hover:bg-white/10">
+        <div class="text-sm text-slate-300">Жалобы</div>
+        <div class="mt-2 text-3xl font-semibold tracking-tight">{{ reports_count }}</div>
+        <div class="mt-1 text-xs text-slate-400">Открытых: {{ unresolved_reports_count }}</div>
+    </a>
+    <a href="{% url 'panel_blocks' %}" class="rounded-3xl border border-white/10 bg-white/5 p-5 hover:bg-white/10">
+        <div class="text-sm text-slate-300">Блокировки</div>
+        <div class="mt-2 text-3xl font-semibold tracking-tight">{{ blocks_count }}</div>
+        <div class="mt-1 text-xs text-slate-400">Всего</div>
+    </a>
+    <a href="{% url 'panel_bans' %}" class="rounded-3xl border border-white/10 bg-white/5 p-5 hover:bg-white/10">
+        <div class="text-sm text-slate-300">Баны</div>
+        <div class="mt-2 text-3xl font-semibold tracking-tight">{{ bans_count }}</div>
+        <div class="mt-1 text-xs text-slate-400">Активных: {{ active_bans_count }}</div>
+    </a>
+</div>
+
+<div class="mt-6 grid gap-6 lg:grid-cols-2">
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="flex items-center justify-between">
+            <div class="text-sm font-medium">Новые пользователи</div>
+            <a class="text-sm text-slate-300 hover:text-white" href="{% url 'panel_users' %}">Все</a>
+        </div>
+        <div class="mt-4 space-y-3">
+            {% for u in recent_users %}
+            <a href="{% url 'panel_user_detail' u.id %}" class="block rounded-2xl border border-white/10 bg-slate-950/30 p-4 hover:bg-white/5">
+                <div class="flex items-center justify-between">
+                    <div class="font-medium">{{ u.username }}</div>
+                    <div class="text-xs text-slate-400">{{ u.date_joined|date:'d.m.Y H:i' }}</div>
+                </div>
+                <div class="mt-1 text-xs text-slate-400">{{ u.email }}</div>
+            </a>
+            {% empty %}
+            <div class="text-sm text-slate-300">Пока пусто.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="flex items-center justify-between">
+            <div class="text-sm font-medium">Уведомления</div>
+            <div class="text-sm text-slate-300">{{ notifications_count }}</div>
+        </div>
+        <div class="mt-4 space-y-3">
+            {% for n in notifications %}
+            <div class="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
+                <div class="flex items-center justify-between">
+                    <div class="font-medium">
+                        {% if n.event == 'new_user' %}
+                        Новый пользователь
+                        {% elif n.event == 'questionnaire_completed' %}
+                        Анкета заполнена
+                        {% else %}
+                        {{ n.event }}
+                        {% endif %}
+                    </div>
+                    <div class="text-xs text-slate-400">{{ n.created_at|date:'d.m.Y H:i' }}</div>
+                </div>
+                <div class="mt-1 text-xs text-slate-400">
+                    <a class="hover:text-white" href="{% url 'panel_user_detail' n.user_id %}">{{ n.user.username }}</a>
+                    {% if n.questionnaire_kind %}· {{ n.questionnaire_kind }}{% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-sm text-slate-300">Пока нет уведомлений.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="flex items-center justify-between">
+            <div class="text-sm font-medium">Последние мэтчи</div>
+            <a class="text-sm text-slate-300 hover:text-white" href="{% url 'panel_matches' %}">Все</a>
+        </div>
+        <div class="mt-4 space-y-3">
+            {% for m in recent_matches %}
+            <div class="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
+                <div class="flex items-center justify-between">
+                    <div class="font-medium">{{ m.user1.username }} × {{ m.user2.username }}</div>
+                    <div class="text-xs text-slate-400">{{ m.created_at|date:'d.m.Y H:i' }}</div>
+                </div>
+                <div class="mt-1 text-xs text-slate-400">Match #{{ m.id }}</div>
+            </div>
+            {% empty %}
+            <div class="text-sm text-slate-300">Пока нет мэтчей.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

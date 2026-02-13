@@ -1,0 +1,71 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Панель — Пользователи{% endblock %}
+
+{% block panel_heading %}Пользователи{% endblock %}
+{% block panel_subtitle %}Поиск и управление доступом.{% endblock %}
+
+{% block panel_content %}
+<div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+    <form method="get" class="grid gap-3 sm:grid-cols-3 sm:items-end">
+        <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm text-slate-200" for="q">Поиск</label>
+            <input id="q" name="q" value="{{ q }}" placeholder="username или email" />
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="submit" class="rounded-xl bg-fuchsia-500 px-4 py-3 text-sm font-medium text-white hover:bg-fuchsia-400">Искать</button>
+            <a href="{% url 'panel_users' %}" class="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium hover:bg-white/10">Сброс</a>
+        </div>
+
+        <label class="flex items-center gap-2 text-sm text-slate-200">
+            <input type="checkbox" name="staff" value="1" {% if only_staff %}checked{% endif %} />
+            Только staff
+        </label>
+        <label class="flex items-center gap-2 text-sm text-slate-200">
+            <input type="checkbox" name="inactive" value="1" {% if only_inactive %}checked{% endif %} />
+            Только неактивные
+        </label>
+    </form>
+</div>
+
+<div class="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+    <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-950/40 text-slate-300">
+                <tr>
+                    <th class="px-4 py-3 text-left font-medium">ID</th>
+                    <th class="px-4 py-3 text-left font-medium">Username</th>
+                    <th class="px-4 py-3 text-left font-medium">Email</th>
+                    <th class="px-4 py-3 text-left font-medium">Staff</th>
+                    <th class="px-4 py-3 text-left font-medium">Active</th>
+                    <th class="px-4 py-3 text-left font-medium">Дата</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/10">
+                {% for u in page_obj.object_list %}
+                <tr class="hover:bg-white/5">
+                    <td class="px-4 py-3 text-slate-300">{{ u.id }}</td>
+                    <td class="px-4 py-3">
+                        <a class="font-medium hover:underline" href="{% url 'panel_user_detail' u.id %}">{{ u.username }}</a>
+                    </td>
+                    <td class="px-4 py-3 text-slate-300">{{ u.email|default:'—' }}</td>
+                    <td class="px-4 py-3">
+                        {% if u.is_staff %}<span class="rounded-full bg-emerald-500/15 px-2 py-1 text-xs text-emerald-200">да</span>{% else %}<span class="text-slate-400">нет</span>{% endif %}
+                    </td>
+                    <td class="px-4 py-3">
+                        {% if u.is_active %}<span class="rounded-full bg-emerald-500/15 px-2 py-1 text-xs text-emerald-200">активен</span>{% else %}<span class="rounded-full bg-rose-500/15 px-2 py-1 text-xs text-rose-200">off</span>{% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-slate-400">{{ u.date_joined|date:'d.m.Y H:i' }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td class="px-4 py-8 text-center text-slate-300" colspan="6">Ничего не найдено.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'panel/_pagination.html' with page_obj=page_obj base_qs=base_qs %}
+{% endblock %}

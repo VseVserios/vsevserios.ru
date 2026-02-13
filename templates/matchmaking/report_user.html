@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Жалоба{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-xl">
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="text-2xl font-semibold tracking-tight">Пожаловаться</div>
+        <div class="mt-1 text-sm text-slate-300">Пользователь: {{ target_name }}</div>
+
+        <form method="post" class="mt-6 space-y-4">
+            {% csrf_token %}
+            <div>
+                <div class="text-sm font-medium">Причина</div>
+                <div class="mt-2">{{ form.reason }}</div>
+            </div>
+            <div>
+                <div class="text-sm font-medium">Комментарий</div>
+                <div class="mt-2">{{ form.message }}</div>
+            </div>
+
+            <div class="mt-6 flex gap-3">
+                <button type="submit" class="flex-1 rounded-2xl bg-fuchsia-500 px-4 py-3 font-semibold text-white hover:bg-fuchsia-400">Отправить</button>
+                <a href="{% url 'public_profile' target.id %}" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center font-medium hover:bg-white/10">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

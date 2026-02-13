@@ -1,0 +1,57 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Панель — Анкета{% endblock %}
+
+{% block panel_heading %}Анкета{% endblock %}
+{% block panel_subtitle %}Разделы и вопросы анкеты.{% endblock %}
+
+{% block panel_top_actions %}
+<a class="rounded-xl bg-fuchsia-500 px-4 py-2 text-sm font-medium text-white hover:bg-fuchsia-400" href="{% url 'panel_questionnaire_section_create' %}">Новый раздел</a>
+{% endblock %}
+
+{% block panel_content %}
+<div class="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+    <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-950/40 text-slate-300">
+                <tr>
+                    <th class="px-4 py-3 text-left font-medium">ID</th>
+                    <th class="px-4 py-3 text-left font-medium">Код</th>
+                    <th class="px-4 py-3 text-left font-medium">Название</th>
+                    <th class="px-4 py-3 text-left font-medium">Порядок</th>
+                    <th class="px-4 py-3 text-left font-medium">Вопросов</th>
+                    <th class="px-4 py-3 text-left font-medium"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/10">
+                {% for s in page_obj.object_list %}
+                <tr class="hover:bg-white/5">
+                    <td class="px-4 py-3 text-slate-300">{{ s.id }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ s.code }}</td>
+                    <td class="px-4 py-3">
+                        <a class="font-medium hover:underline" href="{% url 'panel_questionnaire_section_edit' s.id %}">{{ s.title }}</a>
+                    </td>
+                    <td class="px-4 py-3 text-slate-300">{{ s.order }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ s.questions.count }}</td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center justify-end gap-2">
+                            <a class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium hover:bg-white/10" href="{% url 'panel_questionnaire_section_edit' s.id %}">Редактировать</a>
+                            <form method="post" action="{% url 'panel_questionnaire_section_delete' s.id %}" data-confirm="Удалить раздел «{{ s.title }}»?" data-loading-text="Удаляю…">
+                                {% csrf_token %}
+                                <button type="submit" class="rounded-xl bg-rose-500/15 px-3 py-2 text-xs font-medium text-rose-200 hover:bg-rose-500/25" data-loading-text="Удаляю…">Удалить</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td class="px-4 py-8 text-center text-slate-300" colspan="6">Разделов нет.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'panel/_pagination.html' with page_obj=page_obj base_qs=base_qs %}
+{% endblock %}

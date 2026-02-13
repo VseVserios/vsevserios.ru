@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои рекомендации{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between" data-reveal>
+    <div>
+        <h1 class="text-2xl font-semibold tracking-tight">Рекомендации</h1>
+        <p class="mt-1 text-sm text-slate-300">Анкеты, выбранные модератором.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+        <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10"
+            href="{% url 'matches' %}">Мои мэтчи</a>
+        <a class="rounded-xl bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/15" href="{% url 'me' %}">Профиль</a>
+    </div>
+</div>
+
+<div class="mt-8 grid gap-6 lg:grid-cols-12">
+    <div class="lg:col-span-8">
+        <div class="flex justify-center lg:justify-start" data-reveal>
+            {% include 'matchmaking/_card.html' with candidate=candidate recommendation=recommendation %}
+        </div>
+    </div>
+
+    <aside class="lg:col-span-4">
+        <div class="space-y-4">
+            <div class="rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+                <div class="text-sm font-medium">Подсказки</div>
+                <div class="mt-1 text-xs text-slate-400">Небольшие факты про знакомства и отношения.</div>
+            </div>
+
+            {% for sec in fact_sections %}
+            <details class="rounded-3xl border border-white/10 bg-white/5 p-5 group" {% if forloop.first %}open{% endif %} data-reveal>
+                <summary class="cursor-pointer list-none select-none">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="text-sm font-semibold">{{ sec.title }}</div>
+                        <div class="text-xs text-slate-400 group-open:hidden">Открыть</div>
+                        <div class="text-xs text-slate-400 hidden group-open:block">Свернуть</div>
+                    </div>
+                </summary>
+                <div class="mt-4 space-y-2 text-sm text-slate-200">
+                    {% for item in sec.items %}
+                    <div class="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3">
+                        {{ item }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </details>
+            {% endfor %}
+
+            <div class="rounded-3xl border border-white/10 bg-gradient-to-br from-fuchsia-500/10 to-indigo-500/10 p-6" data-reveal>
+                <div class="text-sm font-semibold">Мини‑челлендж</div>
+                <div class="mt-2 text-sm text-slate-200">Напиши одно сообщение: вопрос + конкретика (без шаблонов). Это работает лучше всего.</div>
+                <div class="mt-4">
+                    <a class="inline-flex rounded-xl bg-fuchsia-500 px-4 py-2 text-sm font-medium text-white hover:bg-fuchsia-400" href="{% url 'chat_inbox' %}">Перейти в чат</a>
+                </div>
+            </div>
+        </div>
+    </aside>
+</div>
+{% endblock %}

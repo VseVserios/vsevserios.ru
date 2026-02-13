@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Мэтчи{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between" data-reveal>
+    <div>
+        <h1 class="text-2xl font-semibold tracking-tight">Мэтчи</h1>
+        <p class="mt-1 text-sm text-slate-300">Совпадения — самое интересное начинается здесь.</p>
+    </div>
+
+    <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10"
+        href="{% url 'feed' %}">Назад в ленту</a>
+</div>
+
+<div class="mt-8 grid gap-6 lg:grid-cols-12">
+    <div class="lg:col-span-4">
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+            <div class="text-sm font-medium">Идеи для первого сообщения</div>
+            <div class="mt-4 space-y-2 text-sm text-slate-200">
+                <div class="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3">“Привет! Что тебе больше нравится: прогулка или уютное кафе?”</div>
+                <div class="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3">“Какая маленькая цель у тебя на этот месяц?”</div>
+                <div class="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3">“Какой фильм/сериал ты бы пересмотрел(а) ещё раз?”</div>
+            </div>
+            <div class="mt-4 text-xs text-slate-400">Вопрос + конкретика обычно дают больше ответов.</div>
+        </div>
+    </div>
+
+    <div class="lg:col-span-8">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {% for row in rows %}
+            <a href="{% url 'chat_room' row.match.id %}"
+                class="group rounded-3xl border border-white/10 bg-white/5 p-5 hover:bg-white/10" data-reveal>
+                <div class="flex items-center gap-4">
+
+                    {% if row.other_avatar_url %}
+                    <img class="h-14 w-14 rounded-2xl object-cover" src="{{ row.other_avatar_url }}" alt="avatar" />
+                    {% else %}
+                    <div class="h-14 w-14 rounded-2xl bg-white/10"></div>
+                    {% endif %}
+
+                    <div>
+                        <div class="font-semibold group-hover:text-white">{{ row.other_name }}</div>
+                        {% if row.last_message_text %}
+                        <div class="text-sm text-slate-300">{{ row.last_message_text }}</div>
+                        {% else %}
+                        <div class="text-sm text-slate-300">Открыть чат</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+
+            {% empty %}
+            <div class="rounded-3xl border border-white/10 bg-white/5 p-8 sm:col-span-2 lg:col-span-3" data-reveal>
+                <div class="text-lg font-semibold">Пока нет мэтчей</div>
+                <div class="mt-2 text-sm text-slate-300">Вернись в ленту и поставь пару лайков. Чем полнее анкета — тем точнее рекомендации.</div>
+                <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+                    <a class="rounded-xl bg-fuchsia-500 px-5 py-3 text-center font-medium text-white hover:bg-fuchsia-400 shine" href="{% url 'feed' %}">В ленту</a>
+                    <a class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-center font-medium text-white hover:bg-white/10" href="{% url 'questionnaire' 'me' %}">Заполнить анкету</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
