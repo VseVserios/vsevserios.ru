@@ -12,7 +12,7 @@ services:
     build: .
     environment:
       DJANGO_DEBUG: "true"
-      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1"
+      DJANGO_ALLOWED_HOSTS: "185.221.214.155"
       DATABASE_URL: "postgres://app:app@db:5432/app"
     ports:
       - "8000:8000"
