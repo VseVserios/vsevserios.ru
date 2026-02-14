@@ -16,7 +16,7 @@ services:
   web:
     build: .
     environment:
-      DJANGO_DEBUG: "true"
+      DJANGO_DEBUG: "false"
       DJANGO_ALLOWED_HOSTS: "185.221.214.155,vsevseryoz.ru"
       DATABASE_URL: "postgres://app:Dctdcthmtp123!@db:5432/app"
     ports:
