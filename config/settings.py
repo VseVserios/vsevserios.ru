@@ -6,9 +6,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-change-me-for-production")
 DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() == "true"
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "vsevseryoz.ru,www.vsevseryoz.ru,185.221.214.155").split(",")
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,testserver").split(",")
 
-_csrf_trusted_origins = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").strip()
+_csrf_trusted_origins = os.environ.get(
+    "DJANGO_CSRF_TRUSTED_ORIGINS",
+    "https://vsevseryoz.ru,https://www.vsevseryoz.ru",
+).strip()
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_trusted_origins.split(",") if o.strip()] if _csrf_trusted_origins else []
 
 INSTALLED_APPS = [
