@@ -1,4 +1,9 @@
 vsevseryoz.ru {
   encode gzip zstd
+  tls {
+    issuer acme {
+      ca https://api.buypass.com/acme/directory
+    }
+  }
   reverse_proxy web:8000
 }
