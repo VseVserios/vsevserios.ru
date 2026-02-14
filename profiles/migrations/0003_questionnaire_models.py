@@ -74,7 +74,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("code", models.SlugField(max_length=64, unique=True)),
-                ("text", models.CharField(max_length=255)),
+                ("text", models.TextField()),
                 ("order", models.PositiveIntegerField(default=0)),
                 (
                     "section",

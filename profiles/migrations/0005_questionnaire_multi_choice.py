@@ -23,6 +23,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='questionnairequestion',
             name='text',
-            field=models.CharField(max_length=512),
+            field=models.TextField(),
         ),
     ]

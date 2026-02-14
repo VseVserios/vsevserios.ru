@@ -90,7 +90,7 @@ class QuestionnaireQuestion(models.Model):
     )
     code = models.SlugField(max_length=64, unique=True)
     gender = models.CharField(max_length=16, choices=Profile.Gender.choices, blank=True, default="")
-    text = models.CharField(max_length=512)
+    text = models.TextField()
     input_type = models.CharField(max_length=16, blank=True, default="choice")
     is_multiple = models.BooleanField(default=False)
     order = models.PositiveIntegerField(default=0)
