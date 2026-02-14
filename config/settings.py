@@ -68,7 +68,9 @@ DATABASES = {
 }
 
 if os.environ.get("DATABASE_URL"):
-    DATABASES["default"] = dj_database_url.config(conn_max_age=600, ssl_require=not DEBUG)
+    _ssl_require_env = os.environ.get("DJANGO_DB_SSL_REQUIRE", "").strip().lower()
+    ssl_require = not DEBUG if _ssl_require_env == "" else _ssl_require_env not in ("0", "false", "no")
+    DATABASES["default"] = dj_database_url.config(conn_max_age=600, ssl_require=ssl_require)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
