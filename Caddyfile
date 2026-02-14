@@ -1,8 +1,5 @@
-{
-  acme_ca https://api.buypass.com/acme/directory
-}
-
 vsevseryoz.ru {
   encode gzip zstd
+  tls internal
   reverse_proxy web:8000
 }
