@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='questionnairechoice',
             name='label',
-            field=models.CharField(max_length=256),
+            field=models.TextField(),
         ),
         migrations.AlterField(
             model_name='questionnairequestion',

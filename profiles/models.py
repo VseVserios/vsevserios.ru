@@ -109,7 +109,7 @@ class QuestionnaireChoice(models.Model):
         related_name="choices",
     )
     value = models.CharField(max_length=64)
-    label = models.CharField(max_length=256)
+    label = models.TextField()
     order = models.PositiveIntegerField(default=0)
 
     class Meta:

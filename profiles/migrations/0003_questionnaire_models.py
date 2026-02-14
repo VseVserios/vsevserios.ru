@@ -102,7 +102,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("value", models.CharField(max_length=64)),
-                ("label", models.CharField(max_length=256)),
+                ("label", models.TextField()),
                 ("order", models.PositiveIntegerField(default=0)),
                 (
                     "question",
