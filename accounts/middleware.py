@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth import logout
+from django.conf import settings
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
@@ -26,6 +27,9 @@ class EmailVerificationRequiredMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        if not getattr(settings, "REQUIRE_EMAIL_VERIFICATION", True):
+            return self.get_response(request)
+
         if request.user.is_authenticated and not getattr(request.user, "email_verified", False):
             path = request.path
             
