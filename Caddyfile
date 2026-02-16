@@ -1,5 +1,4 @@
 vsevseryoz.ru {
   encode gzip zstd
-  tls internal
   reverse_proxy web:8000
 }
