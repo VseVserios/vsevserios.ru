@@ -11,6 +11,33 @@ SCALE_CHOICES = [
     ("5", "Полностью про меня"),
 ]
 
+
+def _normalize_questionnaire_spec(spec):
+    out = []
+    for section in spec or []:
+        questions_out = []
+        for q in section.get("questions") or []:
+            input_type = (q.get("input_type") or "choice")
+            choices = q.get("choices") or []
+            is_multiple = input_type.strip().lower() != "text" and bool(choices)
+            questions_out.append(
+                {
+                    **q,
+                    "input_type": input_type,
+                    "choices": choices,
+                    "is_multiple": is_multiple,
+                }
+            )
+        if not questions_out:
+            continue
+        out.append(
+            {
+                **section,
+                "questions": questions_out,
+            }
+        )
+    return out
+
 BUDGET_CHOICES = [
     ("low", "Низкие"),
     ("mid", "Средние"),
@@ -260,7 +287,7 @@ def get_questionnaire_spec(gender: str | None = None):
         from .models import QuestionnaireChoice, QuestionnaireQuestion, QuestionnaireSection
 
         if not QuestionnaireSection.objects.exists():
-            return QUESTIONNAIRE_SPEC
+            return _normalize_questionnaire_spec(QUESTIONNAIRE_SPEC)
 
         gender_value = (str(gender).strip() if gender is not None else "") or None
 
@@ -288,13 +315,15 @@ def get_questionnaire_spec(gender: str | None = None):
             questions = []
             for q in section.questions.all():
                 choices = [(c.value, c.label) for c in q.choices.all()]
+                input_type = (getattr(q, "input_type", None) or "choice")
+                is_multiple = input_type.strip().lower() != "text" and bool(choices)
                 questions.append(
                     {
                         "id": q.code,
                         "text": q.text,
-                        "input_type": (getattr(q, "input_type", None) or "choice"),
+                        "input_type": input_type,
                         "choices": choices,
-                        "is_multiple": q.is_multiple,
+                        "is_multiple": is_multiple,
                     }
                 )
             if not questions:
@@ -302,7 +331,7 @@ def get_questionnaire_spec(gender: str | None = None):
             spec.append({"id": section.code, "title": section.title, "questions": questions})
         return spec
     except (OperationalError, ProgrammingError):
-        return QUESTIONNAIRE_SPEC
+        return _normalize_questionnaire_spec(QUESTIONNAIRE_SPEC)
 
 
 def questionnaire_gender_for_profile(profile, kind: str) -> str | None:
