@@ -98,6 +98,21 @@ def sitemap_xml(request):
     return HttpResponse(body, content_type="application/xml; charset=utf-8")
 
 
+def yandex_verification(request):
+    body = "".join(
+        [
+            "<html>",
+            "<head>",
+            '<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">',
+            "</head>",
+            "<body>Verification: 9ea13c1b28a1285c</body>",
+            "</html>",
+            "",
+        ]
+    )
+    return HttpResponse(body, content_type="text/html; charset=utf-8")
+
+
 def _recommendation_pair_or_404(request, user_id: int):
     other_user = get_object_or_404(User, id=user_id)
     if other_user.id == request.user.id:
