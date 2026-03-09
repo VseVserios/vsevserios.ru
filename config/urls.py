@@ -13,6 +13,11 @@ def yandex_webmaster_verification(request):
     content = (settings.BASE_DIR / "yandex_9ea13c1b28a1285c.html").read_text(encoding="utf-8")
     return HttpResponse(content, content_type="text/html; charset=utf-8")
 
+
+def google_search_console_verification(request):
+    content = (settings.BASE_DIR / "google05ced95716c6d480.html").read_text(encoding="utf-8")
+    return HttpResponse(content, content_type="text/html; charset=utf-8")
+
 sitemaps = {
     "static": StaticViewSitemap,
     "profiles": PublicProfilesSitemap,
@@ -25,6 +30,11 @@ urlpatterns = [
         "yandex_9ea13c1b28a1285c.html",
         yandex_webmaster_verification,
         name="yandex_webmaster_verification",
+    ),
+    path(
+        "google05ced95716c6d480.html",
+        google_search_console_verification,
+        name="google_search_console_verification",
     ),
     path("robots.txt", robots_txt, name="robots_txt"),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap_xml"),
