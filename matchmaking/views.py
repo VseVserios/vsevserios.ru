@@ -69,33 +69,23 @@ def landing(request):
 
 
 def robots_txt(request):
+    sitemap_url = request.build_absolute_uri("/sitemap.xml")
     content = "\n".join(
         [
             "User-agent: *",
             "Allow: /",
-            "Sitemap: https://vsevseryoz.ru/sitemap.xml",
+            "",
+            "Disallow: /admin/",
+            "Disallow: /panel/",
+            "Disallow: /accounts/",
+            "Disallow: /profiles/me/",
+            "Disallow: /chat/",
+            "",
+            f"Sitemap: {sitemap_url}",
             "",
         ]
     )
     return HttpResponse(content, content_type="text/plain; charset=utf-8")
-
-
-def sitemap_xml(request):
-    urls = [
-        "https://vsevseryoz.ru/",
-        "https://vsevseryoz.ru/accounts/register/",
-        "https://vsevseryoz.ru/accounts/login/",
-    ]
-    body = "\n".join(
-        [
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
-            "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">",
-            *[f"  <url><loc>{u}</loc></url>" for u in urls],
-            "</urlset>",
-            "",
-        ]
-    )
-    return HttpResponse(body, content_type="application/xml; charset=utf-8")
 
 
 def _recommendation_pair_or_404(request, user_id: int):
