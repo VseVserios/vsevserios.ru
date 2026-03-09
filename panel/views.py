@@ -1209,6 +1209,29 @@ def questionnaire_section_edit(request, section_id: int):
         form = QuestionnaireSectionForm(instance=section)
 
     questions = section.questions.all().order_by("order", "id")
+
+    q_gender = (request.GET.get("gender") or "").strip().lower()
+    q_kind = (request.GET.get("kind") or "").strip().lower()
+    q_hidden = (request.GET.get("hidden") or "").strip()
+
+    if q_gender in ("male", "female"):
+        questions = questions.filter(gender=q_gender)
+    elif q_gender == "any":
+        questions = questions.exclude(gender="")
+
+    if q_kind == "me":
+        questions = questions.filter(show_in_me=True)
+    elif q_kind == "ideal":
+        questions = questions.filter(show_in_ideal=True)
+
+    if q_hidden in ("1", "true", "yes"):
+        if q_kind == "me":
+            questions = questions.filter(show_in_me=False)
+        elif q_kind == "ideal":
+            questions = questions.filter(show_in_ideal=False)
+        else:
+            questions = questions.filter(Q(show_in_me=False) | Q(show_in_ideal=False))
+
     return render(
         request,
         "panel/questionnaire_section_form.html",
@@ -1216,6 +1239,9 @@ def questionnaire_section_edit(request, section_id: int):
             "form": form,
             "section": section,
             "questions": questions,
+            "q_gender": q_gender,
+            "q_kind": q_kind,
+            "q_hidden": q_hidden,
             "back_url": redirect("panel_questionnaire_sections").url,
         },
     )

@@ -46,6 +46,34 @@
             {% endif %}
         </div>
 
+        {% if section %}
+        <form method="get" class="mt-4 flex flex-wrap items-end gap-3">
+            <div>
+                <label class="block text-xs text-slate-300" for="q_gender">Пол</label>
+                <select id="q_gender" name="gender" class="mt-1 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 text-sm text-slate-100">
+                    <option value="" {% if not q_gender %}selected{% endif %}>Все</option>
+                    <option value="any" {% if q_gender == 'any' %}selected{% endif %}>Только с полом</option>
+                    <option value="male" {% if q_gender == 'male' %}selected{% endif %}>М</option>
+                    <option value="female" {% if q_gender == 'female' %}selected{% endif %}>Ж</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs text-slate-300" for="q_kind">Раздел</label>
+                <select id="q_kind" name="kind" class="mt-1 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 text-sm text-slate-100">
+                    <option value="" {% if not q_kind %}selected{% endif %}>Все</option>
+                    <option value="me" {% if q_kind == 'me' %}selected{% endif %}>Я</option>
+                    <option value="ideal" {% if q_kind == 'ideal' %}selected{% endif %}>Идеал</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <input id="q_hidden" type="checkbox" name="hidden" value="1" class="h-4 w-4 rounded border-white/20 bg-slate-950/40" {% if q_hidden in '1,true,yes' %}checked{% endif %} />
+                <label for="q_hidden" class="text-sm text-slate-300">Только скрытые</label>
+            </div>
+            <button type="submit" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10">Фильтр</button>
+            <a href="{% url 'panel_questionnaire_section_edit' section.id %}" class="rounded-xl border border-white/10 bg-white/0 px-4 py-2 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white">Сбросить</a>
+        </form>
+        {% endif %}
+
         <div class="mt-4 overflow-hidden rounded-2xl border border-white/10">
             <table class="min-w-full text-sm">
                 <thead class="bg-slate-950/40 text-slate-300">
@@ -53,6 +81,7 @@
                         <th class="px-4 py-3 text-left font-medium">Порядок</th>
                         <th class="px-4 py-3 text-left font-medium">Код</th>
                         <th class="px-4 py-3 text-left font-medium">Текст</th>
+                        <th class="px-4 py-3 text-left font-medium">Метки</th>
                         <th class="px-4 py-3 text-left font-medium"></th>
                     </tr>
                 </thead>
@@ -63,6 +92,29 @@
                         <td class="px-4 py-3 text-slate-300">{{ q.code }}</td>
                         <td class="px-4 py-3">
                             <a class="font-medium hover:underline" href="{% url 'panel_questionnaire_question_edit' q.id %}">{{ q.text }}</a>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex flex-wrap items-center gap-2">
+                                {% if q.gender == 'male' %}
+                                <span class="rounded-full border border-sky-400/20 bg-sky-500/10 px-2 py-1 text-xs text-sky-100">М</span>
+                                {% elif q.gender == 'female' %}
+                                <span class="rounded-full border border-pink-400/20 bg-pink-500/10 px-2 py-1 text-xs text-pink-100">Ж</span>
+                                {% else %}
+                                <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs text-slate-200">Все</span>
+                                {% endif %}
+
+                                {% if q.show_in_me %}
+                                <span class="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-100">Я</span>
+                                {% else %}
+                                <span class="rounded-full border border-rose-400/20 bg-rose-500/10 px-2 py-1 text-xs text-rose-100">Я: скрыт</span>
+                                {% endif %}
+
+                                {% if q.show_in_ideal %}
+                                <span class="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-100">Идеал</span>
+                                {% else %}
+                                <span class="rounded-full border border-rose-400/20 bg-rose-500/10 px-2 py-1 text-xs text-rose-100">Идеал: скрыт</span>
+                                {% endif %}
+                            </div>
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-2">
@@ -76,7 +128,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td class="px-4 py-8 text-center text-slate-300" colspan="4">{% if section %}Вопросов пока нет.{% else %}Сначала создай раздел.{% endif %}</td>
+                        <td class="px-4 py-8 text-center text-slate-300" colspan="5">{% if section %}Вопросов пока нет.{% else %}Сначала создай раздел.{% endif %}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
