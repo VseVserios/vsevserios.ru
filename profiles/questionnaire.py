@@ -282,7 +282,7 @@ QUESTIONNAIRE_SPEC = [
 ]
 
 
-def get_questionnaire_spec(gender: str | None = None):
+def get_questionnaire_spec(gender: str | None = None, kind: str | None = None):
     try:
         from .models import QuestionnaireChoice, QuestionnaireQuestion, QuestionnaireSection
 
@@ -290,9 +290,16 @@ def get_questionnaire_spec(gender: str | None = None):
             return _normalize_questionnaire_spec(QUESTIONNAIRE_SPEC)
 
         gender_value = (str(gender).strip() if gender is not None else "") or None
+        kind_value = (str(kind).strip().lower() if kind is not None else "") or None
 
         sections_qs = QuestionnaireSection.objects.order_by("order", "id")
         questions_qs = QuestionnaireQuestion.objects.order_by("order", "id")
+
+        if kind_value in ("me", "ideal"):
+            section_flag = "show_in_me" if kind_value == "me" else "show_in_ideal"
+            question_flag = section_flag
+            sections_qs = sections_qs.filter(**{section_flag: True})
+            questions_qs = questions_qs.filter(**{question_flag: True})
 
         if gender_value is not None:
             sections_qs = sections_qs.filter(Q(gender="") | Q(gender=gender_value))
@@ -352,7 +359,7 @@ def questionnaire_gender_for_profile(profile, kind: str) -> str | None:
 
 
 def get_questionnaire_spec_for_profile(profile, kind: str):
-    return get_questionnaire_spec(questionnaire_gender_for_profile(profile, kind))
+    return get_questionnaire_spec(questionnaire_gender_for_profile(profile, kind), kind=kind)
 
 
 def questionnaire_total(spec=None):

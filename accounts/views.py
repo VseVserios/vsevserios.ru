@@ -5,6 +5,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth import logout
 from django.contrib.auth.views import LoginView, LogoutView
+from django.core.mail import send_mail
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 
@@ -16,6 +17,7 @@ from .email_verification import send_verification_code, verify_code
 from .forms import (
     AccountSettingsForm,
     EmailVerificationForm,
+    ForgotUsernameForm,
     LoginForm,
     PasswordConfirmForm,
     PasswordResetCodeConfirmForm,
@@ -44,6 +46,40 @@ class SignInView(LoginView):
 
 class SignOutView(LogoutView):
     next_page = reverse_lazy("landing")
+
+
+def forgot_username(request):
+    if request.method == "POST":
+        form = ForgotUsernameForm(request.POST)
+        if form.is_valid():
+            email = (form.cleaned_data.get("email") or "").strip().lower()
+
+            UserModel = get_user_model()
+            user = UserModel.objects.filter(email__iexact=email, is_active=True).first()
+            if user is not None:
+                subject = "Ваш логин на сайте «Всё Всерьёз»"
+                message = (
+                    f"Ваш логин: {user.get_username()}\n\n"
+                    "Если это были не вы — просто проигнорируйте письмо."
+                )
+                try:
+                    send_mail(
+                        subject=subject,
+                        message=message,
+                        from_email=None,
+                        recipient_list=[user.email],
+                        fail_silently=False,
+                    )
+                except Exception:
+                    messages.error(request, "Не удалось отправить письмо. Проверьте SMTP-настройки.")
+                    return redirect("forgot_username")
+
+            messages.success(request, "Если email существует, мы отправили логин на почту.")
+            return redirect("login")
+    else:
+        form = ForgotUsernameForm()
+
+    return render(request, "accounts/forgot_username.html", {"form": form})
 
 
 def password_reset_request(request):

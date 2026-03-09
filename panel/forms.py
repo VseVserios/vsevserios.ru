@@ -63,7 +63,7 @@ class QuestionnaireSectionForm(forms.ModelForm):
 
     class Meta:
         model = QuestionnaireSection
-        fields = ("code", "gender", "title", "order")
+        fields = ("code", "gender", "title", "show_in_me", "show_in_ideal", "order")
 
 
 class QuestionnaireQuestionForm(forms.ModelForm):
@@ -84,7 +84,16 @@ class QuestionnaireQuestionForm(forms.ModelForm):
 
     class Meta:
         model = QuestionnaireQuestion
-        fields = ("code", "gender", "text", "input_type", "is_multiple", "order")
+        fields = (
+            "code",
+            "gender",
+            "text",
+            "input_type",
+            "is_multiple",
+            "show_in_me",
+            "show_in_ideal",
+            "order",
+        )
 
 
 class QuestionnaireChoiceForm(forms.ModelForm):

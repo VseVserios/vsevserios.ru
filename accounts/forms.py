@@ -51,6 +51,10 @@ class PasswordResetRequestForm(forms.Form):
     email = forms.EmailField(widget=forms.EmailInput(attrs={"autocomplete": "email"}))
 
 
+class ForgotUsernameForm(forms.Form):
+    email = forms.EmailField(widget=forms.EmailInput(attrs={"autocomplete": "email"}))
+
+
 class PasswordResetCodeConfirmForm(forms.Form):
     code = forms.CharField(
         max_length=6,

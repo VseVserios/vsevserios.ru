@@ -6,6 +6,7 @@ from .views import (
     account_settings,
     deactivate_account,
     delete_account,
+    forgot_username,
     notifications_list,
     notifications_mark_all_read,
     notifications_mark_read,
@@ -22,6 +23,8 @@ urlpatterns = [
     path("login/", SignInView.as_view(), name="login"),
     path("logout/", SignOutView.as_view(), name="logout"),
     path("register/", register, name="register"),
+
+    path("forgot-username/", forgot_username, name="forgot_username"),
 
     path("password-reset/", password_reset_request, name="password_reset_request"),
     path("password-reset/code/", password_reset_code, name="password_reset_code"),

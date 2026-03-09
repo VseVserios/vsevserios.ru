@@ -11,6 +11,10 @@
 {% if question.input_type != 'text' %}
 <a class="rounded-xl bg-fuchsia-500 px-4 py-2 text-sm font-medium text-white hover:bg-fuchsia-400" href="{% url 'panel_questionnaire_choice_create' question.id %}">Новый ответ</a>
 {% endif %}
+<form method="post" action="{% url 'panel_questionnaire_question_delete' question.id %}" class="inline" data-confirm="Удалить вопрос «{{ question.code }}»?" data-loading-text="Удаляю…">
+    {% csrf_token %}
+    <button type="submit" class="rounded-xl bg-rose-500/15 px-4 py-2 text-sm font-medium text-rose-200 hover:bg-rose-500/25" data-loading-text="Удаляю…">Удалить вопрос</button>
+</form>
 {% endif %}
 {% endblock %}
 

@@ -26,7 +26,8 @@
             {% endif %}
         </div>
 
-        <div class="text-right text-sm">
+        <div class="flex items-center justify-between text-sm">
+            <a class="text-slate-300 underline underline-offset-4 hover:text-white" href="{% url 'forgot_username' %}">Забыли логин?</a>
             <a class="text-slate-300 underline underline-offset-4 hover:text-white" href="{% url 'password_reset_request' %}">Забыли пароль?</a>
         </div>
 

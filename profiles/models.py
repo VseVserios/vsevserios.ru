@@ -73,6 +73,8 @@ class QuestionnaireSection(models.Model):
     gender = models.CharField(max_length=16, choices=Profile.Gender.choices, blank=True, default="")
     title = models.CharField(max_length=128)
     hint = models.CharField(max_length=280, blank=True, default="")
+    show_in_me = models.BooleanField(default=True)
+    show_in_ideal = models.BooleanField(default=True)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -93,6 +95,8 @@ class QuestionnaireQuestion(models.Model):
     text = models.TextField()
     input_type = models.CharField(max_length=16, blank=True, default="choice")
     is_multiple = models.BooleanField(default=False)
+    show_in_me = models.BooleanField(default=True)
+    show_in_ideal = models.BooleanField(default=True)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
