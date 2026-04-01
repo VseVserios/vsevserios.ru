@@ -96,7 +96,7 @@ class QuestionnaireForm(forms.Form):
                 qid = q["id"]
                 self._question_ids.append(qid)
                 input_type = (q.get("input_type") or "choice").strip().lower()
-                is_multiple = bool(q.get("is_multiple"))
+                is_multiple = (kind == "ideal") and bool(q.get("is_multiple"))
                 choices = q.get("choices") or []
 
                 if input_type == "text" or not choices:

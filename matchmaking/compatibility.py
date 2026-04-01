@@ -121,16 +121,17 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
     spec = spec or get_questionnaire_spec()
 
     a_ideal_gender = questionnaire_gender_for_profile(profile_a, "ideal")
+    a_me_gender = questionnaire_gender_for_profile(profile_a, "me")
     b_me_gender = questionnaire_gender_for_profile(profile_b, "me")
-    a_to_b_ids = _allowed_question_ids_for_gender(a_ideal_gender) & _allowed_question_ids_for_gender(
-        b_me_gender
-    )
+    a_ideal_allowed = _allowed_question_ids_for_gender(a_ideal_gender)
+    a_me_allowed = _allowed_question_ids_for_gender(a_me_gender)
+    b_me_allowed = _allowed_question_ids_for_gender(b_me_gender)
 
     b_ideal_gender = questionnaire_gender_for_profile(profile_b, "ideal")
-    a_me_gender = questionnaire_gender_for_profile(profile_a, "me")
-    b_to_a_ids = _allowed_question_ids_for_gender(b_ideal_gender) & _allowed_question_ids_for_gender(
-        a_me_gender
-    )
+    b_me_gender_for_expected = questionnaire_gender_for_profile(profile_b, "me")
+    b_ideal_allowed = _allowed_question_ids_for_gender(b_ideal_gender)
+    b_me_allowed = _allowed_question_ids_for_gender(b_me_gender_for_expected)
+    a_me_allowed_for_actual = _allowed_question_ids_for_gender(a_me_gender)
 
     a_expected = profile_a.questionnaire_ideal or {}
     a_actual = profile_a.questionnaire_me or {}
@@ -161,19 +162,23 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
             if not qid:
                 continue
 
+            show_in_ideal = bool(q.get("show_in_ideal", True))
+
             a_to_b_part = None
             b_to_a_part = None
 
-            if qid in a_to_b_ids:
-                a_to_b_part = _score_question(q, a_expected, b_actual)
+            a_to_b_allowed = (a_ideal_allowed if show_in_ideal else a_me_allowed) & b_me_allowed
+            if qid in a_to_b_allowed:
+                a_to_b_part = _score_question(q, (a_expected if show_in_ideal else a_actual), b_actual)
                 if a_to_b_part is not None:
                     s_a_to_b_total += float(a_to_b_part["score"])
                     s_a_to_b_compared += 1
                     a_to_b_total += float(a_to_b_part["score"])
                     a_to_b_compared += 1
 
-            if qid in b_to_a_ids:
-                b_to_a_part = _score_question(q, b_expected, a_actual)
+            b_to_a_allowed = (b_ideal_allowed if show_in_ideal else b_me_allowed) & a_me_allowed_for_actual
+            if qid in b_to_a_allowed:
+                b_to_a_part = _score_question(q, (b_expected if show_in_ideal else b_actual), a_actual)
                 if b_to_a_part is not None:
                     s_b_to_a_total += float(b_to_a_part["score"])
                     s_b_to_a_compared += 1
@@ -283,29 +288,47 @@ def compatibility(profile_a, profile_b, question_specs: dict | None = None):
     question_specs = question_specs or build_question_specs()
 
     a_ideal_gender = questionnaire_gender_for_profile(profile_a, "ideal")
-    b_me_gender = questionnaire_gender_for_profile(profile_b, "me")
-    a_to_b_ids = _allowed_question_ids_for_gender(a_ideal_gender) & _allowed_question_ids_for_gender(
-        b_me_gender
-    )
-    a_to_b_specs = {qid: question_specs[qid] for qid in a_to_b_ids if qid in question_specs}
-
-    b_ideal_gender = questionnaire_gender_for_profile(profile_b, "ideal")
     a_me_gender = questionnaire_gender_for_profile(profile_a, "me")
-    b_to_a_ids = _allowed_question_ids_for_gender(b_ideal_gender) & _allowed_question_ids_for_gender(
-        a_me_gender
-    )
-    b_to_a_specs = {qid: question_specs[qid] for qid in b_to_a_ids if qid in question_specs}
+    b_ideal_gender = questionnaire_gender_for_profile(profile_b, "ideal")
+    b_me_gender = questionnaire_gender_for_profile(profile_b, "me")
 
-    a_to_b, a_compared = score_expected_vs_actual(
-        profile_a.questionnaire_ideal,
-        profile_b.questionnaire_me,
-        a_to_b_specs,
-    )
-    b_to_a, b_compared = score_expected_vs_actual(
-        profile_b.questionnaire_ideal,
-        profile_a.questionnaire_me,
-        b_to_a_specs,
-    )
+    a_ideal_allowed = _allowed_question_ids_for_gender(a_ideal_gender)
+    a_me_allowed = _allowed_question_ids_for_gender(a_me_gender)
+    b_ideal_allowed = _allowed_question_ids_for_gender(b_ideal_gender)
+    b_me_allowed = _allowed_question_ids_for_gender(b_me_gender)
+
+    a_total = 0.0
+    a_compared = 0
+    b_total = 0.0
+    b_compared = 0
+
+    a_expected = profile_a.questionnaire_ideal or {}
+    a_me = profile_a.questionnaire_me or {}
+    b_expected = profile_b.questionnaire_ideal or {}
+    b_me = profile_b.questionnaire_me or {}
+
+    for qid, qspec in (question_specs or {}).items():
+        if (qspec.get("input_type") or "choice") == "text":
+            continue
+
+        show_in_ideal = bool(qspec.get("show_in_ideal", True))
+
+        a_allowed = (a_ideal_allowed if show_in_ideal else a_me_allowed) & b_me_allowed
+        if qid in a_allowed:
+            part = _score_question(qspec, (a_expected if show_in_ideal else a_me), b_me)
+            if part is not None:
+                a_total += float(part["score"])
+                a_compared += 1
+
+        b_allowed = (b_ideal_allowed if show_in_ideal else b_me_allowed) & a_me_allowed
+        if qid in b_allowed:
+            part = _score_question(qspec, (b_expected if show_in_ideal else b_me), a_me)
+            if part is not None:
+                b_total += float(part["score"])
+                b_compared += 1
+
+    a_to_b = int(round((a_total / a_compared) * 100)) if a_compared else None
+    b_to_a = int(round((b_total / b_compared) * 100)) if b_compared else None
 
     parts = [p for p in (a_to_b, b_to_a) if p is not None]
     overall = int(round(sum(parts) / len(parts))) if parts else None

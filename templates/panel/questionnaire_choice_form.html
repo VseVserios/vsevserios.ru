@@ -7,6 +7,12 @@
 
 {% block panel_top_actions %}
 <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{{ back_url }}">Назад</a>
+{% if choice %}
+<form method="post" action="{% url 'panel_questionnaire_choice_delete' choice.id %}" class="inline" data-confirm="Удалить ответ «{{ choice.value }}»?" data-loading-text="Удаляю…">
+    {% csrf_token %}
+    <button type="submit" class="rounded-xl bg-rose-500/15 px-4 py-2 text-sm font-medium text-rose-200 hover:bg-rose-500/25" data-loading-text="Удаляю…">Удалить</button>
+</form>
+{% endif %}
 {% endblock %}
 
 {% block panel_content %}

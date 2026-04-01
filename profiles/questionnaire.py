@@ -19,13 +19,15 @@ def _normalize_questionnaire_spec(spec):
         for q in section.get("questions") or []:
             input_type = (q.get("input_type") or "choice")
             choices = q.get("choices") or []
-            is_multiple = input_type.strip().lower() != "text" and bool(choices)
+            is_multiple = bool(q.get("is_multiple"))
             questions_out.append(
                 {
                     **q,
                     "input_type": input_type,
                     "choices": choices,
                     "is_multiple": is_multiple,
+                    "show_in_me": bool(q.get("show_in_me", True)),
+                    "show_in_ideal": bool(q.get("show_in_ideal", True)),
                 }
             )
         if not questions_out:
@@ -287,7 +289,13 @@ def get_questionnaire_spec(gender: str | None = None, kind: str | None = None):
         from .models import QuestionnaireChoice, QuestionnaireQuestion, QuestionnaireSection
 
         if not QuestionnaireSection.objects.exists():
-            return _normalize_questionnaire_spec(QUESTIONNAIRE_SPEC)
+            spec = _normalize_questionnaire_spec(QUESTIONNAIRE_SPEC)
+            kind_value = (str(kind).strip().lower() if kind is not None else "") or None
+            if kind_value != "ideal":
+                for section in spec:
+                    for q in section.get("questions") or []:
+                        q["is_multiple"] = False
+            return spec
 
         gender_value = (str(gender).strip() if gender is not None else "") or None
         kind_value = (str(kind).strip().lower() if kind is not None else "") or None
@@ -323,7 +331,12 @@ def get_questionnaire_spec(gender: str | None = None, kind: str | None = None):
             for q in section.questions.all():
                 choices = [(c.value, c.label) for c in q.choices.all()]
                 input_type = (getattr(q, "input_type", None) or "choice")
-                is_multiple = input_type.strip().lower() != "text" and bool(choices)
+                is_multiple = (
+                    kind_value == "ideal"
+                    and bool(getattr(q, "is_multiple", False))
+                    and input_type.strip().lower() != "text"
+                    and bool(choices)
+                )
                 questions.append(
                     {
                         "id": q.code,
@@ -331,6 +344,8 @@ def get_questionnaire_spec(gender: str | None = None, kind: str | None = None):
                         "input_type": input_type,
                         "choices": choices,
                         "is_multiple": is_multiple,
+                        "show_in_me": bool(getattr(q, "show_in_me", True)),
+                        "show_in_ideal": bool(getattr(q, "show_in_ideal", True)),
                     }
                 )
             if not questions:

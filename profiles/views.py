@@ -140,7 +140,7 @@ def questionnaire(request, kind: str):
                     "text": q["text"],
                     "input_type": (q.get("input_type") or "choice"),
                     "field": form[qid],
-                    "is_multiple": bool(q.get("is_multiple")),
+                    "is_multiple": (kind == "ideal") and bool(q.get("is_multiple")),
                 }
             )
         sections.append(
