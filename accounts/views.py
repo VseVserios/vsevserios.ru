@@ -237,8 +237,20 @@ def password_change(request):
 
 @login_required
 def notifications_list(request):
-    qs = UserNotification.objects.filter(recipient=request.user).order_by("-created_at")
+    qs = UserNotification.objects.filter(recipient=request.user, is_read=False).order_by("-created_at")
     return render(request, "accounts/notifications.html", {"notifications": qs[:200]})
+
+
+@login_required
+def notifications_open(request, notification_id: int):
+    n = UserNotification.objects.filter(id=notification_id, recipient=request.user).first()
+    if n is None:
+        raise Http404
+    n.mark_read()
+    url = (n.url or "").strip()
+    if url and url.startswith("/"):
+        return redirect(url)
+    return redirect("notifications")
 
 
 @login_required
