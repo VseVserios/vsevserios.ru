@@ -7,6 +7,7 @@ from .views import (
     deactivate_account,
     delete_account,
     forgot_username,
+    notifications_open,
     notifications_list,
     notifications_mark_all_read,
     notifications_mark_read,
@@ -36,6 +37,11 @@ urlpatterns = [
     path("settings/delete/", delete_account, name="account_delete"),
 
     path("notifications/", notifications_list, name="notifications"),
+    path(
+        "notifications/<int:notification_id>/open/",
+        notifications_open,
+        name="notifications_open",
+    ),
     path("notifications/<int:notification_id>/read/", notifications_mark_read, name="notifications_mark_read"),
     path("notifications/mark-all-read/", notifications_mark_all_read, name="notifications_mark_all_read"),
 

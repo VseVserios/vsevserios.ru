@@ -270,10 +270,7 @@ def notifications_mark_all_read(request):
         raise Http404
 
     now = timezone.now()
-    UserNotification.objects.filter(recipient=request.user, is_read=False).update(
-        is_read=True,
-        read_at=now,
-    )
+    UserNotification.objects.filter(recipient=request.user, is_read=False).update(is_read=True, read_at=now)
     messages.success(request, "Все уведомления отмечены прочитанными.")
     return redirect("notifications")
 

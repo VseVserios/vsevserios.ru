@@ -37,7 +37,7 @@
 
         <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
           {% if n.url %}
-          <a class="rounded-xl bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/15" href="{{ n.url }}">Открыть</a>
+          <a class="rounded-xl bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/15" href="{% url 'notifications_open' n.id %}">Открыть</a>
           {% endif %}
           {% if not n.is_read %}
           <form method="post" action="{% url 'notifications_mark_read' n.id %}">
