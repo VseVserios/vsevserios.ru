@@ -41,6 +41,10 @@
     <form method="post" class="mt-6">
         {% csrf_token %}
 
+        {% if not editable %}
+        <fieldset disabled>
+        {% endif %}
+
         <div class="rounded-3xl border border-white/10 bg-white/5 p-6" data-wizard data-kind="{{ kind }}">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -86,7 +90,7 @@
                 {% for section in sections %}
                 {% for q in section.questions %}
                 <div class="rounded-3xl border border-white/10 bg-slate-950/30 p-6" data-wizard-item
-                    data-section-id="{{ section.id }}" data-section-title="{{ section.title }}">
+                    data-section-id="{{ section.id }}" data-section-title="{{ section.title }}" data-question-id="{{ q.id }}">
                     <div class="flex items-center gap-2">
                         <div class="text-xs text-slate-400">{{ section.title }}</div>
                         {% if section.hint %}
@@ -146,20 +150,29 @@
         <div class="sticky bottom-4 mt-6">
             <div class="rounded-2xl border border-white/10 bg-slate-950/70 p-4 backdrop-blur">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="text-sm text-slate-300">Можно сохранять в любой момент.</div>
+                    <div class="text-sm text-slate-300">{% if editable %}Можно сохранять в любой момент.{% else %}Режим просмотра — изменения отключены.{% endif %}</div>
                     <div class="flex flex-wrap gap-3">
                         <button type="button" id="wizard-prev-bottom"
                             class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 font-medium text-white hover:bg-white/10">Предыдущий</button>
                         <button type="button" id="wizard-next-bottom"
                             class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 font-medium text-white hover:bg-white/10">Следующий</button>
+                        {% if editable %}
                         <button type="submit"
                             class="rounded-xl bg-fuchsia-500 px-5 py-3 font-medium text-white hover:bg-fuchsia-400">Сохранить</button>
+                        {% else %}
+                        <a href="?edit=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+                            class="rounded-xl bg-fuchsia-500 px-5 py-3 text-center font-medium text-white hover:bg-fuchsia-400">Редактировать</a>
+                        {% endif %}
                         <a href="{% url 'me' %}"
                             class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-center font-medium text-white hover:bg-white/10">К профилю</a>
                     </div>
                 </div>
             </div>
         </div>
+
+        {% if not editable %}
+        </fieldset>
+        {% endif %}
     </form>
 </div>
 
@@ -174,12 +187,30 @@
         const kind = root.getAttribute('data-kind') || '';
         const storageKey = 'questionnaire_wizard:' + kind;
 
+        function getQueryParam(name) {
+            try {
+                const u = new URL(window.location.href);
+                return u.searchParams.get(name);
+            } catch (e) {
+                return null;
+            }
+        }
+
         function clamp(n, a, b) {
             return Math.max(a, Math.min(b, n));
         }
 
         let current = parseInt(sessionStorage.getItem(storageKey) || '0', 10);
         current = Number.isFinite(current) ? clamp(current, 0, items.length - 1) : 0;
+
+        const targetQ = (getQueryParam('q') || '').trim();
+        if (targetQ) {
+            const idx = items.findIndex((el) => (el.getAttribute('data-question-id') || '') === targetQ);
+            if (idx !== -1) {
+                current = idx;
+                sessionStorage.setItem(storageKey, String(current));
+            }
+        }
 
         const counterEl = document.getElementById('wizard-step-counter');
         const sectionEl = document.getElementById('wizard-section-title');

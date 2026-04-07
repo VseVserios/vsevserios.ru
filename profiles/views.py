@@ -88,7 +88,11 @@ def questionnaire(request, kind: str):
     before_answers = profile.questionnaire_me if kind == "me" else profile.questionnaire_ideal
     _, _, before_percent = questionnaire_progress(before_answers, spec)
 
-    if request.method == "POST":
+    editable = True
+    if before_percent == 100 and (request.GET.get("edit") or "").strip() != "1":
+        editable = False
+
+    if request.method == "POST" and editable:
         form = QuestionnaireForm(request.POST, profile=profile, kind=kind)
         if form.is_valid():
             form.save()
@@ -159,6 +163,7 @@ def questionnaire(request, kind: str):
             "form": form,
             "kind": kind,
             "sections": sections,
+            "editable": editable,
             "answered": answered,
             "total": total,
             "percent": percent,
