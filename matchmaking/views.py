@@ -218,6 +218,8 @@ def recommendation_excel(request, user_id: int):
 
     add_sheet(my_profile, "me", "Мои ответы")
     add_sheet(my_profile, "ideal", "Мой идеал")
+    add_sheet(other_profile, "me", "Ответы кандидата")
+    add_sheet(other_profile, "ideal", "Идеал кандидата")
 
     meta = wb.create_sheet(title="Инфо")
     meta.append(["Рекомендация ID", rec.id])
@@ -262,6 +264,8 @@ def block_user(request, user_id: int):
     now = timezone.now()
     rec_qs.filter(seen_at__isnull=True).update(seen_at=now)
     rec_qs.update(consumed_at=now)
+
+    request.session["last_recommendation_user_id"] = to_user.id
 
     Match.objects.filter(
         Q(user1=request.user, user2=to_user) | Q(user1=to_user, user2=request.user)
@@ -357,6 +361,8 @@ def undo_swipe(request):
             rec.save(update_fields=["consumed_at"])
         last.delete()
 
+    request.session.pop("last_recommendation_user_id", None)
+
     candidate, recommendation = _next_candidate_for(request.user)
     ctx = {"candidate": candidate, "recommendation": recommendation}
 
@@ -396,10 +402,23 @@ def _next_candidate_for(user):
 @login_required
 def feed(request):
     candidate, recommendation = _next_candidate_for(request.user)
+    last_rec_user_id = request.session.get("last_recommendation_user_id")
+    last_rec_user = None
+    last_rec_profile = None
+    if last_rec_user_id is not None:
+        try:
+            last_rec_user = User.objects.filter(id=int(last_rec_user_id)).first()
+        except (TypeError, ValueError):
+            last_rec_user = None
+        if last_rec_user is not None and hasattr(last_rec_user, "profile"):
+            last_rec_profile = last_rec_user.profile
+
     ctx = {
         "candidate": candidate,
         "recommendation": recommendation,
         "fact_sections": FEED_FACT_SECTIONS,
+        "last_recommendation_user": last_rec_user,
+        "last_recommendation_profile": last_rec_profile,
     }
 
     if request.headers.get("HX-Request") == "true":

@@ -332,11 +332,12 @@ def get_questionnaire_spec(gender: str | None = None, kind: str | None = None):
                 choices = [(c.value, c.label) for c in q.choices.all()]
                 input_type = (getattr(q, "input_type", None) or "choice")
                 is_multiple = (
-                    kind_value == "ideal"
-                    and bool(getattr(q, "is_multiple", False))
+                    bool(getattr(q, "is_multiple", False))
                     and input_type.strip().lower() != "text"
                     and bool(choices)
                 )
+                if kind_value is not None and kind_value != "ideal":
+                    is_multiple = False
                 questions.append(
                     {
                         "id": q.code,

@@ -74,10 +74,16 @@ def _score_multiple_answer(expected_items: list[str], actual_items: list[str]):
     if not e or not a:
         return None
     inter = len(e & a)
-    union = len(e | a)
-    if union == 0:
-        return None
-    return inter / union
+    if inter == 0:
+        return 0.0
+
+    # expected = допустимые варианты (идеал), actual = реальный выбор.
+    # Если реальный выбор полностью входит в допустимые варианты — это 100% совпадение.
+    if a.issubset(e):
+        return 1.0
+
+    # Иначе — доля реальных вариантов, которые допустимы.
+    return inter / len(a)
 
 
 def _score_question(spec: dict, expected_answers: dict, actual_answers: dict):

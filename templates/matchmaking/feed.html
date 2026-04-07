@@ -24,6 +24,19 @@
 
     <aside class="lg:col-span-4">
         <div class="space-y-4">
+            {% if last_recommendation_user %}
+            <div class="rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+                <div class="text-sm font-medium">Последняя рекомендация</div>
+                <div class="mt-1 text-xs text-slate-400">Можно открыть совместимость и Excel после Like/Pass.</div>
+                <div class="mt-4 grid grid-cols-2 gap-3">
+                    <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10"
+                        href="{% url 'recommendation_compatibility' last_recommendation_user.id %}">Совместимость</a>
+                    <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10"
+                        href="{% url 'recommendation_excel' last_recommendation_user.id %}">Скачать Excel</a>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
                 <div class="text-sm font-medium">Подсказки</div>
                 <div class="mt-1 text-xs text-slate-400">Небольшие факты про знакомства и отношения.</div>
