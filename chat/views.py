@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from matchmaking.models import Match
 from matchmaking.models import UserBan, UserBlock
@@ -132,6 +133,9 @@ def room(request, match_id: int):
         other_name = other.get_username()
     form = MessageForm()
 
+    now = timezone.now()
+    Message.objects.filter(match=match, read_at__isnull=True).exclude(sender=request.user).update(read_at=now)
+
     return render(
         request,
         "chat/room.html",
@@ -150,6 +154,9 @@ def messages_partial(request, match_id: int):
 
     if not _user_is_in_match(match, request.user):
         raise Http404
+
+    now = timezone.now()
+    Message.objects.filter(match=match, read_at__isnull=True).exclude(sender=request.user).update(read_at=now)
 
     qs = Message.objects.filter(match=match).select_related("sender")
     return render(request, "chat/_messages.html", {"match": match, "messages": qs})

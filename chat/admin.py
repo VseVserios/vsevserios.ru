@@ -5,5 +5,5 @@ from .models import Message
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ("id", "match", "sender", "created_at")
+    list_display = ("id", "match", "sender", "created_at", "read_at")
     search_fields = ("sender__username", "text")

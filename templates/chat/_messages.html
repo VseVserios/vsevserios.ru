@@ -4,7 +4,14 @@
     <div class="flex justify-end">
         <div class="max-w-[80%] rounded-2xl bg-fuchsia-500/25 px-4 py-3 text-sm text-slate-100">
             <div class="whitespace-pre-wrap">{{ msg.text }}</div>
-            <div class="mt-1 text-xs text-slate-200/70">{{ msg.created_at|date:'H:i' }}</div>
+            <div class="mt-1 text-xs text-slate-200/70">
+                {{ msg.created_at|date:'H:i' }}
+                {% if msg.read_at %}
+                · прочитано
+                {% else %}
+                · не прочитано
+                {% endif %}
+            </div>
         </div>
     </div>
     {% else %}
