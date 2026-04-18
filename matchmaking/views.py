@@ -217,13 +217,13 @@ def recommendation_excel(request, user_id: int):
         ws.freeze_panes = "A2"
 
     add_sheet(my_profile, "me", "Мои ответы")
-    add_sheet(my_profile, "ideal", "Мой идеал")
+    add_sheet(my_profile, "ideal", "Кто мне подходит")
     add_sheet(other_profile, "me", "Ответы кандидата")
-    add_sheet(other_profile, "ideal", "Идеал кандидата")
+    add_sheet(other_profile, "ideal", "Кто ему подходит")
 
     meta = wb.create_sheet(title="Инфо")
     meta.append(["Рекомендация ID", rec.id])
-    meta.append(["Кому отправлено", request.user.username])
+    meta.append(["Мой user_id", request.user.id])
     meta.append(["Кандидат", other_user.username])
     meta.append(["Скор", rec.score if rec.score is not None else ""]) 
     meta.append(["Создана", rec.created_at.strftime("%Y-%m-%d %H:%M") if rec.created_at else ""]) 
@@ -469,7 +469,7 @@ def swipe(request, user_id: int, value: str):
         other_name = to_user.get_username()
 
     if created_match is not None:
-        messages.success(request, f"Мэтч! Теперь вы можете написать {other_name}.")
+        messages.success(request, f"Совпадение! Теперь вы можете написать {other_name}.")
 
     candidate, recommendation = _next_candidate_for(request.user)
     ctx = {"candidate": candidate, "recommendation": recommendation}

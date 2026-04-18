@@ -9,7 +9,7 @@
         {% if user.is_superuser %}
         <p class="mt-1 text-sm text-slate-300">Административные чаты со всеми пользователями.</p>
         {% else %}
-        <p class="mt-1 text-sm text-slate-300">Диалоги доступны только с мэтчами.</p>
+        <p class="mt-1 text-sm text-slate-300">Диалоги доступны только с совпадениями.</p>
         {% endif %}
     </div>
     <div class="flex flex-col gap-3 sm:flex-row">
@@ -20,7 +20,7 @@
         </button>
         {% endif %}
         <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10"
-            href="{% url 'matches' %}">Мэтчи</a>
+            href="{% url 'matches' %}">Совпадения</a>
     </div>
 </div>
 
@@ -54,7 +54,7 @@
         {% if user.is_superuser %}
         Пока нет пользователей для чата.
         {% else %}
-        Пока нет диалогов. Сначала получи мэтч.
+        Пока нет диалогов. Сначала получи совпадение.
         {% endif %}
     </div>
     {% endfor %}

@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Мэтчи{% endblock %}
+{% block title %}Совпадения{% endblock %}
 
 {% block content %}
 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between" data-reveal>
     <div>
-        <h1 class="text-2xl font-semibold tracking-tight">Мэтчи</h1>
+        <h1 class="text-2xl font-semibold tracking-tight">Совпадения</h1>
         <p class="mt-1 text-sm text-slate-300">Совпадения — самое интересное начинается здесь.</p>
     </div>
 
@@ -29,8 +29,7 @@
     <div class="lg:col-span-8">
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {% for row in rows %}
-            <a href="{% url 'chat_room' row.match.id %}"
-                class="group rounded-3xl border border-white/10 bg-white/5 p-5 hover:bg-white/10" data-reveal>
+            <div class="group rounded-3xl border border-white/10 bg-white/5 p-5 hover:bg-white/10" data-reveal>
                 <div class="flex items-center gap-4">
 
                     {% if row.other_avatar_url %}
@@ -39,7 +38,7 @@
                     <div class="h-14 w-14 rounded-2xl bg-white/10"></div>
                     {% endif %}
 
-                    <div>
+                    <div class="flex-1">
                         <div class="font-semibold group-hover:text-white">{{ row.other_name }}</div>
                         {% if row.last_message_text %}
                         <div class="text-sm text-slate-300">{{ row.last_message_text }}</div>
@@ -48,11 +47,18 @@
                         {% endif %}
                     </div>
                 </div>
-            </a>
+
+                <div class="mt-4 grid grid-cols-2 gap-2 text-sm">
+                    <a class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-center hover:bg-white/10" href="{% url 'chat_room' row.match.id %}">Чат</a>
+                    <a class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-center hover:bg-white/10" href="{% url 'public_profile' row.other.id %}">Профиль</a>
+                    <a class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-center hover:bg-white/10" href="{% url 'recommendation_compatibility' row.other.id %}">Совместимость</a>
+                    <a class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-center hover:bg-white/10" href="{% url 'recommendation_excel' row.other.id %}">Excel</a>
+                </div>
+            </div>
 
             {% empty %}
             <div class="rounded-3xl border border-white/10 bg-white/5 p-8 sm:col-span-2 lg:col-span-3" data-reveal>
-                <div class="text-lg font-semibold">Пока нет мэтчей</div>
+                <div class="text-lg font-semibold">Пока нет совпадений</div>
                 <div class="mt-2 text-sm text-slate-300">Вернись в ленту и поставь пару лайков. Чем полнее анкета — тем точнее рекомендации.</div>
                 <div class="mt-6 flex flex-col gap-3 sm:flex-row">
                     <a class="rounded-xl bg-fuchsia-500 px-5 py-3 text-center font-medium text-white hover:bg-fuchsia-400 shine" href="{% url 'feed' %}">В ленту</a>

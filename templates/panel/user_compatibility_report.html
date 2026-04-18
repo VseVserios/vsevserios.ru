@@ -27,12 +27,12 @@
             <div class="sm:col-span-2">
                 <div class="grid gap-3 sm:grid-cols-2">
                     <button type="button" id="btnAtoB" class="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/10">
-                        <div class="text-xs text-slate-400">Я → идеал другого</div>
+                        <div class="text-xs text-slate-400">Я → кто мне подходит другого</div>
                         <div class="mt-1 text-2xl font-semibold">{% if report.a_to_b is not None %}{{ report.a_to_b }}%{% else %}—{% endif %}</div>
                         <div class="mt-1 text-xs text-slate-400">клик — подробности</div>
                     </button>
                     <button type="button" id="btnBtoA" class="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/10">
-                        <div class="text-xs text-slate-400">Другой → мой идеал</div>
+                        <div class="text-xs text-slate-400">Другой → кто мне подходит</div>
                         <div class="mt-1 text-2xl font-semibold">{% if report.b_to_a is not None %}{{ report.b_to_a }}%{% else %}—{% endif %}</div>
                         <div class="mt-1 text-xs text-slate-400">клик — подробности</div>
                     </button>
@@ -42,11 +42,11 @@
 
         <div class="grid gap-6 lg:grid-cols-2">
             <div>
-                <div class="mb-2 text-xs text-slate-400">Насколько я подхожу идеалу другого</div>
+                <div class="mb-2 text-xs text-slate-400">Насколько я подхожу анкете «Кто мне подходит» другого</div>
                 <canvas id="compatChartAtoB" height="160"></canvas>
             </div>
             <div>
-                <div class="mb-2 text-xs text-slate-400">Насколько другой подходит моему идеалу</div>
+                <div class="mb-2 text-xs text-slate-400">Насколько другой подходит анкете «Кто мне подходит»</div>
                 <canvas id="compatChartBtoA" height="160"></canvas>
             </div>
         </div>
@@ -192,7 +192,7 @@
                         <div class="text-lg font-semibold">{{ section.title }}</div>
                         <div class="mt-1 text-xs text-slate-400">{{ section.id }}</div>
                         <div class="mt-2 text-sm text-slate-300">
-                            Я → идеал другого: {% if section.a_to_b is not None %}{{ section.a_to_b }}%{% else %}—{% endif %}
+                            Я → кто мне подходит другого: {% if section.a_to_b is not None %}{{ section.a_to_b }}%{% else %}—{% endif %}
                         </div>
                         <div class="mt-1 text-xs text-slate-400">сравнено: {{ section.a_compared|default:0 }}</div>
                     </div>
@@ -204,7 +204,7 @@
                 <div class="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
                     <div class="text-sm text-slate-100">{{ q.text }}</div>
                     <div class="mt-3 rounded-2xl border border-white/10 bg-white/5 p-4">
-                        <div class="text-xs text-slate-400">Я → идеал другого</div>
+                        <div class="text-xs text-slate-400">Я → кто мне подходит другого</div>
                         {% if q.a_to_b %}
                         <div class="mt-2 text-sm text-slate-200">Ожидание: <span class="text-white">{{ q.a_to_b.expected_label }}</span></div>
                         <div class="mt-1 text-sm text-slate-200">Факт: <span class="text-white">{{ q.a_to_b.actual_label }}</span></div>
@@ -229,7 +229,7 @@
                         <div class="text-lg font-semibold">{{ section.title }}</div>
                         <div class="mt-1 text-xs text-slate-400">{{ section.id }}</div>
                         <div class="mt-2 text-sm text-slate-300">
-                            Другой → мой идеал: {% if section.b_to_a is not None %}{{ section.b_to_a }}%{% else %}—{% endif %}
+                            Другой → кто мне подходит: {% if section.b_to_a is not None %}{{ section.b_to_a }}%{% else %}—{% endif %}
                         </div>
                         <div class="mt-1 text-xs text-slate-400">сравнено: {{ section.b_compared|default:0 }}</div>
                     </div>
@@ -241,7 +241,7 @@
                 <div class="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
                     <div class="text-sm text-slate-100">{{ q.text }}</div>
                     <div class="mt-3 rounded-2xl border border-white/10 bg-white/5 p-4">
-                        <div class="text-xs text-slate-400">Другой → мой идеал</div>
+                        <div class="text-xs text-slate-400">Другой → кто мне подходит</div>
                         {% if q.b_to_a %}
                         <div class="mt-2 text-sm text-slate-200">Ожидание: <span class="text-white">{{ q.b_to_a.expected_label }}</span></div>
                         <div class="mt-1 text-sm text-slate-200">Факт: <span class="text-white">{{ q.b_to_a.actual_label }}</span></div>

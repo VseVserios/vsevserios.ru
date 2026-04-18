@@ -3,7 +3,7 @@
 {% block title %}Панель — Рекомендации{% endblock %}
 
 {% block panel_heading %}Рекомендации: {{ target_user.username }}{% endblock %}
-{% block panel_subtitle %}Подбор по совпадению анкет (идеал ↔ я).{% endblock %}
+{% block panel_subtitle %}Подбор по совпадению анкет (кто мне подходит ↔ я).{% endblock %}
 
 {% block panel_top_actions %}
 <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_detail' target_user.id %}">Назад</a>

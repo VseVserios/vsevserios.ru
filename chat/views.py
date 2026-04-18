@@ -11,6 +11,20 @@ from .forms import MessageForm
 from .models import Message
 
 
+def _mark_chat_notifications_read(user) -> None:
+    if not user or not getattr(user, "is_authenticated", False):
+        return
+
+    from accounts.models import UserNotification
+
+    now = timezone.now()
+    UserNotification.objects.filter(
+        recipient=user,
+        is_read=False,
+        event=UserNotification.Event.NEW_MESSAGE,
+    ).update(is_read=True, read_at=now)
+
+
 def _user_is_in_match(match: Match, user) -> bool:
     # Администраторы могут писать в администраторские чаты
     if user.is_superuser and match.is_admin_chat:
@@ -36,6 +50,8 @@ def _user_is_in_match(match: Match, user) -> bool:
 
 @login_required
 def inbox(request):
+    _mark_chat_notifications_read(request.user)
+
     blocked_ids = set(
         UserBlock.objects.filter(blocker=request.user).values_list("blocked_id", flat=True)
     )
@@ -124,6 +140,8 @@ def room(request, match_id: int):
     if not _user_is_in_match(match, request.user):
         raise Http404
 
+    _mark_chat_notifications_read(request.user)
+
     other = match.other(request.user)
     other_profile = other.profile if hasattr(other, "profile") else None
     other_name = None
@@ -154,6 +172,8 @@ def messages_partial(request, match_id: int):
 
     if not _user_is_in_match(match, request.user):
         raise Http404
+
+    _mark_chat_notifications_read(request.user)
 
     now = timezone.now()
     Message.objects.filter(match=match, read_at__isnull=True).exclude(sender=request.user).update(read_at=now)

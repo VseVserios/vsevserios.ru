@@ -61,13 +61,13 @@
                 </div>
                 <div class="mt-3">
                     <a href="{% url 'questionnaire' 'me' %}"
-                        class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10">Заполнить «Я»</a>
+                        class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10">{% if q_me_percent == 100 %}Открыть «Я»{% else %}Заполнить «Я»{% endif %}</a>
                 </div>
             </div>
 
             <div class="mt-5">
                 <div class="flex items-center justify-between text-sm">
-                    <div class="text-slate-200">Мой идеал</div>
+                    <div class="text-slate-200">Кто мне подходит</div>
                     <div class="text-slate-300">{{ q_ideal_answered }} / {{ q_ideal_total }} ({{ q_ideal_percent }}%)</div>
                 </div>
                 <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/10" data-progress="{{ q_ideal_percent }}">
@@ -75,7 +75,7 @@
                 </div>
                 <div class="mt-3">
                     <a href="{% url 'questionnaire' 'ideal' %}"
-                        class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10">Заполнить «Мой идеал»</a>
+                        class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10">{% if q_ideal_percent == 100 %}Открыть «Кто мне подходит»{% else %}Заполнить «Кто мне подходит»{% endif %}</a>
                 </div>
             </div>
         </div>
@@ -107,7 +107,7 @@
         <div class="mt-6 grid gap-6 lg:grid-cols-2">
             <div class="rounded-2xl border border-white/10 bg-white/5 p-6" data-reveal>
                 <div class="text-sm font-medium">Короткий чеклист</div>
-                <div class="mt-1 text-xs text-slate-400">Чтобы профиль выглядел сильнее и давал больше мэтчей.</div>
+                <div class="mt-1 text-xs text-slate-400">Чтобы профиль выглядел сильнее и давал больше совпадений.</div>
                 <div class="mt-4 space-y-2 text-sm text-slate-200">
                     <div class="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3">Добавь 3+ фото — так доверия больше.</div>
                     <div class="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3">Заполни анкеты хотя бы на 70% — рекомендации становятся точнее.</div>

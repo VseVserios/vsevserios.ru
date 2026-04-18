@@ -28,9 +28,9 @@
         <div class="mt-1 text-xs text-slate-400">Всего действий</div>
     </a>
     <a href="{% url 'panel_matches' %}" class="rounded-3xl border border-white/10 bg-white/5 p-5 hover:bg-white/10">
-        <div class="text-sm text-slate-300">Мэтчи</div>
+        <div class="text-sm text-slate-300">Совпадения</div>
         <div class="mt-2 text-3xl font-semibold tracking-tight">{{ matches_count }}</div>
-        <div class="mt-1 text-xs text-slate-400">Совпадений</div>
+        <div class="mt-1 text-xs text-slate-400">Всего</div>
     </a>
     <a href="{% url 'panel_messages' %}" class="rounded-3xl border border-white/10 bg-white/5 p-5 hover:bg-white/10">
         <div class="text-sm text-slate-300">Сообщения</div>
@@ -108,7 +108,7 @@
 
     <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
         <div class="flex items-center justify-between">
-            <div class="text-sm font-medium">Последние мэтчи</div>
+            <div class="text-sm font-medium">Последние совпадения</div>
             <a class="text-sm text-slate-300 hover:text-white" href="{% url 'panel_matches' %}">Все</a>
         </div>
         <div class="mt-4 space-y-3">
@@ -121,7 +121,7 @@
                 <div class="mt-1 text-xs text-slate-400">Match #{{ m.id }}</div>
             </div>
             {% empty %}
-            <div class="text-sm text-slate-300">Пока нет мэтчей.</div>
+            <div class="text-sm text-slate-300">Пока нет совпадений.</div>
             {% endfor %}
         </div>
     </div>

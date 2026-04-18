@@ -62,7 +62,7 @@
                 <select id="q_kind" name="kind" class="mt-1 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 text-sm text-slate-100">
                     <option value="" {% if not q_kind %}selected{% endif %}>Все</option>
                     <option value="me" {% if q_kind == 'me' %}selected{% endif %}>Я</option>
-                    <option value="ideal" {% if q_kind == 'ideal' %}selected{% endif %}>Идеал</option>
+                    <option value="ideal" {% if q_kind == 'ideal' %}selected{% endif %}>Кто мне подходит</option>
                 </select>
             </div>
             <div class="flex items-center gap-2">
@@ -110,9 +110,9 @@
                                 {% endif %}
 
                                 {% if q.show_in_ideal %}
-                                <span class="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-100">Идеал</span>
+                                <span class="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-100">Кто мне подходит</span>
                                 {% else %}
-                                <span class="rounded-full border border-rose-400/20 bg-rose-500/10 px-2 py-1 text-xs text-rose-100">Идеал: скрыт</span>
+                                <span class="rounded-full border border-rose-400/20 bg-rose-500/10 px-2 py-1 text-xs text-rose-100">Кто мне подходит: скрыт</span>
                                 {% endif %}
                             </div>
                         </td>

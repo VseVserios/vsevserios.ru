@@ -8,7 +8,7 @@
         <div>
             <h1 class="text-2xl font-semibold tracking-tight">Анкета</h1>
             <p class="mt-1 text-sm text-slate-300">
-                {% if kind == 'me' %}Я{% else %}Мой идеал{% endif %}
+                {% if kind == 'me' %}Я{% else %}Кто мне подходит{% endif %}
             </p>
         </div>
 
@@ -19,7 +19,7 @@
             </a>
             <a href="{% url 'questionnaire' 'ideal' %}"
                 class="rounded-xl px-4 py-2 text-sm font-medium {% if kind == 'ideal' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">
-                Мой идеал
+                Кто мне подходит
             </a>
         </div>
     </div>
@@ -34,7 +34,7 @@
         </div>
 
         <div class="mt-4 text-xs text-slate-400">
-            Другая анкета: {% if other_kind == 'me' %}Я{% else %}Мой идеал{% endif %} — {{ other_answered }} / {{ other_total }} ({{ other_percent }}%)
+            Другая анкета: {% if other_kind == 'me' %}Я{% else %}Кто мне подходит{% endif %} — {{ other_answered }} / {{ other_total }} ({{ other_percent }}%)
         </div>
     </div>
 
@@ -91,15 +91,21 @@
                 {% for q in section.questions %}
                 <div class="rounded-3xl border border-white/10 bg-slate-950/30 p-6" data-wizard-item
                     data-section-id="{{ section.id }}" data-section-title="{{ section.title }}" data-question-id="{{ q.id }}">
-                    <div class="flex items-center gap-2">
-                        <div class="text-xs text-slate-400">{{ section.title }}</div>
-                        {% if section.hint %}
-                        <span class="group relative inline-flex items-center">
-                            <span tabindex="0" class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-slate-950/40 text-[11px] font-semibold text-slate-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/60">?</span>
-                            <span class="pointer-events-none absolute left-0 top-full z-10 mt-2 w-72 rounded-2xl border border-white/10 bg-slate-950/95 p-3 text-xs text-slate-200 opacity-0 shadow-xl backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100">
-                                {{ section.hint }}
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <div class="text-xs text-slate-400">{{ section.title }}</div>
+                            {% if section.hint %}
+                            <span class="group relative inline-flex items-center">
+                                <span tabindex="0" class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-slate-950/40 text-[11px] font-semibold text-slate-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/60">?</span>
+                                <span class="pointer-events-none absolute left-0 top-full z-10 mt-2 w-72 rounded-2xl border border-white/10 bg-slate-950/95 p-3 text-xs text-slate-200 opacity-0 shadow-xl backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100">
+                                    {{ section.hint }}
+                                </span>
                             </span>
-                        </span>
+                            {% endif %}
+                        </div>
+                        {% if not editable %}
+                        <a href="?edit=1&q={{ q.id }}"
+                            class="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-100 hover:bg-white/10">Редактировать</a>
                         {% endif %}
                     </div>
                     {% if section.hint %}

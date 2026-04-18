@@ -18,7 +18,7 @@
         <div class="p-5">
             {% if match_name %}
             <div class="mb-4 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm text-emerald-200">
-                Мэтч! Теперь вы можете написать {{ match_name }}.
+                Совпадение! Теперь вы можете написать {{ match_name }}.
             </div>
             {% endif %}
             {% if recommendation and recommendation.score is not None %}
@@ -101,7 +101,7 @@
         <div class="mt-2 text-sm text-slate-300">Когда модератор отправит рекомендации, они появятся здесь.</div>
         <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <a class="rounded-xl bg-fuchsia-500 px-5 py-3 font-medium text-white hover:bg-fuchsia-400"
-                href="{% url 'matches' %}">Мэтчи</a>
+                href="{% url 'matches' %}">Совпадения</a>
             <a class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 font-medium text-white hover:bg-white/10"
                 href="{% url 'me' %}">Профиль</a>
         </div>

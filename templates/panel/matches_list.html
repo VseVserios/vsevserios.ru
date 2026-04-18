@@ -1,8 +1,8 @@
 {% extends 'panel/base.html' %}
 
-{% block title %}Панель — Мэтчи{% endblock %}
+{% block title %}Панель — Совпадения{% endblock %}
 
-{% block panel_heading %}Мэтчи{% endblock %}
+{% block panel_heading %}Совпадения{% endblock %}
 {% block panel_subtitle %}История совпадений.{% endblock %}
 
 {% block panel_content %}
@@ -47,7 +47,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td class="px-4 py-8 text-center text-slate-300" colspan="5">Нет мэтчей.</td>
+                    <td class="px-4 py-8 text-center text-slate-300" colspan="5">Нет совпадений.</td>
                 </tr>
                 {% endfor %}
             </tbody>

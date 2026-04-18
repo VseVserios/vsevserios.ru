@@ -215,14 +215,19 @@
       <nav class="hidden items-center gap-2 text-sm sm:flex">
         {% if request.user.is_authenticated %}
         <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'feed' %}">Лента</a>
-        <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'matches' %}">Мэтчи</a>
+        <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'matches' %}">Совпадения</a>
         <a class="relative rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'notifications' %}">
           Уведомления
           {% if unread_notifications_count %}
           <span class="ml-2 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-fuchsia-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">{{ unread_notifications_count }}</span>
           {% endif %}
         </a>
-        <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'chat_inbox' %}">Чат</a>
+        <a class="relative rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'chat_inbox' %}">
+          Чат
+          {% if unread_chat_notifications_count %}
+          <span class="ml-2 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-fuchsia-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">{{ unread_chat_notifications_count }}</span>
+          {% endif %}
+        </a>
         <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'me' %}">Профиль</a>
         <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'account_settings' %}">Настройки</a>
         {% if request.user.is_staff %}
@@ -244,14 +249,19 @@
       <div class="mx-auto flex max-w-6xl flex-col gap-2 text-sm">
         {% if request.user.is_authenticated %}
         <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'feed' %}">Лента</a>
-        <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'matches' %}">Мэтчи</a>
+        <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'matches' %}">Совпадения</a>
         <a class="flex items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'notifications' %}">
           <span>Уведомления</span>
           {% if unread_notifications_count %}
           <span class="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-fuchsia-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">{{ unread_notifications_count }}</span>
           {% endif %}
         </a>
-        <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'chat_inbox' %}">Чат</a>
+        <a class="flex items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'chat_inbox' %}">
+          <span>Чат</span>
+          {% if unread_chat_notifications_count %}
+          <span class="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-fuchsia-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">{{ unread_chat_notifications_count }}</span>
+          {% endif %}
+        </a>
         <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'me' %}">Профиль</a>
         <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'account_settings' %}">Настройки</a>
         {% if request.user.is_staff %}
