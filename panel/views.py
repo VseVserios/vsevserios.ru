@@ -1123,7 +1123,7 @@ def match_delete(request, match_id: int):
 
     match = get_object_or_404(Match, id=match_id)
     match.delete()
-    messages.success(request, "Мэтч удалён")
+    messages.success(request, "Совпадение удалено")
     return redirect("panel_matches")
 
 

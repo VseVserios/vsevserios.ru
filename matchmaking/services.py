@@ -40,15 +40,15 @@ def record_swipe(*, from_user, to_user, value: str):
         create_user_notification(
             recipient=from_user,
             event=UserNotification.Event.NEW_MATCH,
-            title="Новый мэтч",
-            body=f"У вас мэтч с {other_name_for_from}.",
+            title="Новое совпадение",
+            body=f"У вас совпадение с {other_name_for_from}.",
             url=chat_url,
         )
         create_user_notification(
             recipient=to_user,
             event=UserNotification.Event.NEW_MATCH,
-            title="Новый мэтч",
-            body=f"У вас мэтч с {other_name_for_to}.",
+            title="Новое совпадение",
+            body=f"У вас совпадение с {other_name_for_to}.",
             url=chat_url,
         )
 

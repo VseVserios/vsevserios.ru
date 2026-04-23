@@ -56,7 +56,7 @@ class PasswordResetCode(models.Model):
 
 class UserNotification(models.Model):
     class Event(models.TextChoices):
-        NEW_MATCH = "new_match", "Новый мэтч"
+        NEW_MATCH = "new_match", "Новое совпадение"
         NEW_MESSAGE = "new_message", "Новое сообщение"
 
     recipient = models.ForeignKey(
