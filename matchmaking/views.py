@@ -103,8 +103,25 @@ def _recommendation_pair_or_404(request, user_id: int):
         .order_by("-created_at", "-id")
         .first()
     )
+
     if rec is None:
-        raise Http404
+        has_match = Match.objects.filter(
+            Q(user1=request.user, user2=other_user) | Q(user1=other_user, user2=request.user)
+        ).exists()
+        if not has_match:
+            raise Http404
+
+        from .compatibility import compatibility
+
+        report = compatibility(my_profile, other_profile)
+        now = timezone.now()
+        rec = UserRecommendation.objects.create(
+            to_user=request.user,
+            recommended_user=other_user,
+            score=report.get("overall"),
+            seen_at=now,
+            consumed_at=now,
+        )
 
     return rec, my_profile, other_user, other_profile
 

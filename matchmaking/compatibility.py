@@ -45,10 +45,25 @@ def _choice_values(spec):
     return [str(v) for v, _ in spec.get("choices") or []]
 
 
+def _choice_map(spec):
+    return {str(v): str(lbl) for v, lbl in spec.get("choices") or []}
+
+
 def _score_single_answer(spec, expected: str, actual: str):
     values = _choice_values(spec)
 
-    is_scale = set(values) == {"1", "2", "3", "4", "5"}
+    choice_map = _choice_map(spec)
+    scale_map = {
+        "1": "Совсем не про меня",
+        "2": "Скорее не про меня",
+        "3": "50/50",
+        "4": "Скорее про меня",
+        "5": "Полностью про меня",
+    }
+
+    is_scale = set(values) == {"1", "2", "3", "4", "5"} and all(
+        choice_map.get(k) == v for k, v in scale_map.items()
+    )
     if is_scale and expected.isdigit() and actual.isdigit():
         e = int(expected)
         a = int(actual)
