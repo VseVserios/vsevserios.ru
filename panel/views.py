@@ -330,7 +330,7 @@ def user_compatibility_report(request, user_id: int, other_user_id: int):
 
     report = compatibility_breakdown(profile_a, profile_b)
 
-    def _label_value(value, choices_map: dict):
+    def _label_value(value, choices_map: dict, choices_list: list | None = None):
         if value is None:
             return "—"
         if isinstance(value, (list, tuple, set)):
@@ -340,19 +340,30 @@ def user_compatibility_report(request, user_id: int, other_user_id: int):
                 parts.append(str(choices_map.get(item_s, item_s)))
             return ", ".join(parts) if parts else "—"
         value_s = str(value)
-        return str(choices_map.get(value_s, value_s))
+        mapped = choices_map.get(value_s)
+        if mapped is not None:
+            return str(mapped)
+        if choices_list and value_s.isdigit():
+            idx = int(value_s) - 1
+            if 0 <= idx < len(choices_list):
+                try:
+                    return str(choices_list[idx][1])
+                except Exception:
+                    pass
+        return value_s
 
     sections = report.get("sections") or []
     for section in sections:
         for q in section.get("questions") or []:
-            choices_map = {str(v): str(lbl) for v, lbl in (q.get("choices") or [])}
+            choices_list = list(q.get("choices") or [])
+            choices_map = {str(v): str(lbl) for v, lbl in choices_list}
             for key in ("a_to_b", "b_to_a"):
                 part = q.get(key)
                 if not part:
                     continue
                 part["score_percent"] = int(round(float(part.get("score") or 0.0) * 100))
-                part["expected_label"] = _label_value(part.get("expected"), choices_map)
-                part["actual_label"] = _label_value(part.get("actual"), choices_map)
+                part["expected_label"] = _label_value(part.get("expected"), choices_map, choices_list)
+                part["actual_label"] = _label_value(part.get("actual"), choices_map, choices_list)
 
     chart_labels = [s.get("title") or s.get("id") or "" for s in sections]
     chart_values_a_to_b = [s.get("a_to_b") for s in sections]
@@ -384,10 +395,6 @@ def user_recommendations(request, user_id: int):
 
     q = (request.GET.get("q") or "").strip()
     only_new = request.GET.get("only_new") == "1"
-    raw_min_score = (request.GET.get("min_score") or "").strip()
-    min_score = None
-    if raw_min_score.isdigit():
-        min_score = int(raw_min_score)
 
     qs = (
         Profile.objects.select_related("user")
@@ -454,62 +461,17 @@ def user_recommendations(request, user_id: int):
     if only_new and recommended_ids:
         qs = qs.exclude(user_id__in=recommended_ids)
 
-    from matchmaking.compatibility import (
-        build_question_specs,
-        compatibility as compute_compatibility,
-        compatibility_breakdown,
-    )
-    from profiles.questionnaire import get_questionnaire_spec
-
-    question_specs = build_question_specs()
-    breakdown_spec = get_questionnaire_spec()
-
     rows = []
     for candidate_profile in qs:
-        scores = compute_compatibility(target_profile, candidate_profile, question_specs)
-        breakdown = compatibility_breakdown(target_profile, candidate_profile, spec=breakdown_spec)
-        sections = breakdown.get("sections") or []
-        section_rows = [
-            {
-                "id": s.get("id") or "",
-                "title": s.get("title") or "",
-                "overall": s.get("overall"),
-                "a_to_b": s.get("a_to_b"),
-                "b_to_a": s.get("b_to_a"),
-                "a_compared": s.get("a_compared"),
-                "b_compared": s.get("b_compared"),
-            }
-            for s in sections
-        ]
-        compared_total = int(scores.get("a_compared", 0) or 0) + int(scores.get("b_compared", 0) or 0)
-        score = scores.get("overall")
-        if min_score is not None:
-            if score is None or score < min_score:
-                continue
         rows.append(
             {
                 "profile": candidate_profile,
                 "user": candidate_profile.user,
-                "score": score,
-                "a_to_b": scores.get("a_to_b"),
-                "b_to_a": scores.get("b_to_a"),
-                "a_compared": scores.get("a_compared"),
-                "b_compared": scores.get("b_compared"),
-                "compared_total": compared_total,
                 "already_recommended": candidate_profile.user_id in recommended_ids,
-                "sections": section_rows,
             }
         )
 
-    rows.sort(
-        key=lambda r: (
-            r["score"] is not None,
-            r["score"] or -1,
-            r["compared_total"],
-            r["profile"].updated_at,
-        ),
-        reverse=True,
-    )
+    rows.sort(key=lambda r: (r["already_recommended"], r["profile"].updated_at), reverse=True)
 
     rows = rows[:60]
 
@@ -522,7 +484,6 @@ def user_recommendations(request, user_id: int):
             "rows": rows,
             "q": q,
             "only_new": only_new,
-            "min_score": raw_min_score,
         },
     )
 

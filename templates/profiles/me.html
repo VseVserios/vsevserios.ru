@@ -61,7 +61,9 @@
                 </div>
                 <div class="mt-3">
                     <a href="{% url 'questionnaire' 'me' %}"
-                        class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10">{% if q_me_percent == 100 %}Открыть «Я»{% else %}Заполнить «Я»{% endif %}</a>
+                        class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10">{% if q_me_percent == 100 %}Открыть «Моя анкета»{% else %}Заполнить «Моя анкета»{% endif %}</a>
+                    <a href="{% url 'questionnaire' 'me' %}?view=1"
+                        class="mt-2 block rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10">Просмотр «Моя анкета»</a>
                 </div>
             </div>
 
@@ -76,6 +78,8 @@
                 <div class="mt-3">
                     <a href="{% url 'questionnaire' 'ideal' %}"
                         class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10">{% if q_ideal_percent == 100 %}Открыть «Кто мне подходит»{% else %}Заполнить «Кто мне подходит»{% endif %}</a>
+                    <a href="{% url 'questionnaire' 'ideal' %}?view=1"
+                        class="mt-2 block rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10">Просмотр «Кто мне подходит»</a>
                 </div>
             </div>
         </div>

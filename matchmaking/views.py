@@ -135,7 +135,7 @@ def recommendation_compatibility(request, user_id: int):
     report = compatibility_breakdown(my_profile, other_profile)
     sections = report.get("sections") or []
 
-    def _label_value(value, choices_map: dict):
+    def _label_value(value, choices_map: dict, choices_list: list | None = None):
         if value is None:
             return "—"
         if isinstance(value, (list, tuple, set)):
@@ -145,18 +145,29 @@ def recommendation_compatibility(request, user_id: int):
                 parts.append(str(choices_map.get(item_s, item_s)))
             return ", ".join(parts) if parts else "—"
         value_s = str(value)
-        return str(choices_map.get(value_s, value_s))
+        mapped = choices_map.get(value_s)
+        if mapped is not None:
+            return str(mapped)
+        if choices_list and value_s.isdigit():
+            idx = int(value_s) - 1
+            if 0 <= idx < len(choices_list):
+                try:
+                    return str(choices_list[idx][1])
+                except Exception:
+                    pass
+        return value_s
 
     for section in sections:
         for q in section.get("questions") or []:
-            choices_map = {str(v): str(lbl) for v, lbl in (q.get("choices") or [])}
+            choices_list = list(q.get("choices") or [])
+            choices_map = {str(v): str(lbl) for v, lbl in choices_list}
             for key in ("a_to_b", "b_to_a"):
                 part = q.get(key)
                 if not part:
                     continue
                 part["score_percent"] = int(round(float(part.get("score") or 0.0) * 100))
-                part["expected_label"] = _label_value(part.get("expected"), choices_map)
-                part["actual_label"] = _label_value(part.get("actual"), choices_map)
+                part["expected_label"] = _label_value(part.get("expected"), choices_map, choices_list)
+                part["actual_label"] = _label_value(part.get("actual"), choices_map, choices_list)
 
     chart_labels = [s.get("title") or s.get("id") or "" for s in sections]
     chart_values_a_to_b = [s.get("a_to_b") for s in sections]
