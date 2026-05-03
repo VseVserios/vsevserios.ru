@@ -39,6 +39,7 @@
                     <th class="px-4 py-3 text-left font-medium">Staff</th>
                     <th class="px-4 py-3 text-left font-medium">Active</th>
                     <th class="px-4 py-3 text-left font-medium">Дата</th>
+                    <th class="px-4 py-3 text-right font-medium">Подбор</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-white/10">
@@ -56,10 +57,13 @@
                         {% if u.is_active %}<span class="rounded-full bg-emerald-500/15 px-2 py-1 text-xs text-emerald-200">активен</span>{% else %}<span class="rounded-full bg-rose-500/15 px-2 py-1 text-xs text-rose-200">off</span>{% endif %}
                     </td>
                     <td class="px-4 py-3 text-slate-400">{{ u.date_joined|date:'d.m.Y H:i' }}</td>
+                    <td class="px-4 py-3 text-right">
+                        <a class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium hover:bg-white/10" href="{% url 'panel_user_recommendations' u.id %}">Подобрать анкеты</a>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td class="px-4 py-8 text-center text-slate-300" colspan="6">Ничего не найдено.</td>
+                    <td class="px-4 py-8 text-center text-slate-300" colspan="7">Ничего не найдено.</td>
                 </tr>
                 {% endfor %}
             </tbody>
