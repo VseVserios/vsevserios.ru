@@ -22,11 +22,6 @@ urlpatterns = [
 
     path("users/", views.users_list, name="panel_users"),
     path("users/<int:user_id>/", views.user_detail, name="panel_user_detail"),
-    path(
-        "users/<int:user_id>/compatibility/<int:other_user_id>/",
-        views.user_compatibility_report,
-        name="panel_user_compatibility_report",
-    ),
     path("users/<int:user_id>/delete/", views.user_delete, name="panel_user_delete"),
     path(
         "users/<int:user_id>/recommendations/",

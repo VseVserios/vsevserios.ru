@@ -7,8 +7,9 @@
 
 {% block panel_top_actions %}
 <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_users' %}">Назад</a>
-<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_set_password' target_user.id %}">Сменить пароль</a>
 <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_recommendations' target_user.id %}">Рекомендации</a>
+{% if request.user.is_staff %}
+<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_set_password' target_user.id %}">Сменить пароль</a>
 <a class="rounded-xl bg-rose-500 px-4 py-2 text-sm font-medium text-white hover:bg-rose-400" href="{% url 'panel_user_delete' target_user.id %}">Удалить</a>
 {% if active_ban %}
 <form method="post" action="{% url 'panel_ban_revoke' active_ban.id %}">
@@ -24,6 +25,7 @@
         {% if target_user.is_active %}Деактивировать{% else %}Активировать{% endif %}
     </button>
 </form>
+{% endif %}
 {% endblock %}
 
 {% block panel_content %}
@@ -80,6 +82,7 @@
     </div>
 
     <div class="lg:col-span-2">
+        {% if request.user.is_staff %}
         <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
             <div class="text-sm font-medium">Редактирование</div>
 
@@ -117,6 +120,7 @@
                 <button type="submit" class="rounded-xl bg-fuchsia-500 px-5 py-3 font-medium text-white hover:bg-fuchsia-400">Сохранить</button>
             </form>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

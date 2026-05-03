@@ -56,6 +56,24 @@ def staff_required(view_func):
     return _wrapped
 
 
+def _is_matchmaker(user) -> bool:
+    try:
+        return bool(user and user.is_authenticated and user.groups.filter(name="matchmaker").exists())
+    except Exception:
+        return False
+
+
+def staff_or_matchmaker_required(view_func):
+    @login_required
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        if not (request.user.is_staff or _is_matchmaker(request.user)):
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped
+
+
 def _paginate(request, qs, per_page: int = 50):
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page") or 1
@@ -196,7 +214,7 @@ def home_block_delete(request, block_id: int):
     return redirect("panel_home_page_edit", page_id=page_id)
 
 
-@staff_required
+@staff_or_matchmaker_required
 def dashboard(request):
     users_count = User.objects.count()
     active_users_count = User.objects.filter(is_active=True).count()
@@ -241,7 +259,7 @@ def dashboard(request):
     )
 
 
-@staff_required
+@staff_or_matchmaker_required
 def users_list(request):
     q = (request.GET.get("q") or "").strip()
     only_staff = request.GET.get("staff") == "1"
@@ -269,9 +287,12 @@ def users_list(request):
     )
 
 
-@staff_required
+@staff_or_matchmaker_required
 def user_detail(request, user_id: int):
     u = get_object_or_404(User, id=user_id)
+
+    if request.method == "POST" and _is_matchmaker(request.user):
+        raise PermissionDenied
 
     if request.method == "POST":
         form = UserEditForm(request.POST, instance=u, actor=request.user)
@@ -316,77 +337,7 @@ def user_detail(request, user_id: int):
     )
 
 
-@staff_required
-def user_compatibility_report(request, user_id: int, other_user_id: int):
-    user_a = get_object_or_404(User, id=user_id)
-    user_b = get_object_or_404(User, id=other_user_id)
-
-    profile_a = getattr(user_a, "profile", None)
-    profile_b = getattr(user_b, "profile", None)
-    if profile_a is None or profile_b is None:
-        raise Http404
-
-    from matchmaking.compatibility import compatibility_breakdown
-
-    report = compatibility_breakdown(profile_a, profile_b)
-
-    def _label_value(value, choices_map: dict, choices_list: list | None = None):
-        if value is None:
-            return "—"
-        if isinstance(value, (list, tuple, set)):
-            parts = []
-            for item in value:
-                item_s = str(item)
-                parts.append(str(choices_map.get(item_s, item_s)))
-            return ", ".join(parts) if parts else "—"
-        value_s = str(value)
-        mapped = choices_map.get(value_s)
-        if mapped is not None:
-            return str(mapped)
-        if choices_list and value_s.isdigit():
-            idx = int(value_s) - 1
-            if 0 <= idx < len(choices_list):
-                try:
-                    return str(choices_list[idx][1])
-                except Exception:
-                    pass
-        return value_s
-
-    sections = report.get("sections") or []
-    for section in sections:
-        for q in section.get("questions") or []:
-            choices_list = list(q.get("choices") or [])
-            choices_map = {str(v): str(lbl) for v, lbl in choices_list}
-            for key in ("a_to_b", "b_to_a"):
-                part = q.get(key)
-                if not part:
-                    continue
-                part["score_percent"] = int(round(float(part.get("score") or 0.0) * 100))
-                part["expected_label"] = _label_value(part.get("expected"), choices_map, choices_list)
-                part["actual_label"] = _label_value(part.get("actual"), choices_map, choices_list)
-
-    chart_labels = [s.get("title") or s.get("id") or "" for s in sections]
-    chart_values_a_to_b = [s.get("a_to_b") for s in sections]
-    chart_values_b_to_a = [s.get("b_to_a") for s in sections]
-
-    return render(
-        request,
-        "panel/user_compatibility_report.html",
-        {
-            "user_a": user_a,
-            "user_b": user_b,
-            "profile_a": profile_a,
-            "profile_b": profile_b,
-            "report": report,
-            "sections": sections,
-            "chart_labels": chart_labels,
-            "chart_values_a_to_b": chart_values_a_to_b,
-            "chart_values_b_to_a": chart_values_b_to_a,
-        },
-    )
-
-
-@staff_required
+@staff_or_matchmaker_required
 def user_recommendations(request, user_id: int):
     target_user = get_object_or_404(User, id=user_id)
     target_profile = getattr(target_user, "profile", None)
@@ -488,7 +439,7 @@ def user_recommendations(request, user_id: int):
     )
 
 
-@staff_required
+@staff_or_matchmaker_required
 def user_recommend_send(request, user_id: int):
     if request.method != "POST":
         raise Http404

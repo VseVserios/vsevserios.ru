@@ -10,6 +10,7 @@
 
             {% with current=request.resolver_match.url_name %}
             <nav class="mt-3 space-y-2 text-sm">
+                {% if request.user.is_staff %}
                 <a href="{% url 'panel_dashboard' %}"
                     class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_dashboard' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Дашборд</a>
                 <a href="{% url 'panel_home_pages' %}"
@@ -36,6 +37,12 @@
                     class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_blocks' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Блокировки</a>
                 <a href="{% url 'panel_bans' %}"
                     class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_bans' or current == 'panel_ban_create' or current == 'panel_user_ban' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Баны</a>
+                {% else %}
+                <a href="{% url 'panel_dashboard' %}"
+                    class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_dashboard' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Дашборд</a>
+                <a href="{% url 'panel_users' %}"
+                    class="block rounded-xl px-3 py-2 font-medium {% if current == 'panel_users' or current == 'panel_user_detail' or current == 'panel_user_set_password' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">Пользователи</a>
+                {% endif %}
             </nav>
             {% endwith %}
 
