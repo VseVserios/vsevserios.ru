@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import SetPasswordForm
+from django.contrib.auth.models import Group
 
 from accounts.models import User
 from matchmaking.models import HomeBlock, HomePage, UserBan
@@ -7,11 +8,36 @@ from profiles.models import Profile, QuestionnaireChoice, QuestionnaireQuestion,
 
 
 class UserEditForm(forms.ModelForm):
+    is_matchmaker = forms.BooleanField(required=False)
+
     def __init__(self, *args, actor: User | None = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.actor = actor
         if actor and not actor.is_superuser:
             self.fields["is_staff"].disabled = True
+
+        try:
+            self.fields["is_matchmaker"].initial = bool(
+                self.instance
+                and self.instance.pk
+                and self.instance.groups.filter(name="matchmaker").exists()
+            )
+        except Exception:
+            self.fields["is_matchmaker"].initial = False
+
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+
+        # Ensure group membership is updated even when commit=False.
+        # The caller is expected to save the user instance if needed.
+        is_matchmaker = bool(self.cleaned_data.get("is_matchmaker"))
+        group, _ = Group.objects.get_or_create(name="matchmaker")
+        if is_matchmaker:
+            user.groups.add(group)
+        else:
+            user.groups.remove(group)
+
+        return user
 
     class Meta:
         model = User
