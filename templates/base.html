@@ -230,7 +230,7 @@
         </a>
         <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'me' %}">Профиль</a>
         <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'account_settings' %}">Настройки</a>
-        {% if request.user.is_staff %}
+        {% if request.user.is_staff or is_matchmaker %}
         <a class="rounded-lg bg-white/10 px-3 py-2 transition-colors hover:bg-white/15 btn-press" href="{% url 'panel_dashboard' %}">Панель</a>
         {% endif %}
         <form method="post" action="{% url 'logout' %}" class="contents">
@@ -264,7 +264,7 @@
         </a>
         <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'me' %}">Профиль</a>
         <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'account_settings' %}">Настройки</a>
-        {% if request.user.is_staff %}
+        {% if request.user.is_staff or is_matchmaker %}
         <a class="rounded-lg bg-white/10 px-3 py-2 transition-colors hover:bg-white/15 btn-press" href="{% url 'panel_dashboard' %}">Панель</a>
         {% endif %}
         <form method="post" action="{% url 'logout' %}">
