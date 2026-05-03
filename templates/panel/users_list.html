@@ -58,7 +58,7 @@
                     </td>
                     <td class="px-4 py-3 text-slate-400">{{ u.date_joined|date:'d.m.Y H:i' }}</td>
                     <td class="px-4 py-3 text-right">
-                        <a class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium hover:bg-white/10" href="{% url 'panel_user_recommendations' u.id %}">Подобрать анкеты</a>
+                        <a class="inline-flex whitespace-nowrap rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium hover:bg-white/10" href="{% url 'panel_user_recommendations' u.id %}">Подобрать анкеты</a>
                     </td>
                 </tr>
                 {% empty %}
