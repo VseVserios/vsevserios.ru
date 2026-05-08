@@ -88,10 +88,8 @@ def questionnaire(request, kind: str):
     before_answers = profile.questionnaire_me if kind == "me" else profile.questionnaire_ideal
     _, _, before_percent = questionnaire_progress(before_answers, spec)
 
-    editable = True
+    editable = (request.GET.get("edit") or "").strip() == "1"
     if (request.GET.get("view") or "").strip() == "1":
-        editable = False
-    if before_percent == 100 and (request.GET.get("edit") or "").strip() != "1":
         editable = False
 
     if request.method == "POST" and editable:
