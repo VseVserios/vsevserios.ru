@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-change-me-for-production")
 
 # Fernet key for field encryption
-FERNET_KEY = os.environ.get("DJANGO_FERNET_KEY", Fernet.generate_key().decode())
+FERNET_KEY = os.environ.get("DJANGO_FERNET_KEY", "6C6woIO7Cm5OL6EE3S26VJNMRXwT5IUY3kiS4ibYgGI=")
 FERNET = Fernet(FERNET_KEY.encode())
 DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() == "true"
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,testserver").split(",")
