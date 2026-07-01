@@ -44,6 +44,23 @@ class EncryptedJSONField(models.JSONField):
         except Exception:
             return value
 
+    def to_python(self, value):
+        if value is None:
+            return value
+        if isinstance(value, str):
+            try:
+                # Try to decrypt if it's an encrypted string
+                decrypted = settings.FERNET.decrypt(value.encode())
+                return json.loads(decrypted.decode())
+            except Exception:
+                # If decryption fails, try to parse as JSON directly
+                try:
+                    return json.loads(value)
+                except Exception:
+                    # Return as-is if it's not JSON
+                    return value
+        return value
+
     def get_prep_value(self, value):
         if value is None:
             return value
