@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from accounts.fields import EncryptedJSONField
 
 
 class Profile(models.Model):
@@ -27,8 +26,8 @@ class Profile(models.Model):
     gender = models.CharField(max_length=16, choices=Gender.choices, blank=True)
     looking_for = models.CharField(max_length=16, choices=LookingFor.choices, blank=True)
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
-    questionnaire_me = EncryptedJSONField(default=dict, blank=True)
-    questionnaire_ideal = EncryptedJSONField(default=dict, blank=True)
+    questionnaire_me = models.JSONField(default=dict, blank=True)
+    questionnaire_ideal = models.JSONField(default=dict, blank=True)
 
     class Theme(models.TextChoices):
         DARK = "dark", "Тёмная"
