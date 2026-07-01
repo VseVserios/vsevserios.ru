@@ -1,8 +1,10 @@
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
+from datetime import timedelta
 
-from .models import EmailVerification
+from .models import EmailVerification, UserNotification
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -44,3 +46,17 @@ def create_admin_chat_for_user(user):
             sender=admin_user,
             text="Привет! Это админ"
         )
+
+
+@receiver(post_save, sender=UserNotification)
+def cleanup_old_notifications_on_new(sender, instance, created, **kwargs):
+    """Automatically delete old notifications for the user when a new one is created."""
+    if not created:
+        return
+
+    # Delete notifications older than 90 days for this user
+    cutoff_date = timezone.now() - timedelta(days=90)
+    UserNotification.objects.filter(
+        recipient=instance.recipient,
+        created_at__lt=cutoff_date,
+    ).delete()

@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from accounts.fields import EncryptedJSONField
 
 
 class Profile(models.Model):
@@ -26,8 +27,8 @@ class Profile(models.Model):
     gender = models.CharField(max_length=16, choices=Gender.choices, blank=True)
     looking_for = models.CharField(max_length=16, choices=LookingFor.choices, blank=True)
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
-    questionnaire_me = models.JSONField(default=dict, blank=True)
-    questionnaire_ideal = models.JSONField(default=dict, blank=True)
+    questionnaire_me = EncryptedJSONField(default=dict, blank=True)
+    questionnaire_ideal = EncryptedJSONField(default=dict, blank=True)
 
     class Theme(models.TextChoices):
         DARK = "dark", "Тёмная"
@@ -53,6 +54,39 @@ class Profile(models.Model):
 
     def __str__(self) -> str:
         return f"Profile({self.user_id})"
+
+
+class ProfileAccessLog(models.Model):
+    """Log of who accessed personal data (profile/questionnaire)."""
+
+    class AccessType(models.TextChoices):
+        PROFILE_VIEW = "profile_view", "Просмотр профиля"
+        QUESTIONNAIRE_VIEW = "questionnaire_view", "Просмотр анкеты"
+        PROFILE_EDIT = "profile_edit", "Редактирование профиля"
+        QUESTIONNAIRE_EDIT = "questionnaire_edit", "Редактирование анкеты"
+
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="access_logs")
+    accessed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="access_logs",
+    )
+    access_type = models.CharField(max_length=32, choices=AccessType.choices)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    accessed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-accessed_at"]
+        indexes = [
+            models.Index(fields=["profile", "accessed_at"]),
+            models.Index(fields=["accessed_by", "accessed_at"]),
+            models.Index(fields=["accessed_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"ProfileAccessLog({self.profile_id}, {self.access_type}, {self.accessed_at})"
 
 
 class ProfilePhoto(models.Model):

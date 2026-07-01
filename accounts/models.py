@@ -1,10 +1,11 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+from .fields import EncryptedEmailField
 
 
 class User(AbstractUser):
-    email = models.EmailField(unique=True)
+    email = EncryptedEmailField(unique=True)
     email_verified = models.BooleanField(default=False)
 
     def __str__(self) -> str:

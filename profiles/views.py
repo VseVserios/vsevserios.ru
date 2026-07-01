@@ -5,8 +5,21 @@ from django.shortcuts import get_object_or_404, redirect, render
 from matchmaking.models import UserBan, UserBlock
 
 from .forms import OnboardingForm, PhotoUploadForm, QuestionnaireForm
-from .models import Profile, ProfilePhoto
+from .models import Profile, ProfilePhoto, ProfileAccessLog
 from .questionnaire import get_questionnaire_spec_for_profile, questionnaire_progress
+
+
+def _log_profile_access(profile, user, access_type, request):
+    """Helper function to log profile access."""
+    ip_address = request.META.get("REMOTE_ADDR") or request.META.get("HTTP_X_FORWARDED_FOR", "")
+    user_agent = request.META.get("HTTP_USER_AGENT", "")
+    ProfileAccessLog.objects.create(
+        profile=profile,
+        accessed_by=user if user.is_authenticated else None,
+        access_type=access_type,
+        ip_address=ip_address[:45] if ip_address else None,
+        user_agent=user_agent[:500] if user_agent else "",
+    )
 
 
 @login_required
@@ -34,6 +47,9 @@ def me(request):
     me_answered, me_total, me_percent = questionnaire_progress(profile.questionnaire_me, spec_me)
     ideal_answered, ideal_total, ideal_percent = questionnaire_progress(profile.questionnaire_ideal, spec_ideal)
     blocks_count = UserBlock.objects.filter(blocker=request.user).count()
+
+    _log_profile_access(profile, request.user, ProfileAccessLog.AccessType.PROFILE_VIEW, request)
+
     return render(
         request,
         "profiles/me.html",
@@ -91,6 +107,13 @@ def questionnaire(request, kind: str):
     editable = (request.GET.get("edit") or "").strip() == "1"
     if (request.GET.get("view") or "").strip() == "1":
         editable = False
+
+    access_type = (
+        ProfileAccessLog.AccessType.QUESTIONNAIRE_EDIT
+        if editable
+        else ProfileAccessLog.AccessType.QUESTIONNAIRE_VIEW
+    )
+    _log_profile_access(profile, request.user, access_type, request)
 
     if request.method == "POST" and editable:
         form = QuestionnaireForm(request.POST, profile=profile, kind=kind)
