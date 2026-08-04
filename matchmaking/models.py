@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
@@ -54,7 +56,8 @@ class Match(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["user1", "user2"], name="uniq_match_pair"),
+            models.UniqueConstraint(
+                fields=["user1", "user2"], name="uniq_match_pair"),
         ]
 
     def save(self, *args, **kwargs):
@@ -229,6 +232,14 @@ class UserRecommendation(models.Model):
         blank=True,
         related_name="recommendations_created",
     )
+    order = models.ForeignKey(
+        "matchmaking.AdminSearchOrder",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="recommendations",
+    )
+    is_self_search = models.BooleanField(default=False)
     score = models.PositiveSmallIntegerField(null=True, blank=True)
     note = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -246,6 +257,105 @@ class UserRecommendation(models.Model):
 
     def __str__(self) -> str:
         return f"Recommendation({self.to_user_id}->{self.recommended_user_id})"
+
+
+class SelfSearchSubscription(models.Model):
+    """Доступ к самостоятельному подбору: 1 месяц бесплатно, далее по подписке."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="self_search_subscription",
+    )
+    trial_started_at = models.DateTimeField(default=timezone.now)
+    trial_ends_at = models.DateTimeField()
+    paid_until = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.trial_ends_at:
+            self.trial_ends_at = self.trial_started_at + \
+                timezone.timedelta(days=30)
+        return super().save(*args, **kwargs)
+
+    def has_full_access(self) -> bool:
+        now = timezone.now()
+        if self.trial_ends_at and now < self.trial_ends_at:
+            return True
+        if self.paid_until and now < self.paid_until:
+            return True
+        return False
+
+    def __str__(self) -> str:
+        return f"SelfSearchSubscription({self.user_id})"
+
+
+class SelfSearchCriteria(models.Model):
+    """Порог совместимости, который пользователь задаёт для самостоятельного поиска."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="self_search_criteria",
+    )
+    min_compatibility_percent = models.PositiveSmallIntegerField(default=60)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return f"SelfSearchCriteria({self.user_id}:{self.min_compatibility_percent}%)"
+
+
+class AdminSearchOrder(models.Model):
+    """Платный подбор администратором: поверхностный / точечный / углублённый."""
+
+    class Tier(models.TextChoices):
+        SURFACE = "surface", "Поверхностный подбор"
+        TARGETED = "targeted", "Точечный подбор"
+        DEEP = "deep", "Углублённый подбор"
+
+    TIER_PRICES = {
+        Tier.SURFACE: Decimal("500"),
+        Tier.TARGETED: Decimal("2000"),
+        Tier.DEEP: Decimal("10000"),
+    }
+
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Активен"
+        COMPLETED = "completed", "Завершён"
+        CANCELLED = "cancelled", "Отменён"
+
+    client = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="admin_search_orders",
+    )
+    tier = models.CharField(max_length=16, choices=Tier.choices)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    required_criteria = models.TextField(
+        blank=True, default="",
+        help_text="Для точечного подбора: обязательные критерии клиента (не менее двух).",
+    )
+    status = models.CharField(
+        max_length=16, choices=Status.choices, default=Status.ACTIVE)
+    rejected_streak = models.PositiveSmallIntegerField(default=0)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="admin_search_orders_created",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def save(self, *args, **kwargs):
+        if not self.price:
+            self.price = self.TIER_PRICES.get(self.tier, Decimal("0"))
+        return super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"AdminSearchOrder({self.client_id}:{self.tier})"
 
 
 class HomePage(models.Model):
@@ -271,7 +381,8 @@ class HomeBlock(models.Model):
         FAQ = "faq", "FAQ"
         CTA = "cta", "CTA"
 
-    page = models.ForeignKey(HomePage, on_delete=models.CASCADE, related_name="blocks")
+    page = models.ForeignKey(
+        HomePage, on_delete=models.CASCADE, related_name="blocks")
     type = models.CharField(max_length=32, choices=Type.choices)
     order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
@@ -281,10 +392,14 @@ class HomeBlock(models.Model):
     subtitle = models.CharField(max_length=260, blank=True, default="")
     body = models.TextField(blank=True, default="")
 
-    primary_button_text = models.CharField(max_length=60, blank=True, default="")
-    primary_button_url = models.CharField(max_length=200, blank=True, default="")
-    secondary_button_text = models.CharField(max_length=60, blank=True, default="")
-    secondary_button_url = models.CharField(max_length=200, blank=True, default="")
+    primary_button_text = models.CharField(
+        max_length=60, blank=True, default="")
+    primary_button_url = models.CharField(
+        max_length=200, blank=True, default="")
+    secondary_button_text = models.CharField(
+        max_length=60, blank=True, default="")
+    secondary_button_url = models.CharField(
+        max_length=200, blank=True, default="")
 
     image = models.ImageField(upload_to="landing/", blank=True, null=True)
     items = models.JSONField(blank=True, null=True)

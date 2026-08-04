@@ -12,6 +12,7 @@ from django.utils import timezone
 from accounts.models import User
 from chat.models import Message
 from matchmaking.models import (
+    AdminSearchOrder,
     HomeBlock,
     HomePage,
     Match,
@@ -31,6 +32,7 @@ from profiles.models import (
 from profiles.questionnaire import get_questionnaire_spec_for_profile, questionnaire_progress
 
 from .forms import (
+    AdminSearchOrderForm,
     HomeBlockForm,
     HomePageForm,
     ProfileEditForm,
@@ -178,7 +180,8 @@ def home_block_create(request, page_id: int):
 
 @staff_required
 def home_block_edit(request, block_id: int):
-    block = get_object_or_404(HomeBlock.objects.select_related("page"), id=block_id)
+    block = get_object_or_404(
+        HomeBlock.objects.select_related("page"), id=block_id)
     page = block.page
 
     if request.method == "POST":
@@ -225,12 +228,14 @@ def dashboard(request):
     messages_count = Message.objects.count()
     blocks_count = UserBlock.objects.count()
     reports_count = UserReport.objects.count()
-    unresolved_reports_count = UserReport.objects.filter(resolved=False).count()
+    unresolved_reports_count = UserReport.objects.filter(
+        resolved=False).count()
     bans_count = UserBan.objects.count()
     active_bans_count = UserBan.objects.active().count()
 
     recent_users = User.objects.order_by("-date_joined")[:8]
-    recent_matches = Match.objects.select_related("user1", "user2").order_by("-created_at")[:8]
+    recent_matches = Match.objects.select_related(
+        "user1", "user2").order_by("-created_at")[:8]
 
     notifications_count = AdminNotification.objects.count()
     notifications = AdminNotification.objects.select_related("user")[:12]
@@ -313,8 +318,10 @@ def user_detail(request, user_id: int):
     blocks_received = UserBlock.objects.filter(blocked=u).count()
     reports_made = UserReport.objects.filter(reporter=u).count()
     reports_received = UserReport.objects.filter(reported_user=u).count()
-    unresolved_reports_received = UserReport.objects.filter(reported_user=u, resolved=False).count()
-    active_ban = UserBan.objects.active().filter(user=u).order_by("-created_at").first()
+    unresolved_reports_received = UserReport.objects.filter(
+        reported_user=u, resolved=False).count()
+    active_ban = UserBan.objects.active().filter(
+        user=u).order_by("-created_at").first()
 
     return render(
         request,
@@ -355,7 +362,8 @@ def user_recommendations(request, user_id: int):
     )
 
     swiped_to_ids = set(
-        Swipe.objects.filter(from_user=target_user).values_list("to_user_id", flat=True)
+        Swipe.objects.filter(from_user=target_user).values_list(
+            "to_user_id", flat=True)
     )
     if swiped_to_ids:
         qs = qs.exclude(user_id__in=swiped_to_ids)
@@ -387,17 +395,21 @@ def user_recommendations(request, user_id: int):
             | Q(looking_for=Profile.LookingFor.WOMEN)
         )
     elif my_gender:
-        qs = qs.filter(Q(looking_for="") | Q(looking_for=Profile.LookingFor.EVERYONE))
+        qs = qs.filter(Q(looking_for="") | Q(
+            looking_for=Profile.LookingFor.EVERYONE))
 
-    banned_ids = set(UserBan.objects.active().values_list("user_id", flat=True))
+    banned_ids = set(UserBan.objects.active(
+    ).values_list("user_id", flat=True))
     if banned_ids:
         qs = qs.exclude(user_id__in=banned_ids)
 
     blocked_ids = set(
-        UserBlock.objects.filter(blocker=target_user).values_list("blocked_id", flat=True)
+        UserBlock.objects.filter(blocker=target_user).values_list(
+            "blocked_id", flat=True)
     )
     blocked_by_ids = set(
-        UserBlock.objects.filter(blocked=target_user).values_list("blocker_id", flat=True)
+        UserBlock.objects.filter(blocked=target_user).values_list(
+            "blocker_id", flat=True)
     )
     exclude_ids = blocked_ids | blocked_by_ids
     if exclude_ids:
@@ -422,14 +434,20 @@ def user_recommendations(request, user_id: int):
             }
         )
 
-    rows.sort(key=lambda r: (r["already_recommended"], r["profile"].updated_at), reverse=True)
+    rows.sort(key=lambda r: (r["already_recommended"],
+              r["profile"].updated_at), reverse=True)
 
     rows = rows[:60]
+
+    active_orders = AdminSearchOrder.objects.filter(
+        client=target_user, status=AdminSearchOrder.Status.ACTIVE
+    )
 
     return render(
         request,
         "panel/user_recommendations.html",
         {
+            "active_orders": active_orders,
             "target_user": target_user,
             "target_profile": target_profile,
             "rows": rows,
@@ -480,10 +498,18 @@ def user_recommend_send(request, user_id: int):
 
     note = (request.POST.get("note") or "").strip()
 
+    order = None
+    raw_order_id = request.POST.get("order_id")
+    if raw_order_id and str(raw_order_id).isdigit():
+        order = AdminSearchOrder.objects.filter(
+            id=int(raw_order_id), client=target_user, status=AdminSearchOrder.Status.ACTIVE
+        ).first()
+
     UserRecommendation.objects.create(
         to_user=target_user,
         recommended_user=recommended_user,
         created_by=request.user,
+        order=order,
         score=score,
         note=note,
     )
@@ -495,6 +521,48 @@ def user_recommend_send(request, user_id: int):
         return redirect(next_url)
 
     return redirect("panel_user_recommendations", user_id=target_user.id)
+
+
+@staff_or_matchmaker_required
+def user_search_orders(request, user_id: int):
+    target_user = get_object_or_404(User, id=user_id)
+
+    if request.method == "POST":
+        form = AdminSearchOrderForm(request.POST)
+        if form.is_valid():
+            order = form.save(commit=False)
+            order.client = target_user
+            order.created_by = request.user
+            order.save()
+            messages.success(request, "Заказ подбора создан")
+            return redirect("panel_user_search_orders", user_id=target_user.id)
+    else:
+        form = AdminSearchOrderForm()
+
+    orders = AdminSearchOrder.objects.filter(
+        client=target_user).order_by("-created_at")
+
+    return render(
+        request,
+        "panel/user_search_orders.html",
+        {
+            "target_user": target_user,
+            "orders": orders,
+            "form": form,
+        },
+    )
+
+
+@staff_or_matchmaker_required
+def user_search_order_cancel(request, order_id: int):
+    if request.method != "POST":
+        raise Http404
+
+    order = get_object_or_404(AdminSearchOrder, id=order_id)
+    order.status = AdminSearchOrder.Status.CANCELLED
+    order.save(update_fields=["status"])
+    messages.success(request, "Заказ отменён")
+    return redirect("panel_user_search_orders", user_id=order.client_id)
 
 
 @staff_required
@@ -601,7 +669,8 @@ def bans_list(request):
     q = (request.GET.get("q") or "").strip()
     only_active = request.GET.get("active") == "1"
 
-    qs = UserBan.objects.select_related("user", "created_by", "revoked_by").order_by("-created_at")
+    qs = UserBan.objects.select_related(
+        "user", "created_by", "revoked_by").order_by("-created_at")
     if q:
         qs = qs.filter(
             Q(user__username__icontains=q)
@@ -612,7 +681,8 @@ def bans_list(request):
 
     now = timezone.now()
     if only_active:
-        qs = qs.filter(revoked_at__isnull=True).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+        qs = qs.filter(revoked_at__isnull=True).filter(
+            Q(expires_at__isnull=True) | Q(expires_at__gt=now))
 
     page_obj, base_qs = _paginate(request, qs, per_page=80)
     return render(
@@ -762,7 +832,8 @@ def user_delete(request, user_id: int):
         return redirect("panel_user_detail", user_id=u.id)
 
     if (u.is_staff or u.is_superuser) and not request.user.is_superuser:
-        messages.error(request, "Удалять staff/superuser может только суперпользователь")
+        messages.error(
+            request, "Удалять staff/superuser может только суперпользователь")
         return redirect("panel_user_detail", user_id=u.id)
 
     profile = getattr(u, "profile", None)
@@ -829,8 +900,10 @@ def profile_detail(request, profile_id: int):
     else:
         form = ProfileEditForm(instance=profile)
 
-    me_answered, me_total, me_percent = questionnaire_progress(profile.questionnaire_me, spec_me)
-    ideal_answered, ideal_total, ideal_percent = questionnaire_progress(profile.questionnaire_ideal, spec_ideal)
+    me_answered, me_total, me_percent = questionnaire_progress(
+        profile.questionnaire_me, spec_me)
+    ideal_answered, ideal_total, ideal_percent = questionnaire_progress(
+        profile.questionnaire_ideal, spec_ideal)
 
     def _answered(value) -> bool:
         if value is None:
@@ -940,13 +1013,21 @@ def profile_detail(request, profile_id: int):
 @staff_required
 def photos_list(request):
     q = (request.GET.get("q") or "").strip()
+    status = (request.GET.get("status") or "").strip()
 
-    qs = ProfilePhoto.objects.select_related("profile", "profile__user").order_by("-created_at")
+    qs = ProfilePhoto.objects.select_related(
+        "profile", "profile__user").order_by("-created_at")
     if q:
         qs = qs.filter(
             Q(profile__user__username__icontains=q)
             | Q(profile__display_name__icontains=q)
         )
+    if status in dict(ProfilePhoto.ModerationStatus.choices):
+        qs = qs.filter(moderation_status=status)
+
+    pending_count = ProfilePhoto.objects.filter(
+        moderation_status=ProfilePhoto.ModerationStatus.PENDING
+    ).count()
 
     page_obj, base_qs = _paginate(request, qs, per_page=60)
     return render(
@@ -956,8 +1037,44 @@ def photos_list(request):
             "page_obj": page_obj,
             "base_qs": base_qs,
             "q": q,
+            "status": status,
+            "pending_count": pending_count,
         },
     )
+
+
+@staff_required
+def photo_moderate(request, photo_id: int):
+    if request.method != "POST":
+        raise Http404
+
+    photo = get_object_or_404(ProfilePhoto, id=photo_id)
+    action = (request.POST.get("action") or "").strip()
+
+    if action == "approve":
+        photo.moderation_status = ProfilePhoto.ModerationStatus.APPROVED
+        photo.moderated_at = timezone.now()
+        photo.moderated_by = request.user
+        photo.rejection_reason = ""
+        photo.save(update_fields=[
+                   "moderation_status", "moderated_at", "moderated_by", "rejection_reason"])
+        messages.success(request, "Фото одобрено")
+    elif action == "reject":
+        photo.moderation_status = ProfilePhoto.ModerationStatus.REJECTED
+        photo.moderated_at = timezone.now()
+        photo.moderated_by = request.user
+        photo.rejection_reason = (request.POST.get(
+            "rejection_reason") or "").strip()
+        photo.save(update_fields=[
+                   "moderation_status", "moderated_at", "moderated_by", "rejection_reason"])
+        messages.success(request, "Фото отклонено")
+    else:
+        raise Http404
+
+    next_url = request.POST.get("next")
+    if next_url and str(next_url).startswith("/"):
+        return redirect(next_url)
+    return redirect("panel_photos")
 
 
 @staff_required
@@ -977,7 +1094,8 @@ def photo_delete(request, photo_id: int):
 def swipes_list(request):
     q = (request.GET.get("q") or "").strip()
 
-    qs = Swipe.objects.select_related("from_user", "to_user").order_by("-created_at")
+    qs = Swipe.objects.select_related(
+        "from_user", "to_user").order_by("-created_at")
     if q:
         qs = qs.filter(
             Q(from_user__username__icontains=q)
@@ -1014,7 +1132,8 @@ def matches_list(request):
 
     qs = Match.objects.select_related("user1", "user2").order_by("-created_at")
     if q:
-        qs = qs.filter(Q(user1__username__icontains=q) | Q(user2__username__icontains=q))
+        qs = qs.filter(Q(user1__username__icontains=q) |
+                       Q(user2__username__icontains=q))
 
     page_obj, base_qs = _paginate(request, qs, per_page=80)
     return render(
@@ -1043,7 +1162,8 @@ def match_delete(request, match_id: int):
 def messages_list(request):
     q = (request.GET.get("q") or "").strip()
 
-    qs = Message.objects.select_related("match", "sender").order_by("-created_at")
+    qs = Message.objects.select_related(
+        "match", "sender").order_by("-created_at")
     if q:
         qs = qs.filter(Q(sender__username__icontains=q) | Q(text__icontains=q))
 
@@ -1142,7 +1262,8 @@ def questionnaire_section_edit(request, section_id: int):
         elif q_kind == "ideal":
             questions = questions.filter(show_in_ideal=False)
         else:
-            questions = questions.filter(Q(show_in_me=False) | Q(show_in_ideal=False))
+            questions = questions.filter(
+                Q(show_in_me=False) | Q(show_in_ideal=False))
 
     return render(
         request,
@@ -1274,7 +1395,8 @@ def questionnaire_choice_create(request, question_id: int):
 @staff_required
 def questionnaire_choice_edit(request, choice_id: int):
     choice = get_object_or_404(
-        QuestionnaireChoice.objects.select_related("question", "question__section"),
+        QuestionnaireChoice.objects.select_related(
+            "question", "question__section"),
         id=choice_id,
     )
 

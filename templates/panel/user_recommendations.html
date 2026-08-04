@@ -8,6 +8,7 @@
 {% block panel_top_actions %}
 <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_detail' target_user.id %}">Назад</a>
 <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_profile_detail' target_profile.id %}">Профиль</a>
+<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_search_orders' target_user.id %}">Заказы подбора</a>
 {% endblock %}
 
 {% block panel_content %}
@@ -51,6 +52,14 @@
                 {% csrf_token %}
                 <input type="hidden" name="recommended_user_id" value="{{ row.user.id }}" />
                 <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                {% if active_orders %}
+                <select name="order_id" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white sm:w-auto">
+                    <option value="">Без заказа (бесплатно)</option>
+                    {% for order in active_orders %}
+                    <option value="{{ order.id }}">{{ order.get_tier_display }} · {{ order.price }}₽</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
                 <input name="note" value="" placeholder="Заметка (необязательно)" />
                 <button type="submit" class="rounded-xl bg-white/10 px-4 py-3 text-sm font-medium hover:bg-white/15">
                     {% if row.already_recommended %}Отправить повторно{% else %}Отправить{% endif %}

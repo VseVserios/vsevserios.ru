@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
-{% block title %}Анкеты{% endblock %}
+{% block title %}Оформи анкету{% endblock %}
 
 {% block content %}
 <div class="mx-auto max-w-4xl">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-2xl font-semibold tracking-tight">Анкета</h1>
+            <h1 class="text-2xl font-semibold tracking-tight">Оформи анкету</h1>
             <p class="mt-1 text-sm text-slate-300">
-                {% if kind == 'me' %}Моя анкета{% else %}Кто мне подходит{% endif %}
+                {% if kind == 'me' %}Расскажи о себе — это основа для подбора совпадений.{% else %}Опиши, кто тебе подходит: чем подробнее анкета, тем точнее подбор.{% endif %}
             </p>
         </div>
 
@@ -33,10 +33,17 @@
             <div class="h-2 rounded-full bg-fuchsia-500" data-progress-bar></div>
         </div>
 
+        {% if percent < 70 %}
+        <div class="mt-4 rounded-2xl border border-amber-300/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            Рекомендуем заполнить хотя бы 70% анкеты — так подбор совпадений будет намного точнее.
+        </div>
+        {% endif %}
+
         <div class="mt-4 text-xs text-slate-400">
             Другая анкета: {% if other_kind == 'me' %}Я{% else %}Кто мне подходит{% endif %} — {{ other_answered }} / {{ other_total }} ({{ other_percent }}%)
         </div>
     </div>
+
 
     <form method="post" class="mt-6">
         {% csrf_token %}
@@ -88,6 +95,24 @@
 
             <div class="mt-6">
                 {% for section in sections %}
+                {% if section.is_sensitive and form.special_category_consent %}
+                <div class="rounded-3xl border border-fuchsia-400/20 bg-fuchsia-500/5 p-6" data-wizard-item
+                    data-section-id="{{ section.id }}" data-section-title="{{ section.title }}" data-question-id="__consent_{{ section.id }}">
+                    <div class="text-xs text-slate-400">{{ section.title }}</div>
+                    <div class="mt-2 text-lg font-semibold leading-snug">Согласие на обработку специальных категорий данных</div>
+                    <div class="mt-2 text-sm text-slate-300">
+                        Ответы в этом разделе относятся к специальным категориям персональных данных (сведения о сексуальной жизни).
+                        Чтобы сохранить ответы, подтверди согласие на их обработку.
+                    </div>
+                    <label class="mt-4 flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100">
+                        {{ form.special_category_consent }}
+                        <span>Я даю согласие на обработку специальных категорий персональных данных согласно
+                            <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_special_category' %}" target="_blank" rel="noopener">тексту согласия</a>.
+                            Без этого ответы раздела «{{ section.title }}» сохранены не будут.
+                        </span>
+                    </label>
+                </div>
+                {% endif %}
                 {% for q in section.questions %}
                 <div class="rounded-3xl border border-white/10 bg-slate-950/30 p-6" data-wizard-item
                     data-section-id="{{ section.id }}" data-section-title="{{ section.title }}" data-question-id="{{ q.id }}">

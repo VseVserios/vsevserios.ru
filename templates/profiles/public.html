@@ -59,7 +59,7 @@
         <div class="mt-6">
             <div class="text-sm font-medium">Фото</div>
             <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {% for photo in profile.photos.all %}
+                {% for photo in profile.approved_photos %}
                 <img class="h-44 w-full rounded-2xl object-cover" src="{{ photo.image.url }}" alt="photo" />
                 {% empty %}
                 <div class="text-sm text-slate-300">Фото не добавлены.</div>

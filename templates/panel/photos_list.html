@@ -3,14 +3,23 @@
 {% block title %}Панель — Фото{% endblock %}
 
 {% block panel_heading %}Фото{% endblock %}
-{% block panel_subtitle %}Просмотр и удаление фото (модерация).{% endblock %}
+{% block panel_subtitle %}Просмотр, модерация и удаление фото. На модерации: {{ pending_count }}.{% endblock %}
 
 {% block panel_content %}
 <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
-    <form method="get" class="grid gap-3 sm:grid-cols-3 sm:items-end">
+    <form method="get" class="grid gap-3 sm:grid-cols-4 sm:items-end">
         <div class="sm:col-span-2">
             <label class="mb-1 block text-sm text-slate-200" for="q">Поиск</label>
             <input id="q" name="q" value="{{ q }}" placeholder="username или имя" />
+        </div>
+        <div>
+            <label class="mb-1 block text-sm text-slate-200" for="status">Статус модерации</label>
+            <select id="status" name="status" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white">
+                <option value="">Все</option>
+                <option value="pending" {% if status == 'pending' %}selected{% endif %}>На модерации</option>
+                <option value="approved" {% if status == 'approved' %}selected{% endif %}>Одобрено</option>
+                <option value="rejected" {% if status == 'rejected' %}selected{% endif %}>Отклонено</option>
+            </select>
         </div>
         <div class="flex items-center gap-3">
             <button type="submit" class="rounded-xl bg-fuchsia-500 px-4 py-3 text-sm font-medium text-white hover:bg-fuchsia-400">Искать</button>
@@ -31,6 +40,14 @@
             </div>
             <div class="mt-1 text-xs text-slate-400">{{ photo.profile.user.username }} · {{ photo.created_at|date:'d.m.Y H:i' }}</div>
 
+            {% if photo.moderation_status == 'pending' %}
+            <div class="mt-2 inline-block rounded-lg border border-amber-300/20 bg-amber-500/10 px-2 py-1 text-xs text-amber-200">На модерации</div>
+            {% elif photo.moderation_status == 'approved' %}
+            <div class="mt-2 inline-block rounded-lg border border-emerald-300/20 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-200">Одобрено</div>
+            {% elif photo.moderation_status == 'rejected' %}
+            <div class="mt-2 rounded-lg border border-rose-300/20 bg-rose-500/10 px-2 py-1 text-xs text-rose-200">Отклонено{% if photo.rejection_reason %}: {{ photo.rejection_reason }}{% endif %}</div>
+            {% endif %}
+
             <div class="mt-3 flex items-center justify-between">
                 <a class="text-sm text-slate-300 hover:text-white" href="{% url 'public_profile' photo.profile.user_id %}">Public</a>
                 <form method="post" action="{% url 'panel_photo_delete' photo.id %}">
@@ -38,6 +55,24 @@
                     <button type="submit" class="rounded-xl bg-rose-500/15 px-4 py-2 text-sm font-medium text-rose-200 hover:bg-rose-500/25">Удалить</button>
                 </form>
             </div>
+
+            {% if photo.moderation_status != 'approved' %}
+            <form method="post" action="{% url 'panel_photo_moderate' photo.id %}" class="mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="approve" />
+                <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                <button type="submit" class="w-full rounded-xl bg-emerald-500/20 px-4 py-2 text-sm font-medium text-emerald-100 hover:bg-emerald-500/30">Одобрить</button>
+            </form>
+            {% endif %}
+            {% if photo.moderation_status != 'rejected' %}
+            <form method="post" action="{% url 'panel_photo_moderate' photo.id %}" class="mt-2 flex gap-2">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reject" />
+                <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                <input name="rejection_reason" placeholder="Причина отклонения" class="flex-1" />
+                <button type="submit" class="shrink-0 rounded-xl bg-rose-500/20 px-4 py-2 text-sm font-medium text-rose-100 hover:bg-rose-500/30">Отклонить</button>
+            </form>
+            {% endif %}
         </div>
     </div>
     {% empty %}

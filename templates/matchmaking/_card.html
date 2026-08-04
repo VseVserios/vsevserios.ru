@@ -41,9 +41,9 @@
                 {{ candidate.bio|default:'—'|linebreaksbr }}
             </div>
 
-            {% if candidate.photos.exists %}
+            {% if candidate.approved_photos %}
             <div class="mt-4 grid grid-cols-3 gap-3">
-                {% for photo in candidate.photos.all|slice:':3' %}
+                {% for photo in candidate.approved_photos|slice:':3' %}
                 <img class="h-24 w-full rounded-2xl object-cover" src="{{ photo.image.url }}" alt="photo" />
                 {% endfor %}
             </div>

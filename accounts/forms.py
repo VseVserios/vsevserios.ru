@@ -8,8 +8,10 @@ from .models import User
 
 
 class LoginForm(AuthenticationForm):
-    username = forms.CharField(widget=forms.TextInput(attrs={"autocomplete": "username"}))
-    password = forms.CharField(widget=forms.PasswordInput(attrs={"autocomplete": "current-password"}))
+    username = forms.CharField(widget=forms.TextInput(
+        attrs={"autocomplete": "username"}))
+    password = forms.CharField(widget=forms.PasswordInput(
+        attrs={"autocomplete": "current-password"}))
 
     def confirm_login_allowed(self, user):
         super().confirm_login_allowed(user)
@@ -25,6 +27,16 @@ class LoginForm(AuthenticationForm):
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField()
+    terms_agree = forms.BooleanField(
+        required=True,
+        error_messages={
+            "required": "Нужно принять Пользовательское соглашение."},
+    )
+    privacy_agree = forms.BooleanField(
+        required=True,
+        error_messages={
+            "required": "Нужно принять Политику обработки персональных данных."},
+    )
 
     class Meta:
         model = User
@@ -35,7 +47,8 @@ class EmailVerificationForm(forms.Form):
     code = forms.CharField(
         max_length=6,
         min_length=6,
-        widget=forms.TextInput(attrs={"autocomplete": "one-time-code", "inputmode": "numeric"}),
+        widget=forms.TextInput(
+            attrs={"autocomplete": "one-time-code", "inputmode": "numeric"}),
     )
 
     def clean_code(self):
@@ -48,21 +61,26 @@ class EmailVerificationForm(forms.Form):
 
 
 class PasswordResetRequestForm(forms.Form):
-    email = forms.EmailField(widget=forms.EmailInput(attrs={"autocomplete": "email"}))
+    email = forms.EmailField(widget=forms.EmailInput(
+        attrs={"autocomplete": "email"}))
 
 
 class ForgotUsernameForm(forms.Form):
-    email = forms.EmailField(widget=forms.EmailInput(attrs={"autocomplete": "email"}))
+    email = forms.EmailField(widget=forms.EmailInput(
+        attrs={"autocomplete": "email"}))
 
 
 class PasswordResetCodeConfirmForm(forms.Form):
     code = forms.CharField(
         max_length=6,
         min_length=6,
-        widget=forms.TextInput(attrs={"autocomplete": "one-time-code", "inputmode": "numeric"}),
+        widget=forms.TextInput(
+            attrs={"autocomplete": "one-time-code", "inputmode": "numeric"}),
     )
-    new_password1 = forms.CharField(widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}))
-    new_password2 = forms.CharField(widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}))
+    new_password1 = forms.CharField(widget=forms.PasswordInput(
+        attrs={"autocomplete": "new-password"}))
+    new_password2 = forms.CharField(widget=forms.PasswordInput(
+        attrs={"autocomplete": "new-password"}))
 
     def clean_code(self):
         code = (self.cleaned_data.get("code") or "").strip()
@@ -107,7 +125,8 @@ class AccountSettingsForm(forms.ModelForm):
 
 
 class PasswordConfirmForm(forms.Form):
-    password = forms.CharField(widget=forms.PasswordInput(attrs={"autocomplete": "current-password"}))
+    password = forms.CharField(widget=forms.PasswordInput(
+        attrs={"autocomplete": "current-password"}))
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)

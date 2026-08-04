@@ -1,7 +1,7 @@
 from django import forms
 
 from .models import Profile, ProfilePhoto
-from .questionnaire import get_questionnaire_spec_for_profile
+from .questionnaire import SENSITIVE_SECTION_IDS, get_questionnaire_spec_for_profile
 
 
 class OnboardingForm(forms.ModelForm):
@@ -91,10 +91,14 @@ class QuestionnaireForm(forms.Form):
         spec = get_questionnaire_spec_for_profile(profile, kind)
 
         self._question_ids = []
+        self._sensitive_question_ids = set()
         for section in spec:
+            is_sensitive_section = section["id"] in SENSITIVE_SECTION_IDS
             for q in section["questions"]:
                 qid = q["id"]
                 self._question_ids.append(qid)
+                if is_sensitive_section:
+                    self._sensitive_question_ids.add(qid)
                 input_type = (q.get("input_type") or "choice").strip().lower()
                 is_multiple = (kind == "ideal") and bool(q.get("is_multiple"))
                 choices = q.get("choices") or []
@@ -123,14 +127,27 @@ class QuestionnaireForm(forms.Form):
                         initial=initial_answers.get(qid, ""),
                     )
 
+        self.has_sensitive_section = kind == "me" and bool(
+            self._sensitive_question_ids)
+        if self.has_sensitive_section:
+            self.fields["special_category_consent"] = forms.BooleanField(
+                required=False,
+                initial=profile.user.special_category_consent,
+            )
+
     def cleaned_answers(self) -> dict:
+        consent_given = bool(self.cleaned_data.get(
+            "special_category_consent")) if self.has_sensitive_section else True
         answers = {}
         for qid in self._question_ids:
+            if qid in self._sensitive_question_ids and not consent_given:
+                continue
             v = self.cleaned_data.get(qid)
             if v is None:
                 continue
             if isinstance(v, (list, tuple, set)):
-                items = [str(x).strip() for x in v if x is not None and str(x).strip() != ""]
+                items = [str(x).strip()
+                         for x in v if x is not None and str(x).strip() != ""]
                 if items:
                     answers[qid] = items
                 continue
@@ -146,5 +163,27 @@ class QuestionnaireForm(forms.Form):
             self.profile.questionnaire_ideal = answers
         else:
             raise ValueError("Invalid questionnaire kind")
-        self.profile.save(update_fields=[f"questionnaire_{self.kind}", "updated_at"])
+        self.profile.save(
+            update_fields=[f"questionnaire_{self.kind}", "updated_at"])
+
+        if self.has_sensitive_section:
+            from django.utils import timezone
+
+            from accounts.models import ConsentEvent
+
+            user = self.profile.user
+            consent_given = bool(self.cleaned_data.get(
+                "special_category_consent"))
+            if consent_given and not user.special_category_consent:
+                user.special_category_consent = True
+                user.special_category_consent_at = timezone.now()
+                user.special_category_consent_revoked_at = None
+                user.save(update_fields=[
+                    "special_category_consent",
+                    "special_category_consent_at",
+                    "special_category_consent_revoked_at",
+                ])
+                ConsentEvent.objects.create(
+                    user=user, kind=ConsentEvent.Kind.SPECIAL_CATEGORY_GIVEN)
+
         return self.profile

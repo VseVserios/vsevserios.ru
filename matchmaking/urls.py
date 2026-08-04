@@ -7,6 +7,7 @@ from .views import (
     recommendation_compatibility,
     recommendation_excel,
     report_user,
+    self_search,
     swipe,
     unblock_user,
     undo_swipe,
@@ -17,6 +18,7 @@ urlpatterns = [
     path("swipe/<int:user_id>/<str:value>/", swipe, name="swipe"),
     path("swipe/undo/", undo_swipe, name="swipe_undo"),
     path("matches/", matches, name="matches"),
+    path("self-search/", self_search, name="self_search"),
     path(
         "recommendations/<int:user_id>/compatibility/",
         recommendation_compatibility,

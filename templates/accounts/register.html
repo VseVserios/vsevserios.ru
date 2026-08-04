@@ -4,8 +4,8 @@
 
 {% block content %}
 <div class="mx-auto max-w-md">
-    <h1 class="text-2xl font-semibold tracking-tight">Регистрация</h1>
-    <p class="mt-2 text-sm text-slate-300">Создай аккаунт и оформи анкету.</p>
+    <h1 class="text-2xl font-semibold tracking-tight">Создай аккаунт</h1>
+    <p class="mt-2 text-sm text-slate-300">Регистрация займёт пару минут. Сайт доступен только лицам старше 18 лет.</p>
 
     <form method="post" class="mt-6 space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6">
         {% csrf_token %}
@@ -42,6 +42,28 @@
             {% endif %}
         </div>
 
+        <div class="space-y-2 border-t border-white/10 pt-4">
+            <label class="flex items-start gap-2 text-sm text-slate-300">
+                {{ form.terms_agree }}
+                <span>Я принимаю условия
+                    <a class="text-white underline underline-offset-4 hover:text-fuchsia-200" href="{% url 'legal_terms' %}" target="_blank" rel="noopener">Пользовательского соглашения</a>
+                </span>
+            </label>
+            {% if form.terms_agree.errors %}
+            <div class="text-sm text-rose-300">{{ form.terms_agree.errors }}</div>
+            {% endif %}
+
+            <label class="flex items-start gap-2 text-sm text-slate-300">
+                {{ form.privacy_agree }}
+                <span>Я согласен(на) с
+                    <a class="text-white underline underline-offset-4 hover:text-fuchsia-200" href="{% url 'legal_privacy' %}" target="_blank" rel="noopener">Политикой обработки персональных данных</a>
+                </span>
+            </label>
+            {% if form.privacy_agree.errors %}
+            <div class="text-sm text-rose-300">{{ form.privacy_agree.errors }}</div>
+            {% endif %}
+        </div>
+
         {% if form.non_field_errors %}
         <div class="text-sm text-rose-300">{{ form.non_field_errors }}</div>
         {% endif %}
@@ -49,6 +71,13 @@
         <button type="submit"
             class="w-full rounded-xl bg-fuchsia-500 px-4 py-3 font-medium text-white hover:bg-fuchsia-400">Создать
             аккаунт</button>
+
+        <p class="text-center text-xs text-slate-400">
+            Мы используем cookies для авторизации, сохранения настроек и корректной работы сайта. Подробнее в
+            <a class="underline underline-offset-4 hover:text-fuchsia-200" href="{% url 'legal_privacy' %}">Политике обработки персональных данных</a>
+            и
+            <a class="underline underline-offset-4 hover:text-fuchsia-200" href="{% url 'legal_terms' %}">Пользовательском соглашении</a>.
+        </p>
 
         <div class="text-center text-sm text-slate-300">
             Уже есть аккаунт?

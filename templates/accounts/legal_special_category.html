@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Согласие на обработку специальных категорий персональных данных{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-3xl" data-reveal>
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 class="text-2xl font-semibold tracking-tight">Согласие на обработку специальных категорий персональных данных</h1>
+        <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'landing' %}">На главную</a>
+    </div>
+
+    <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6 text-sm leading-relaxed text-slate-200 sm:p-8">
+        {% include 'accounts/legal/_consent_special_category.html' %}
+    </div>
+</div>
+{% endblock %}

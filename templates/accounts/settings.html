@@ -22,6 +22,8 @@
           <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="{% url 'password_change' %}">Сменить пароль</a>
           <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="{% url 'edit_profile' %}">Внешний вид профиля</a>
           <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="{% url 'photos_manage' %}">Фотографии</a>
+          <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="{% url 'payment' %}">Кошелёк и оплата</a>
+          <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="#consents">Управление согласиями</a>
         </div>
 
         <div class="mt-4 text-xs text-slate-400">Подсказка: смена email не подтверждает его автоматически.</div>
@@ -113,6 +115,66 @@
           <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10" href="{% url 'edit_profile' %}">Редактировать профиль</a>
           <a class="rounded-2xl bg-fuchsia-500 px-4 py-3 text-center text-sm font-medium text-white hover:bg-fuchsia-400 shine" href="{% url 'photos_manage' %}">Управлять фото</a>
         </div>
+      </div>
+
+      <div id="consents" class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+        <div class="text-sm font-medium">Управление согласиями</div>
+        <div class="mt-2 text-sm text-slate-300">Статус принятых документов и согласий на обработку данных.</div>
+
+        <div class="mt-4 grid gap-3">
+          <div class="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3 text-sm">
+            <div>
+              <div class="font-medium">Пользовательское соглашение</div>
+              {% if request.user.terms_accepted_at %}
+              <div class="text-xs text-slate-400">Принято {{ request.user.terms_accepted_at|date:"d.m.Y H:i" }}</div>
+              {% else %}
+              <div class="text-xs text-amber-300">Не принято</div>
+              {% endif %}
+            </div>
+            <a class="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10" href="{% url 'legal_terms' %}" target="_blank" rel="noopener">Открыть</a>
+          </div>
+
+          <div class="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3 text-sm">
+            <div>
+              <div class="font-medium">Политика обработки персональных данных</div>
+              {% if request.user.privacy_accepted_at %}
+              <div class="text-xs text-slate-400">Принято {{ request.user.privacy_accepted_at|date:"d.m.Y H:i" }}</div>
+              {% else %}
+              <div class="text-xs text-amber-300">Не принято</div>
+              {% endif %}
+            </div>
+            <a class="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10" href="{% url 'legal_privacy' %}" target="_blank" rel="noopener">Открыть</a>
+          </div>
+
+          <div class="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3 text-sm">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <div class="font-medium">Согласие на обработку специальных категорий данных</div>
+                {% if request.user.special_category_consent %}
+                <div class="text-xs text-emerald-300">Дано {{ request.user.special_category_consent_at|date:"d.m.Y H:i" }}</div>
+                {% elif request.user.special_category_consent_revoked_at %}
+                <div class="text-xs text-amber-300">Отозвано {{ request.user.special_category_consent_revoked_at|date:"d.m.Y H:i" }}</div>
+                {% else %}
+                <div class="text-xs text-slate-400">Не дано (заполняется при прохождении анкеты «Сексуальная совместимость»)</div>
+                {% endif %}
+              </div>
+              <a class="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10" href="{% url 'legal_special_category' %}" target="_blank" rel="noopener">Текст</a>
+            </div>
+            {% if request.user.special_category_consent %}
+            <form method="post" action="{% url 'revoke_special_category_consent' %}" class="mt-3">
+              {% csrf_token %}
+              <button type="submit" class="w-full rounded-xl border border-rose-300/30 bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-100 hover:bg-rose-500/20">Отозвать согласие</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+          <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10" href="{% url 'legal_photo_rules' %}" target="_blank" rel="noopener">Правила загрузки фото</a>
+          <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium hover:bg-white/10" href="{% url 'legal_site_rules' %}" target="_blank" rel="noopener">Правила пользования Сайтом</a>
+        </div>
+
+        <a class="mt-3 block text-center text-sm text-slate-300 underline underline-offset-4 hover:text-white" href="{% url 'consent_history' %}">Посмотреть историю согласий</a>
       </div>
 
       <div class="mt-6 rounded-3xl border border-rose-400/20 bg-rose-500/10 p-6" data-reveal>

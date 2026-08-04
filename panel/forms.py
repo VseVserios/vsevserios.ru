@@ -3,7 +3,7 @@ from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.models import Group
 
 from accounts.models import User
-from matchmaking.models import HomeBlock, HomePage, UserBan
+from matchmaking.models import AdminSearchOrder, HomeBlock, HomePage, UserBan
 from profiles.models import Profile, QuestionnaireChoice, QuestionnaireQuestion, QuestionnaireSection
 
 
@@ -81,6 +81,18 @@ class UserBanForm(forms.ModelForm):
         }
 
 
+class AdminSearchOrderForm(forms.ModelForm):
+    class Meta:
+        model = AdminSearchOrder
+        fields = ("tier", "required_criteria")
+        widgets = {
+            "required_criteria": forms.Textarea(
+                attrs={
+                    "rows": 3, "placeholder": "Для точечного подбора: не менее двух обязательных критериев"}
+            ),
+        }
+
+
 class QuestionnaireSectionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -89,7 +101,8 @@ class QuestionnaireSectionForm(forms.ModelForm):
 
     class Meta:
         model = QuestionnaireSection
-        fields = ("code", "gender", "title", "show_in_me", "show_in_ideal", "order")
+        fields = ("code", "gender", "title",
+                  "show_in_me", "show_in_ideal", "order")
 
 
 class QuestionnaireQuestionForm(forms.ModelForm):
@@ -106,7 +119,8 @@ class QuestionnaireQuestionForm(forms.ModelForm):
         if self.instance and self.instance.pk:
             self.fields["code"].disabled = True
 
-        self.fields["input_type"].initial = (getattr(self.instance, "input_type", "") or "choice")
+        self.fields["input_type"].initial = (
+            getattr(self.instance, "input_type", "") or "choice")
 
     class Meta:
         model = QuestionnaireQuestion

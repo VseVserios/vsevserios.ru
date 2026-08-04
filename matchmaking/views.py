@@ -11,9 +11,17 @@ from django.utils.text import slugify
 
 from accounts.models import User
 
-from .forms import ReportUserForm
-from .models import HomePage, Match, Swipe, UserBan, UserBlock, UserRecommendation
-from .services import record_swipe
+from .forms import ReportUserForm, SelfSearchCriteriaForm
+from .models import (
+    HomePage,
+    Match,
+    SelfSearchCriteria,
+    SelfSearchSubscription,
+    UserBan,
+    UserBlock,
+    UserRecommendation,
+)
+from .services import record_swipe, run_self_search
 
 
 FEED_FACT_SECTIONS = [
@@ -63,7 +71,8 @@ def landing(request):
     page = HomePage.objects.filter(slug="landing", is_active=True).first()
     blocks = []
     if page is not None:
-        blocks = list(page.blocks.filter(is_active=True).order_by("order", "id"))
+        blocks = list(page.blocks.filter(
+            is_active=True).order_by("order", "id"))
 
     return render(request, "matchmaking/landing.html", {"cms_blocks": blocks})
 
@@ -99,14 +108,16 @@ def _recommendation_pair_or_404(request, user_id: int):
         raise Http404
 
     rec = (
-        UserRecommendation.objects.filter(to_user=request.user, recommended_user=other_user)
+        UserRecommendation.objects.filter(
+            to_user=request.user, recommended_user=other_user)
         .order_by("-created_at", "-id")
         .first()
     )
 
     if rec is None:
         has_match = Match.objects.filter(
-            Q(user1=request.user, user2=other_user) | Q(user1=other_user, user2=request.user)
+            Q(user1=request.user, user2=other_user) | Q(
+                user1=other_user, user2=request.user)
         ).exists()
         if not has_match:
             raise Http404
@@ -126,9 +137,42 @@ def _recommendation_pair_or_404(request, user_id: int):
     return rec, my_profile, other_user, other_profile
 
 
+def _self_search_has_full_access(user) -> bool:
+    sub = getattr(user, "self_search_subscription", None)
+    if sub is None:
+        sub = SelfSearchSubscription.objects.create(
+            user=user, trial_ends_at=timezone.now() + timezone.timedelta(days=30)
+        )
+    return sub.has_full_access()
+
+
 @login_required
 def recommendation_compatibility(request, user_id: int):
-    rec, my_profile, other_user, other_profile = _recommendation_pair_or_404(request, user_id)
+    rec, my_profile, other_user, other_profile = _recommendation_pair_or_404(
+        request, user_id)
+
+    paywalled = bool(
+        rec.is_self_search) and not _self_search_has_full_access(request.user)
+
+    if paywalled:
+        from .compatibility import compatibility
+
+        report = compatibility(my_profile, other_profile)
+        return render(
+            request,
+            "matchmaking/recommendation_compatibility.html",
+            {
+                "recommendation": rec,
+                "other_user": other_user,
+                "other_profile": other_profile,
+                "report": report,
+                "sections": [],
+                "chart_labels": [],
+                "chart_values_a_to_b": [],
+                "chart_values_b_to_a": [],
+                "paywalled": True,
+            },
+        )
 
     from .compatibility import compatibility_breakdown
 
@@ -165,9 +209,12 @@ def recommendation_compatibility(request, user_id: int):
                 part = q.get(key)
                 if not part:
                     continue
-                part["score_percent"] = int(round(float(part.get("score") or 0.0) * 100))
-                part["expected_label"] = _label_value(part.get("expected"), choices_map, choices_list)
-                part["actual_label"] = _label_value(part.get("actual"), choices_map, choices_list)
+                part["score_percent"] = int(
+                    round(float(part.get("score") or 0.0) * 100))
+                part["expected_label"] = _label_value(
+                    part.get("expected"), choices_map, choices_list)
+                part["actual_label"] = _label_value(
+                    part.get("actual"), choices_map, choices_list)
 
     chart_labels = [s.get("title") or s.get("id") or "" for s in sections]
     chart_values_a_to_b = [s.get("a_to_b") for s in sections]
@@ -191,7 +238,15 @@ def recommendation_compatibility(request, user_id: int):
 
 @login_required
 def recommendation_excel(request, user_id: int):
-    rec, my_profile, other_user, other_profile = _recommendation_pair_or_404(request, user_id)
+    rec, my_profile, other_user, other_profile = _recommendation_pair_or_404(
+        request, user_id)
+
+    if rec.is_self_search and not _self_search_has_full_access(request.user):
+        messages.error(
+            request,
+            "Подробная выгрузка доступна по подписке на самостоятельный поиск (500₽/мес).",
+        )
+        return redirect("recommendation_compatibility", user_id=user_id)
 
     from openpyxl import Workbook
     from openpyxl.utils import get_column_letter
@@ -230,17 +285,20 @@ def recommendation_excel(request, user_id: int):
                 q_text = q.get("text") or ""
 
                 raw = answers.get(qid)
-                choices_map = {str(v): str(lbl) for v, lbl in (q.get("choices") or [])}
+                choices_map = {str(v): str(lbl)
+                               for v, lbl in (q.get("choices") or [])}
 
                 if isinstance(raw, (list, tuple, set)):
                     raw_value = ", ".join([str(x) for x in raw])
                 else:
                     raw_value = "" if raw is None else str(raw)
 
-                ws.append([section_title, q_text, raw_value, _label_value(raw, choices_map)])
+                ws.append([section_title, q_text, raw_value,
+                          _label_value(raw, choices_map)])
 
         for col in range(1, 5):
-            ws.column_dimensions[get_column_letter(col)].width = 32 if col in (1, 2) else 24
+            ws.column_dimensions[get_column_letter(
+                col)].width = 32 if col in (1, 2) else 24
 
         ws.freeze_panes = "A2"
 
@@ -253,8 +311,9 @@ def recommendation_excel(request, user_id: int):
     meta.append(["Рекомендация ID", rec.id])
     meta.append(["Мой user_id", request.user.id])
     meta.append(["Кандидат", other_user.username])
-    meta.append(["Скор", rec.score if rec.score is not None else ""]) 
-    meta.append(["Создана", rec.created_at.strftime("%Y-%m-%d %H:%M") if rec.created_at else ""]) 
+    meta.append(["Скор", rec.score if rec.score is not None else ""])
+    meta.append(["Создана", rec.created_at.strftime(
+        "%Y-%m-%d %H:%M") if rec.created_at else ""])
 
     base = slugify(other_user.username) or "candidate"
     filename = f"recommendation_{base}_{rec.id}.xlsx"
@@ -296,10 +355,12 @@ def block_user(request, user_id: int):
     request.session["last_recommendation_user_id"] = to_user.id
 
     Match.objects.filter(
-        Q(user1=request.user, user2=to_user) | Q(user1=to_user, user2=request.user)
+        Q(user1=request.user, user2=to_user) | Q(
+            user1=to_user, user2=request.user)
     ).delete()
     Swipe.objects.filter(
-        Q(from_user=request.user, to_user=to_user) | Q(from_user=to_user, to_user=request.user)
+        Q(from_user=request.user, to_user=to_user) | Q(
+            from_user=to_user, to_user=request.user)
     ).delete()
 
     messages.success(request, "Пользователь заблокирован.")
@@ -368,12 +429,14 @@ def report_user(request, user_id: int):
         },
     )
 
+
 @login_required
 def undo_swipe(request):
     if request.method != "POST":
         raise Http404
 
-    last = Swipe.objects.filter(from_user=request.user).order_by("-created_at").first()
+    last = Swipe.objects.filter(
+        from_user=request.user).order_by("-created_at").first()
     if last is not None:
         rec = (
             UserRecommendation.objects.filter(
@@ -402,11 +465,14 @@ def undo_swipe(request):
 
 def _next_candidate_for(user):
     banned_ids = UserBan.objects.active().values_list("user_id", flat=True)
-    blocked_ids = UserBlock.objects.filter(blocker=user).values_list("blocked_id", flat=True)
-    blocked_by_ids = UserBlock.objects.filter(blocked=user).values_list("blocker_id", flat=True)
+    blocked_ids = UserBlock.objects.filter(
+        blocker=user).values_list("blocked_id", flat=True)
+    blocked_by_ids = UserBlock.objects.filter(
+        blocked=user).values_list("blocker_id", flat=True)
 
     rec = (
-        UserRecommendation.objects.filter(to_user=user, consumed_at__isnull=True)
+        UserRecommendation.objects.filter(
+            to_user=user, consumed_at__isnull=True)
         .filter(recommended_user__is_active=True)
         .filter(recommended_user__profile__isnull=False)
         .exclude(recommended_user_id__in=banned_ids)
@@ -435,7 +501,8 @@ def feed(request):
     last_rec_profile = None
     if last_rec_user_id is not None:
         try:
-            last_rec_user = User.objects.filter(id=int(last_rec_user_id)).first()
+            last_rec_user = User.objects.filter(
+                id=int(last_rec_user_id)).first()
         except (TypeError, ValueError):
             last_rec_user = None
         if last_rec_user is not None and hasattr(last_rec_user, "profile"):
@@ -475,11 +542,13 @@ def swipe(request, user_id: int, value: str):
         raise Http404
 
     if UserBlock.objects.filter(
-        Q(blocker=request.user, blocked=to_user) | Q(blocker=to_user, blocked=request.user)
+        Q(blocker=request.user, blocked=to_user) | Q(
+            blocker=to_user, blocked=request.user)
     ).exists():
         raise Http404
 
-    _, created_match = record_swipe(from_user=request.user, to_user=to_user, value=value)
+    _, created_match = record_swipe(
+        from_user=request.user, to_user=to_user, value=value)
 
     rec_qs = UserRecommendation.objects.filter(
         to_user=request.user,
@@ -497,7 +566,8 @@ def swipe(request, user_id: int, value: str):
         other_name = to_user.get_username()
 
     if created_match is not None:
-        messages.success(request, f"Совпадение! Теперь вы можете написать {other_name}.")
+        messages.success(
+            request, f"Совпадение! Теперь вы можете написать {other_name}.")
 
     candidate, recommendation = _next_candidate_for(request.user)
     ctx = {"candidate": candidate, "recommendation": recommendation}
@@ -514,10 +584,12 @@ def swipe(request, user_id: int, value: str):
 @login_required
 def matches(request):
     blocked_ids = set(
-        UserBlock.objects.filter(blocker=request.user).values_list("blocked_id", flat=True)
+        UserBlock.objects.filter(blocker=request.user).values_list(
+            "blocked_id", flat=True)
     )
     blocked_by_ids = set(
-        UserBlock.objects.filter(blocked=request.user).values_list("blocker_id", flat=True)
+        UserBlock.objects.filter(blocked=request.user).values_list(
+            "blocker_id", flat=True)
     )
 
     qs = (
@@ -532,7 +604,8 @@ def matches(request):
         .order_by("-created_at")
     )
 
-    banned_ids = set(UserBan.objects.active().values_list("user_id", flat=True))
+    banned_ids = set(UserBan.objects.active(
+    ).values_list("user_id", flat=True))
 
     rows = []
     for m in qs:
@@ -572,3 +645,41 @@ def matches(request):
             }
         )
     return render(request, "matchmaking/matches.html", {"rows": rows})
+
+
+@login_required
+def self_search(request):
+    criteria, _ = SelfSearchCriteria.objects.get_or_create(user=request.user)
+    sub = getattr(request.user, "self_search_subscription", None)
+    if sub is None:
+        sub = SelfSearchSubscription.objects.create(
+            user=request.user, trial_ends_at=timezone.now() + timezone.timedelta(days=30)
+        )
+
+    if request.method == "POST":
+        form = SelfSearchCriteriaForm(request.POST, instance=criteria)
+        if form.is_valid():
+            form.save()
+            created = run_self_search(
+                request.user,
+                min_compatibility_percent=criteria.min_compatibility_percent,
+            )
+            if created:
+                messages.success(
+                    request, f"Найдено новых анкет: {created}. Смотри в ленте рекомендаций.")
+            else:
+                messages.info(
+                    request, "По заданному порогу подходящих анкет пока не нашлось. Попробуйте снизить процент.")
+            return redirect("feed")
+    else:
+        form = SelfSearchCriteriaForm(instance=criteria)
+
+    return render(
+        request,
+        "matchmaking/self_search.html",
+        {
+            "form": form,
+            "subscription": sub,
+            "has_full_access": sub.has_full_access(),
+        },
+    )

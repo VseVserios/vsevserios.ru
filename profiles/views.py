@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -6,7 +7,7 @@ from matchmaking.models import UserBan, UserBlock
 
 from .forms import OnboardingForm, PhotoUploadForm, QuestionnaireForm
 from .models import Profile, ProfilePhoto
-from .questionnaire import get_questionnaire_spec_for_profile, questionnaire_progress
+from .questionnaire import SENSITIVE_SECTION_IDS, get_questionnaire_spec_for_profile, questionnaire_progress
 
 
 @login_required
@@ -31,8 +32,10 @@ def me(request):
 
     spec_me = get_questionnaire_spec_for_profile(profile, "me")
     spec_ideal = get_questionnaire_spec_for_profile(profile, "ideal")
-    me_answered, me_total, me_percent = questionnaire_progress(profile.questionnaire_me, spec_me)
-    ideal_answered, ideal_total, ideal_percent = questionnaire_progress(profile.questionnaire_ideal, spec_ideal)
+    me_answered, me_total, me_percent = questionnaire_progress(
+        profile.questionnaire_me, spec_me)
+    ideal_answered, ideal_total, ideal_percent = questionnaire_progress(
+        profile.questionnaire_ideal, spec_ideal)
     blocks_count = UserBlock.objects.filter(blocker=request.user).count()
     return render(
         request,
@@ -71,7 +74,8 @@ def blocked_users(request):
         other_avatar_url = None
         if other_profile is not None and other_profile.avatar:
             other_avatar_url = other_profile.avatar.url
-        rows.append({"block": b, "other": other, "other_name": other_name, "other_avatar_url": other_avatar_url})
+        rows.append({"block": b, "other": other, "other_name": other_name,
+                    "other_avatar_url": other_avatar_url})
 
     return render(request, "profiles/blocks.html", {"rows": rows})
 
@@ -118,7 +122,8 @@ def questionnaire(request, kind: str):
     other_kind = "ideal" if kind == "me" else "me"
     other_answers = profile.questionnaire_ideal if kind == "me" else profile.questionnaire_me
     other_spec = get_questionnaire_spec_for_profile(profile, other_kind)
-    other_answered, other_total, other_percent = questionnaire_progress(other_answers, other_spec)
+    other_answered, other_total, other_percent = questionnaire_progress(
+        other_answers, other_spec)
 
     section_hints = {
         "principles": "Ценности и принципы, которые определяют поведение в отношениях и в жизни. Нужны, чтобы находить людей с похожими установками.",
@@ -152,6 +157,7 @@ def questionnaire(request, kind: str):
                 "id": sid,
                 "title": section["title"],
                 "hint": section_hints.get(sid, ""),
+                "is_sensitive": sid in SENSITIVE_SECTION_IDS,
                 "questions": rows,
             }
         )
@@ -199,7 +205,13 @@ def upload_photo(request):
         if form.is_valid():
             photo = form.save(commit=False)
             photo.profile = profile
+            photo.moderation_status = ProfilePhoto.ModerationStatus.PENDING
             photo.save()
+            messages.success(
+                request,
+                "Фото отправлено на модерацию. Проверка обычно занимает до 24 часов, "
+                "после чего фото появится в вашем профиле.",
+            )
 
     next_url = request.POST.get("next")
     if next_url and str(next_url).startswith("/"):
@@ -275,6 +287,10 @@ def photo_set_avatar(request, photo_id: int):
 
     profile = request.user.profile
     photo = get_object_or_404(ProfilePhoto, id=photo_id, profile=profile)
+    if photo.moderation_status != ProfilePhoto.ModerationStatus.APPROVED:
+        messages.error(
+            request, "На аватар можно поставить только фото, прошедшее модерацию.")
+        return redirect("photos_manage")
     if photo.image:
         profile.avatar = photo.image
         profile.save(update_fields=["avatar", "updated_at"])
@@ -293,8 +309,10 @@ def public_profile(request, user_id: int):
     i_blocked = False
     blocked_by_other = False
     if request.user.is_authenticated and request.user.id != profile.user_id:
-        i_blocked = UserBlock.objects.filter(blocker=request.user, blocked_id=profile.user_id).exists()
-        blocked_by_other = UserBlock.objects.filter(blocker_id=profile.user_id, blocked=request.user).exists()
+        i_blocked = UserBlock.objects.filter(
+            blocker=request.user, blocked_id=profile.user_id).exists()
+        blocked_by_other = UserBlock.objects.filter(
+            blocker_id=profile.user_id, blocked=request.user).exists()
         if blocked_by_other:
             raise Http404
 

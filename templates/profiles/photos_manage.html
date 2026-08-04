@@ -1,15 +1,23 @@
 {% extends 'base.html' %}
 
-{% block title %}Мои фото{% endblock %}
+{% block title %}Добавь фото{% endblock %}
 
 {% block content %}
 <div class="mx-auto max-w-5xl" data-reveal>
   <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div>
-      <h1 class="text-2xl font-semibold tracking-tight">Мои фото</h1>
-      <p class="mt-1 text-sm text-slate-300">Загружай, удаляй и меняй порядок. Любое фото можно поставить на аватар.</p>
+      <h1 class="text-2xl font-semibold tracking-tight">Добавь фото</h1>
+      <p class="mt-1 text-sm text-slate-300">Загружай, удаляй и меняй порядок. На аватар можно поставить только фото, прошедшее модерацию.</p>
     </div>
     <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'me' %}">Назад</a>
+  </div>
+
+  <div class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-slate-300" data-reveal>
+    Каждое загруженное фото проходит модерацию — обычно это занимает до 24 часов. Загружая фото, вы подтверждаете,
+    что оно соответствует
+    <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_photo_rules' %}" target="_blank" rel="noopener">Правилам загрузки фотографий</a>
+    и
+    <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_terms' %}" target="_blank" rel="noopener">Пользовательскому соглашению</a>.
   </div>
 
   <div class="mt-6 grid gap-6 lg:grid-cols-12">
@@ -67,6 +75,13 @@
                 </form>
               </div>
               <div class="mt-2 text-xs text-slate-400">Порядок: {{ p.order }} · {{ p.created_at|date:'d.m.Y H:i' }}</div>
+              {% if p.moderation_status == 'pending' %}
+              <div class="mt-2 inline-block rounded-lg border border-amber-300/20 bg-amber-500/10 px-2 py-1 text-xs text-amber-200">На модерации (до 24 часов)</div>
+              {% elif p.moderation_status == 'approved' %}
+              <div class="mt-2 inline-block rounded-lg border border-emerald-300/20 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-200">Одобрено</div>
+              {% elif p.moderation_status == 'rejected' %}
+              <div class="mt-2 rounded-lg border border-rose-300/20 bg-rose-500/10 px-2 py-1 text-xs text-rose-200">Отклонено{% if p.rejection_reason %}: {{ p.rejection_reason }}{% endif %}</div>
+              {% endif %}
             </div>
           </div>
           {% endfor %}

@@ -7,13 +7,15 @@ urlpatterns = [
 
     path("home/", views.home_pages, name="panel_home_pages"),
     path("home/new/", views.home_page_create, name="panel_home_page_create"),
-    path("home/<int:page_id>/", views.home_page_edit, name="panel_home_page_edit"),
+    path("home/<int:page_id>/", views.home_page_edit,
+         name="panel_home_page_edit"),
     path(
         "home/<int:page_id>/blocks/new/",
         views.home_block_create,
         name="panel_home_block_create",
     ),
-    path("home/blocks/<int:block_id>/", views.home_block_edit, name="panel_home_block_edit"),
+    path("home/blocks/<int:block_id>/",
+         views.home_block_edit, name="panel_home_block_edit"),
     path(
         "home/blocks/<int:block_id>/delete/",
         views.home_block_delete,
@@ -22,7 +24,8 @@ urlpatterns = [
 
     path("users/", views.users_list, name="panel_users"),
     path("users/<int:user_id>/", views.user_detail, name="panel_user_detail"),
-    path("users/<int:user_id>/delete/", views.user_delete, name="panel_user_delete"),
+    path("users/<int:user_id>/delete/",
+         views.user_delete, name="panel_user_delete"),
     path(
         "users/<int:user_id>/recommendations/",
         views.user_recommendations,
@@ -32,6 +35,16 @@ urlpatterns = [
         "users/<int:user_id>/recommendations/send/",
         views.user_recommend_send,
         name="panel_user_recommend_send",
+    ),
+    path(
+        "users/<int:user_id>/search-orders/",
+        views.user_search_orders,
+        name="panel_user_search_orders",
+    ),
+    path(
+        "search-orders/<int:order_id>/cancel/",
+        views.user_search_order_cancel,
+        name="panel_user_search_order_cancel",
     ),
     path(
         "users/<int:user_id>/ban/",
@@ -55,7 +68,8 @@ urlpatterns = [
         name="panel_profile_detail",
     ),
 
-    path("questionnaire/sections/", views.questionnaire_sections, name="panel_questionnaire_sections"),
+    path("questionnaire/sections/", views.questionnaire_sections,
+         name="panel_questionnaire_sections"),
     path(
         "questionnaire/sections/new/",
         views.questionnaire_section_create,
@@ -102,11 +116,16 @@ urlpatterns = [
         name="panel_questionnaire_choice_delete",
     ),
     path("photos/", views.photos_list, name="panel_photos"),
-    path("photos/<int:photo_id>/delete/", views.photo_delete, name="panel_photo_delete"),
+    path("photos/<int:photo_id>/moderate/",
+         views.photo_moderate, name="panel_photo_moderate"),
+    path("photos/<int:photo_id>/delete/",
+         views.photo_delete, name="panel_photo_delete"),
     path("swipes/", views.swipes_list, name="panel_swipes"),
-    path("swipes/<int:swipe_id>/delete/", views.swipe_delete, name="panel_swipe_delete"),
+    path("swipes/<int:swipe_id>/delete/",
+         views.swipe_delete, name="panel_swipe_delete"),
     path("matches/", views.matches_list, name="panel_matches"),
-    path("matches/<int:match_id>/delete/", views.match_delete, name="panel_match_delete"),
+    path("matches/<int:match_id>/delete/",
+         views.match_delete, name="panel_match_delete"),
     path("messages/", views.messages_list, name="panel_messages"),
     path(
         "messages/<int:message_id>/delete/",

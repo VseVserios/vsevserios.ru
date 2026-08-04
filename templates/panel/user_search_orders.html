@@ -1,0 +1,58 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Панель — Заказы подбора{% endblock %}
+
+{% block panel_heading %}Заказы подбора: {{ target_user.username }}{% endblock %}
+{% block panel_subtitle %}Платный подбор администратором: поверхностный (500₽), точечный (2000₽), углублённый (10000₽).{% endblock %}
+
+{% block panel_top_actions %}
+<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_detail' target_user.id %}">Назад</a>
+<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_recommendations' target_user.id %}">Рекомендации</a>
+{% endblock %}
+
+{% block panel_content %}
+<div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+    <div class="text-sm font-medium">Новый заказ</div>
+    <form method="post" class="mt-4 grid gap-3 sm:grid-cols-3 sm:items-end">
+        {% csrf_token %}
+        <div>
+            {{ form.tier.label_tag }}
+            {{ form.tier }}
+        </div>
+        <div class="sm:col-span-2">
+            {{ form.required_criteria.label_tag }}
+            {{ form.required_criteria }}
+        </div>
+        <div class="sm:col-span-3">
+            <button type="submit" class="rounded-xl bg-fuchsia-500 px-4 py-3 text-sm font-medium text-white hover:bg-fuchsia-400">Создать заказ</button>
+        </div>
+    </form>
+</div>
+
+<div class="mt-6 space-y-4">
+    {% for order in orders %}
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <div class="text-sm font-semibold">{{ order.get_tier_display }} — {{ order.price }}₽</div>
+                <div class="mt-1 text-xs text-slate-400">Создан {{ order.created_at|date:'d.m.Y H:i' }} · Отклонений подряд: {{ order.rejected_streak }}/5</div>
+                {% if order.required_criteria %}
+                <div class="mt-1 text-xs text-slate-300">{{ order.required_criteria }}</div>
+                {% endif %}
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="rounded-lg border border-white/10 bg-slate-950/30 px-3 py-1 text-xs {% if order.status == 'active' %}text-emerald-300{% elif order.status == 'cancelled' %}text-rose-300{% else %}text-slate-300{% endif %}">{{ order.get_status_display }}</span>
+                {% if order.status == 'active' %}
+                <form method="post" action="{% url 'panel_user_search_order_cancel' order.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="rounded-xl bg-rose-500/15 px-3 py-2 text-xs font-medium text-rose-200 hover:bg-rose-500/25">Отменить</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-8 text-sm text-slate-300">Заказов пока нет.</div>
+    {% endfor %}
+</div>
+{% endblock %}

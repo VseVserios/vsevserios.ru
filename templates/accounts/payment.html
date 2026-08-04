@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Оплата услуги{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-2xl" data-reveal>
+  <div>
+    <h1 class="text-2xl font-semibold tracking-tight">Оплата услуги</h1>
+    <p class="mt-1 text-sm text-slate-300">Внутренний Кошелёк Сайта. Реальный платёжный шлюз пока не подключён — пополнение имитируется.</p>
+  </div>
+
+  <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+    <div class="text-sm text-slate-300">Баланс кошелька</div>
+    <div class="mt-1 text-4xl font-semibold tracking-tight">{{ wallet_balance }}₽</div>
+
+    <div class="mt-4 rounded-2xl border border-white/10 bg-slate-950/30 p-4 text-xs text-slate-300">
+      Совершая оплату, вы подтверждаете, что ознакомлены и согласны с условиями оплаты и возврата средств, изложенными в
+      <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_terms' %}" target="_blank" rel="noopener">Пользовательском соглашении</a>
+      (раздел «Кошелёк и оплата услуг»). Списание с баланса происходит только за фактически оказанные услуги Сайта.
+      Возврат неиспользованных средств возможен по обращению в поддержку в порядке, предусмотренном Пользовательским соглашением.
+    </div>
+
+    <form method="post" action="{% url 'payment_topup' %}" class="mt-4 flex flex-col gap-3 sm:flex-row">
+      {% csrf_token %}
+      <input type="number" name="amount" min="1" step="1" placeholder="Сумма пополнения, ₽" class="flex-1" required />
+      <button type="submit" class="rounded-xl bg-fuchsia-500 px-4 py-3 text-sm font-medium text-white hover:bg-fuchsia-400 sm:w-auto">Пополнить</button>
+    </form>
+  </div>
+
+  <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+    <div class="text-sm font-semibold">Подписка «Самостоятельный поиск» — 500₽/мес</div>
+    <p class="mt-2 text-sm text-slate-300">
+      Первый месяц самостоятельного поиска бесплатный: доступна подробная совместимость по вопросам, графики и Excel-выгрузка.
+      После пробного периода для этих возможностей нужна подписка. Без подписки виден только общий процент совместимости.
+    </p>
+
+    {% if has_full_access %}
+    <div class="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+      {% if subscription.paid_until %}
+      Подписка активна до {{ subscription.paid_until|date:"d.m.Y" }}.
+      {% else %}
+      Бесплатный пробный период активен до {{ subscription.trial_ends_at|date:"d.m.Y" }}.
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'payment_self_search' %}" class="mt-4">
+      {% csrf_token %}
+      <button type="submit" class="w-full rounded-xl bg-white/10 px-4 py-3 text-sm font-medium hover:bg-white/15">
+        {% if has_full_access %}Продлить ещё на месяц за 500₽{% else %}Оформить подписку за 500₽{% endif %}
+      </button>
+    </form>
+    <div class="mt-2 text-xs text-slate-400">Списание происходит с баланса кошелька. Если средств недостаточно — сначала пополните баланс выше.</div>
+  </div>
+</div>
+{% endblock %}

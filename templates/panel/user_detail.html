@@ -8,6 +8,7 @@
 {% block panel_top_actions %}
 <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_users' %}">Назад</a>
 <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_recommendations' target_user.id %}">Рекомендации</a>
+<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_search_orders' target_user.id %}">Заказы подбора</a>
 {% if request.user.is_staff %}
 <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_set_password' target_user.id %}">Сменить пароль</a>
 <a class="rounded-xl bg-rose-500 px-4 py-2 text-sm font-medium text-white hover:bg-rose-400" href="{% url 'panel_user_delete' target_user.id %}">Удалить</a>

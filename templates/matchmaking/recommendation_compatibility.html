@@ -11,9 +11,27 @@
         </div>
         <div class="flex flex-wrap items-center gap-3">
             <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'feed' %}">Назад</a>
+            {% if not paywalled %}
             <a class="rounded-xl bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/15" href="{% url 'recommendation_excel' other_user.id %}">Скачать Excel</a>
+            {% endif %}
         </div>
     </div>
+
+    {% if paywalled %}
+    <div class="mt-6 rounded-3xl border border-fuchsia-400/20 bg-fuchsia-500/10 p-6" data-reveal>
+        <div class="text-sm font-semibold">Подробная совместимость — по подписке</div>
+        <p class="mt-2 text-sm text-slate-200">
+            Пробный месяц самостоятельного поиска закончился (или ещё не начинался). Общий процент совместимости доступен всегда,
+            а разбивка по вопросам, графики и анкета «Кто мне подходит» кандидата открываются с подпиской 500₽/мес.
+        </p>
+        <a class="mt-4 inline-block rounded-xl bg-fuchsia-500 px-4 py-3 text-sm font-medium text-white hover:bg-fuchsia-400" href="{% url 'payment_self_search' %}">Оформить подписку за 500₽/мес</a>
+    </div>
+
+    <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+        <div class="text-sm text-slate-300">Общий процент</div>
+        <div class="mt-1 text-4xl font-semibold tracking-tight">{% if report.overall is not None %}{{ report.overall }}%{% else %}—{% endif %}</div>
+    </div>
+    {% else %}
 
     <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
         <div class="grid gap-4 sm:grid-cols-3 sm:items-end">
@@ -233,5 +251,6 @@
         <div class="rounded-3xl border border-white/10 bg-white/5 p-8 text-sm text-slate-300" data-reveal>Нет данных для сравнения (возможно, анкеты не заполнены).</div>
         {% endif %}
     </div>
+    {% endif %}
 </div>
 {% endblock %}

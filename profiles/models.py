@@ -23,8 +23,10 @@ class Profile(models.Model):
     bio = models.TextField(blank=True)
     city = models.CharField(max_length=64, blank=True)
     birth_date = models.DateField(null=True, blank=True)
-    gender = models.CharField(max_length=16, choices=Gender.choices, blank=True)
-    looking_for = models.CharField(max_length=16, choices=LookingFor.choices, blank=True)
+    gender = models.CharField(
+        max_length=16, choices=Gender.choices, blank=True)
+    looking_for = models.CharField(
+        max_length=16, choices=LookingFor.choices, blank=True)
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
     questionnaire_me = models.JSONField(default=dict, blank=True)
     questionnaire_ideal = models.JSONField(default=dict, blank=True)
@@ -33,7 +35,8 @@ class Profile(models.Model):
         DARK = "dark", "Тёмная"
         LIGHT = "light", "Светлая"
 
-    ui_theme = models.CharField(max_length=16, choices=Theme.choices, default=Theme.DARK)
+    ui_theme = models.CharField(
+        max_length=16, choices=Theme.choices, default=Theme.DARK)
     notify_email_matches = models.BooleanField(default=True)
     notify_email_messages = models.BooleanField(default=True)
     notify_email_marketing = models.BooleanField(default=False)
@@ -51,15 +54,38 @@ class Profile(models.Model):
             years -= 1
         return years
 
+    @property
+    def approved_photos(self):
+        return self.photos.filter(moderation_status=ProfilePhoto.ModerationStatus.APPROVED)
+
     def __str__(self) -> str:
         return f"Profile({self.user_id})"
 
 
 class ProfilePhoto(models.Model):
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="photos")
+    class ModerationStatus(models.TextChoices):
+        PENDING = "pending", "На модерации"
+        APPROVED = "approved", "Одобрено"
+        REJECTED = "rejected", "Отклонено"
+
+    profile = models.ForeignKey(
+        Profile, on_delete=models.CASCADE, related_name="photos")
     image = models.ImageField(upload_to="photos/")
     order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    moderation_status = models.CharField(
+        max_length=16, choices=ModerationStatus.choices, default=ModerationStatus.PENDING,
+    )
+    moderated_at = models.DateTimeField(null=True, blank=True)
+    moderated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="moderated_photos",
+    )
+    rejection_reason = models.CharField(max_length=255, blank=True, default="")
 
     class Meta:
         ordering = ["order", "created_at"]
@@ -70,7 +96,8 @@ class ProfilePhoto(models.Model):
 
 class QuestionnaireSection(models.Model):
     code = models.SlugField(max_length=64, unique=True)
-    gender = models.CharField(max_length=16, choices=Profile.Gender.choices, blank=True, default="")
+    gender = models.CharField(
+        max_length=16, choices=Profile.Gender.choices, blank=True, default="")
     title = models.CharField(max_length=128)
     hint = models.CharField(max_length=280, blank=True, default="")
     show_in_me = models.BooleanField(default=True)
@@ -91,7 +118,8 @@ class QuestionnaireQuestion(models.Model):
         related_name="questions",
     )
     code = models.SlugField(max_length=64, unique=True)
-    gender = models.CharField(max_length=16, choices=Profile.Gender.choices, blank=True, default="")
+    gender = models.CharField(
+        max_length=16, choices=Profile.Gender.choices, blank=True, default="")
     text = models.TextField()
     input_type = models.CharField(max_length=16, blank=True, default="choice")
     is_multiple = models.BooleanField(default=False)
@@ -119,7 +147,8 @@ class QuestionnaireChoice(models.Model):
     class Meta:
         ordering = ["order", "id"]
         constraints = [
-            models.UniqueConstraint(fields=["question", "value"], name="uniq_question_choice_value"),
+            models.UniqueConstraint(
+                fields=["question", "value"], name="uniq_question_choice_value"),
         ]
 
     def __str__(self) -> str:

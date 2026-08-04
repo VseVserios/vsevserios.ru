@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Самостоятельный поиск{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-2xl" data-reveal>
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Самостоятельный поиск</h1>
+      <p class="mt-1 text-sm text-slate-300">Задай минимальный процент совместимости — мы подберём подходящие анкеты в твою ленту.</p>
+    </div>
+    <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'feed' %}">В ленту</a>
+  </div>
+
+  <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+    {% if has_full_access %}
+      {% if subscription.paid_until %}
+      <div class="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+        Подписка активна до {{ subscription.paid_until|date:"d.m.Y" }}. Доступна подробная совместимость и Excel-выгрузка.
+      </div>
+      {% else %}
+      <div class="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+        Бесплатный пробный период до {{ subscription.trial_ends_at|date:"d.m.Y" }}. Доступна подробная совместимость и Excel-выгрузка.
+      </div>
+      {% endif %}
+    {% else %}
+      <div class="rounded-2xl border border-amber-300/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+        Пробный период закончился. Общий процент совместимости виден всегда, а подробная разбивка по вопросам, графики и анкета
+        «Кто мне подходит» кандидата — по подписке 500₽/мес.
+        <a class="ml-1 underline underline-offset-4 hover:text-white" href="{% url 'payment_self_search' %}">Оформить подписку</a>.
+      </div>
+    {% endif %}
+
+    <form method="post" class="mt-6 space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="mb-1 block text-sm text-slate-200">Минимальный процент совместимости</label>
+        {{ form.min_compatibility_percent }}
+        {% if form.min_compatibility_percent.errors %}
+        <div class="mt-1 text-sm text-rose-300">{{ form.min_compatibility_percent.errors }}</div>
+        {% endif %}
+        <div class="mt-1 text-xs text-slate-400">Чем выше порог, тем меньше, но точнее подобранных анкет.</div>
+      </div>
+
+      <button type="submit" class="w-full rounded-xl bg-fuchsia-500 px-4 py-3 font-medium text-white hover:bg-fuchsia-400">Найти анкеты</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

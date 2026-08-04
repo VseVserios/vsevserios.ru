@@ -11,6 +11,10 @@ SCALE_CHOICES = [
     ("5", "Полностью про меня"),
 ]
 
+# Разделы анкеты, ответы в которых относятся к специальным категориям
+# персональных данных (сведения о сексуальной жизни, ст. 10 152-ФЗ).
+SENSITIVE_SECTION_IDS = {"sexual"}
+
 
 def _normalize_questionnaire_spec(spec):
     out = []
@@ -39,6 +43,7 @@ def _normalize_questionnaire_spec(spec):
             }
         )
     return out
+
 
 BUDGET_CHOICES = [
     ("low", "Низкие"),
@@ -72,128 +77,206 @@ QUESTIONNAIRE_SPEC = [
         "id": "principles",
         "title": "Жизненные принципы",
         "questions": [
-            {"id": "principles_01", "text": "Честность важнее, чем удобство", "choices": SCALE_CHOICES},
-            {"id": "principles_02", "text": "Я ценю свободу и личные границы", "choices": SCALE_CHOICES},
-            {"id": "principles_03", "text": "Семья для меня в приоритете", "choices": SCALE_CHOICES},
-            {"id": "principles_04", "text": "Я умею признавать ошибки", "choices": SCALE_CHOICES},
-            {"id": "principles_05", "text": "Мне важна духовность/смысл", "choices": SCALE_CHOICES},
-            {"id": "principles_06", "text": "Я избегаю конфликтов любой ценой", "choices": SCALE_CHOICES},
-            {"id": "principles_07", "text": "Я готов(а) к компромиссам", "choices": SCALE_CHOICES},
-            {"id": "principles_08", "text": "Для меня важны традиции", "choices": SCALE_CHOICES},
-            {"id": "principles_09", "text": "Я предпочитаю стабильность риску", "choices": SCALE_CHOICES},
-            {"id": "principles_10", "text": "Я быстро восстанавливаюсь после стресса", "choices": SCALE_CHOICES},
+            {"id": "principles_01", "text": "Честность важнее, чем удобство",
+                "choices": SCALE_CHOICES},
+            {"id": "principles_02", "text": "Я ценю свободу и личные границы",
+                "choices": SCALE_CHOICES},
+            {"id": "principles_03", "text": "Семья для меня в приоритете",
+                "choices": SCALE_CHOICES},
+            {"id": "principles_04", "text": "Я умею признавать ошибки",
+                "choices": SCALE_CHOICES},
+            {"id": "principles_05", "text": "Мне важна духовность/смысл",
+                "choices": SCALE_CHOICES},
+            {"id": "principles_06", "text": "Я избегаю конфликтов любой ценой",
+                "choices": SCALE_CHOICES},
+            {"id": "principles_07",
+                "text": "Я готов(а) к компромиссам", "choices": SCALE_CHOICES},
+            {"id": "principles_08", "text": "Для меня важны традиции",
+                "choices": SCALE_CHOICES},
+            {"id": "principles_09", "text": "Я предпочитаю стабильность риску",
+                "choices": SCALE_CHOICES},
+            {"id": "principles_10", "text": "Я быстро восстанавливаюсь после стресса",
+                "choices": SCALE_CHOICES},
         ],
     },
     {
         "id": "housing",
         "title": "Жилищные условия",
         "questions": [
-            {"id": "housing_01", "text": "Мне важно жить отдельно от родителей", "choices": SCALE_CHOICES},
-            {"id": "housing_02", "text": "Я люблю порядок и системность дома", "choices": SCALE_CHOICES},
-            {"id": "housing_03", "text": "Я готов(а) к совместному быту сразу", "choices": SCALE_CHOICES},
-            {"id": "housing_04", "text": "Мне нужен личный угол/пространство", "choices": SCALE_CHOICES},
-            {"id": "housing_05", "text": "Я нормально отношусь к гостям дома", "choices": SCALE_CHOICES},
-            {"id": "housing_06", "text": "Мне важно, чтобы дома было тихо", "choices": SCALE_CHOICES},
-            {"id": "housing_07", "text": "Дом для меня — место восстановления", "choices": SCALE_CHOICES},
-            {"id": "housing_08", "text": "Я люблю готовить дома", "choices": SCALE_CHOICES},
-            {"id": "housing_09", "text": "Мне важно иметь собственное жильё", "choices": SCALE_CHOICES},
-            {"id": "housing_10", "text": "Я готов(а) к переезду ради отношений", "choices": SCALE_CHOICES},
+            {"id": "housing_01", "text": "Мне важно жить отдельно от родителей",
+                "choices": SCALE_CHOICES},
+            {"id": "housing_02", "text": "Я люблю порядок и системность дома",
+                "choices": SCALE_CHOICES},
+            {"id": "housing_03",
+                "text": "Я готов(а) к совместному быту сразу", "choices": SCALE_CHOICES},
+            {"id": "housing_04", "text": "Мне нужен личный угол/пространство",
+                "choices": SCALE_CHOICES},
+            {"id": "housing_05", "text": "Я нормально отношусь к гостям дома",
+                "choices": SCALE_CHOICES},
+            {"id": "housing_06", "text": "Мне важно, чтобы дома было тихо",
+                "choices": SCALE_CHOICES},
+            {"id": "housing_07", "text": "Дом для меня — место восстановления",
+                "choices": SCALE_CHOICES},
+            {"id": "housing_08", "text": "Я люблю готовить дома",
+                "choices": SCALE_CHOICES},
+            {"id": "housing_09", "text": "Мне важно иметь собственное жильё",
+                "choices": SCALE_CHOICES},
+            {"id": "housing_10",
+                "text": "Я готов(а) к переезду ради отношений", "choices": SCALE_CHOICES},
         ],
     },
     {
         "id": "roles",
         "title": "Роли",
         "questions": [
-            {"id": "roles_01", "text": "Какой формат ролей в паре комфортен", "choices": ROLE_CHOICES},
-            {"id": "roles_02", "text": "Мне комфортно быть лидером в паре", "choices": SCALE_CHOICES},
-            {"id": "roles_03", "text": "Мне комфортно следовать за партнёром", "choices": SCALE_CHOICES},
-            {"id": "roles_04", "text": "Решения должны приниматься вместе", "choices": SCALE_CHOICES},
-            {"id": "roles_05", "text": "Мне важно распределение обязанностей", "choices": SCALE_CHOICES},
-            {"id": "roles_06", "text": "Я люблю заботиться о партнёре", "choices": SCALE_CHOICES},
-            {"id": "roles_07", "text": "Мне важна инициатива партнёра", "choices": SCALE_CHOICES},
-            {"id": "roles_08", "text": "Я хочу, чтобы у каждого были свои зоны", "choices": SCALE_CHOICES},
-            {"id": "roles_09", "text": "Я хочу общие цели на 3–5 лет", "choices": SCALE_CHOICES},
-            {"id": "roles_10", "text": "Мне важно уважение к моим решениям", "choices": SCALE_CHOICES},
+            {"id": "roles_01", "text": "Какой формат ролей в паре комфортен",
+                "choices": ROLE_CHOICES},
+            {"id": "roles_02", "text": "Мне комфортно быть лидером в паре",
+                "choices": SCALE_CHOICES},
+            {"id": "roles_03", "text": "Мне комфортно следовать за партнёром",
+                "choices": SCALE_CHOICES},
+            {"id": "roles_04", "text": "Решения должны приниматься вместе",
+                "choices": SCALE_CHOICES},
+            {"id": "roles_05", "text": "Мне важно распределение обязанностей",
+                "choices": SCALE_CHOICES},
+            {"id": "roles_06", "text": "Я люблю заботиться о партнёре",
+                "choices": SCALE_CHOICES},
+            {"id": "roles_07", "text": "Мне важна инициатива партнёра",
+                "choices": SCALE_CHOICES},
+            {"id": "roles_08", "text": "Я хочу, чтобы у каждого были свои зоны",
+                "choices": SCALE_CHOICES},
+            {"id": "roles_09", "text": "Я хочу общие цели на 3–5 лет",
+                "choices": SCALE_CHOICES},
+            {"id": "roles_10", "text": "Мне важно уважение к моим решениям",
+                "choices": SCALE_CHOICES},
         ],
     },
     {
         "id": "work",
         "title": "Работа",
         "questions": [
-            {"id": "work_01", "text": "Я амбициозен/амбициозна", "choices": SCALE_CHOICES},
-            {"id": "work_02", "text": "Для меня важна карьера", "choices": SCALE_CHOICES},
-            {"id": "work_03", "text": "Я готов(а) много работать ради цели", "choices": SCALE_CHOICES},
-            {"id": "work_04", "text": "Я предпочитаю work-life balance", "choices": SCALE_CHOICES},
-            {"id": "work_05", "text": "Мне важно, чтобы партнёр развивался", "choices": SCALE_CHOICES},
-            {"id": "work_06", "text": "Я хочу/готов(а) поддерживать партнёра в карьере", "choices": SCALE_CHOICES},
-            {"id": "work_07", "text": "Я открыт(а) к переезду из-за работы", "choices": SCALE_CHOICES},
-            {"id": "work_08", "text": "Мне важно иметь свой проект/дело", "choices": SCALE_CHOICES},
-            {"id": "work_09", "text": "Я стабилен(а) в доходах", "choices": SCALE_CHOICES},
-            {"id": "work_10", "text": "Я готов(а) к совместным финансовым целям", "choices": SCALE_CHOICES},
+            {"id": "work_01", "text": "Я амбициозен/амбициозна",
+                "choices": SCALE_CHOICES},
+            {"id": "work_02", "text": "Для меня важна карьера",
+                "choices": SCALE_CHOICES},
+            {"id": "work_03",
+                "text": "Я готов(а) много работать ради цели", "choices": SCALE_CHOICES},
+            {"id": "work_04", "text": "Я предпочитаю work-life balance",
+                "choices": SCALE_CHOICES},
+            {"id": "work_05", "text": "Мне важно, чтобы партнёр развивался",
+                "choices": SCALE_CHOICES},
+            {"id": "work_06",
+                "text": "Я хочу/готов(а) поддерживать партнёра в карьере", "choices": SCALE_CHOICES},
+            {"id": "work_07",
+                "text": "Я открыт(а) к переезду из-за работы", "choices": SCALE_CHOICES},
+            {"id": "work_08", "text": "Мне важно иметь свой проект/дело",
+                "choices": SCALE_CHOICES},
+            {"id": "work_09",
+                "text": "Я стабилен(а) в доходах", "choices": SCALE_CHOICES},
+            {"id": "work_10",
+                "text": "Я готов(а) к совместным финансовым целям", "choices": SCALE_CHOICES},
         ],
     },
     {
         "id": "wife_expenses",
         "title": "Расходы на жену",
         "questions": [
-            {"id": "wife_expenses_01", "text": "Уровень расходов/подарков", "choices": BUDGET_CHOICES},
-            {"id": "wife_expenses_02", "text": "Мужчина должен полностью обеспечивать", "choices": SCALE_CHOICES},
-            {"id": "wife_expenses_03", "text": "Я за общий бюджет", "choices": SCALE_CHOICES},
-            {"id": "wife_expenses_04", "text": "Я за раздельный бюджет", "choices": SCALE_CHOICES},
-            {"id": "wife_expenses_05", "text": "Траты должны обсуждаться заранее", "choices": SCALE_CHOICES},
-            {"id": "wife_expenses_06", "text": "Мне важны регулярные подарки", "choices": SCALE_CHOICES},
-            {"id": "wife_expenses_07", "text": "Мне важны совместные поездки", "choices": SCALE_CHOICES},
-            {"id": "wife_expenses_08", "text": "Я готов(а) инвестировать в образование партнёра", "choices": SCALE_CHOICES},
-            {"id": "wife_expenses_09", "text": "Я готов(а) поддерживать родных партнёра", "choices": SCALE_CHOICES},
-            {"id": "wife_expenses_10", "text": "Мне важна финансовая безопасность", "choices": SCALE_CHOICES},
+            {"id": "wife_expenses_01", "text": "Уровень расходов/подарков",
+                "choices": BUDGET_CHOICES},
+            {"id": "wife_expenses_02", "text": "Мужчина должен полностью обеспечивать",
+                "choices": SCALE_CHOICES},
+            {"id": "wife_expenses_03", "text": "Я за общий бюджет",
+                "choices": SCALE_CHOICES},
+            {"id": "wife_expenses_04", "text": "Я за раздельный бюджет",
+                "choices": SCALE_CHOICES},
+            {"id": "wife_expenses_05", "text": "Траты должны обсуждаться заранее",
+                "choices": SCALE_CHOICES},
+            {"id": "wife_expenses_06", "text": "Мне важны регулярные подарки",
+                "choices": SCALE_CHOICES},
+            {"id": "wife_expenses_07", "text": "Мне важны совместные поездки",
+                "choices": SCALE_CHOICES},
+            {"id": "wife_expenses_08",
+                "text": "Я готов(а) инвестировать в образование партнёра", "choices": SCALE_CHOICES},
+            {"id": "wife_expenses_09",
+                "text": "Я готов(а) поддерживать родных партнёра", "choices": SCALE_CHOICES},
+            {"id": "wife_expenses_10", "text": "Мне важна финансовая безопасность",
+                "choices": SCALE_CHOICES},
         ],
     },
     {
         "id": "sexual",
         "title": "Сексуальная совместимость",
         "questions": [
-            {"id": "sexual_01", "text": "Интим — важная часть отношений", "choices": SCALE_CHOICES},
-            {"id": "sexual_02", "text": "Мне важно обсуждать желания", "choices": SCALE_CHOICES},
-            {"id": "sexual_03", "text": "Я комфортно говорю о границах", "choices": SCALE_CHOICES},
-            {"id": "sexual_04", "text": "Мне важна нежность", "choices": SCALE_CHOICES},
+            {"id": "sexual_01", "text": "Интим — важная часть отношений",
+                "choices": SCALE_CHOICES},
+            {"id": "sexual_02", "text": "Мне важно обсуждать желания",
+                "choices": SCALE_CHOICES},
+            {"id": "sexual_03", "text": "Я комфортно говорю о границах",
+                "choices": SCALE_CHOICES},
+            {"id": "sexual_04", "text": "Мне важна нежность",
+                "choices": SCALE_CHOICES},
             {"id": "sexual_05", "text": "Мне важна страсть", "choices": SCALE_CHOICES},
-            {"id": "sexual_06", "text": "Я открыт(а) к экспериментам", "choices": SCALE_CHOICES},
-            {"id": "sexual_07", "text": "Я предпочитаю стабильность", "choices": SCALE_CHOICES},
-            {"id": "sexual_08", "text": "Я ценю инициативу партнёра", "choices": SCALE_CHOICES},
-            {"id": "sexual_09", "text": "Мне важна эмоциональная близость", "choices": SCALE_CHOICES},
-            {"id": "sexual_10", "text": "Мне важна совместимость по темпераменту", "choices": SCALE_CHOICES},
+            {"id": "sexual_06",
+                "text": "Я открыт(а) к экспериментам", "choices": SCALE_CHOICES},
+            {"id": "sexual_07", "text": "Я предпочитаю стабильность",
+                "choices": SCALE_CHOICES},
+            {"id": "sexual_08", "text": "Я ценю инициативу партнёра",
+                "choices": SCALE_CHOICES},
+            {"id": "sexual_09", "text": "Мне важна эмоциональная близость",
+                "choices": SCALE_CHOICES},
+            {"id": "sexual_10", "text": "Мне важна совместимость по темпераменту",
+                "choices": SCALE_CHOICES},
         ],
     },
     {
         "id": "rest",
         "title": "Отдых",
         "questions": [
-            {"id": "rest_01", "text": "Я люблю активный отдых", "choices": SCALE_CHOICES},
-            {"id": "rest_02", "text": "Я люблю спокойный отдых", "choices": SCALE_CHOICES},
+            {"id": "rest_01", "text": "Я люблю активный отдых",
+                "choices": SCALE_CHOICES},
+            {"id": "rest_02", "text": "Я люблю спокойный отдых",
+                "choices": SCALE_CHOICES},
             {"id": "rest_03", "text": "Я люблю путешествия", "choices": SCALE_CHOICES},
-            {"id": "rest_04", "text": "Мне важны совместные хобби", "choices": SCALE_CHOICES},
-            {"id": "rest_05", "text": "Мне нужно иногда отдыхать отдельно", "choices": SCALE_CHOICES},
-            {"id": "rest_06", "text": "Я люблю спонтанность", "choices": SCALE_CHOICES},
-            {"id": "rest_07", "text": "Я люблю планировать заранее", "choices": SCALE_CHOICES},
-            {"id": "rest_08", "text": "Мне важны вечерние прогулки/встречи", "choices": SCALE_CHOICES},
-            {"id": "rest_09", "text": "Я люблю мероприятия и тусовки", "choices": SCALE_CHOICES},
-            {"id": "rest_10", "text": "Мне важен здоровый сон и режим", "choices": SCALE_CHOICES},
+            {"id": "rest_04", "text": "Мне важны совместные хобби",
+                "choices": SCALE_CHOICES},
+            {"id": "rest_05", "text": "Мне нужно иногда отдыхать отдельно",
+                "choices": SCALE_CHOICES},
+            {"id": "rest_06", "text": "Я люблю спонтанность",
+                "choices": SCALE_CHOICES},
+            {"id": "rest_07", "text": "Я люблю планировать заранее",
+                "choices": SCALE_CHOICES},
+            {"id": "rest_08", "text": "Мне важны вечерние прогулки/встречи",
+                "choices": SCALE_CHOICES},
+            {"id": "rest_09", "text": "Я люблю мероприятия и тусовки",
+                "choices": SCALE_CHOICES},
+            {"id": "rest_10", "text": "Мне важен здоровый сон и режим",
+                "choices": SCALE_CHOICES},
         ],
     },
     {
         "id": "love_language",
         "title": "Язык любви",
         "questions": [
-            {"id": "love_language_01", "text": "Мой главный язык любви", "choices": LANGUAGE_CHOICES},
-            {"id": "love_language_02", "text": "Мне важны слова поддержки", "choices": SCALE_CHOICES},
-            {"id": "love_language_03", "text": "Мне важно качественное время вместе", "choices": SCALE_CHOICES},
-            {"id": "love_language_04", "text": "Мне важны прикосновения", "choices": SCALE_CHOICES},
-            {"id": "love_language_05", "text": "Мне важны действия/забота", "choices": SCALE_CHOICES},
-            {"id": "love_language_06", "text": "Мне важны подарки", "choices": SCALE_CHOICES},
-            {"id": "love_language_07", "text": "Я люблю делать сюрпризы", "choices": SCALE_CHOICES},
-            {"id": "love_language_08", "text": "Я люблю говорить о чувствах", "choices": SCALE_CHOICES},
-            {"id": "love_language_09", "text": "Мне важно слышать признание", "choices": SCALE_CHOICES},
-            {"id": "love_language_10", "text": "Мне важны совместные ритуалы", "choices": SCALE_CHOICES},
+            {"id": "love_language_01", "text": "Мой главный язык любви",
+                "choices": LANGUAGE_CHOICES},
+            {"id": "love_language_02", "text": "Мне важны слова поддержки",
+                "choices": SCALE_CHOICES},
+            {"id": "love_language_03", "text": "Мне важно качественное время вместе",
+                "choices": SCALE_CHOICES},
+            {"id": "love_language_04", "text": "Мне важны прикосновения",
+                "choices": SCALE_CHOICES},
+            {"id": "love_language_05", "text": "Мне важны действия/забота",
+                "choices": SCALE_CHOICES},
+            {"id": "love_language_06", "text": "Мне важны подарки",
+                "choices": SCALE_CHOICES},
+            {"id": "love_language_07", "text": "Я люблю делать сюрпризы",
+                "choices": SCALE_CHOICES},
+            {"id": "love_language_08", "text": "Я люблю говорить о чувствах",
+                "choices": SCALE_CHOICES},
+            {"id": "love_language_09", "text": "Мне важно слышать признание",
+                "choices": SCALE_CHOICES},
+            {"id": "love_language_10", "text": "Мне важны совместные ритуалы",
+                "choices": SCALE_CHOICES},
         ],
     },
     {
@@ -290,15 +373,18 @@ def get_questionnaire_spec(gender: str | None = None, kind: str | None = None):
 
         if not QuestionnaireSection.objects.exists():
             spec = _normalize_questionnaire_spec(QUESTIONNAIRE_SPEC)
-            kind_value = (str(kind).strip().lower() if kind is not None else "") or None
+            kind_value = (str(kind).strip().lower()
+                          if kind is not None else "") or None
             if kind_value != "ideal":
                 for section in spec:
                     for q in section.get("questions") or []:
                         q["is_multiple"] = False
             return spec
 
-        gender_value = (str(gender).strip() if gender is not None else "") or None
-        kind_value = (str(kind).strip().lower() if kind is not None else "") or None
+        gender_value = (str(gender).strip()
+                        if gender is not None else "") or None
+        kind_value = (str(kind).strip().lower()
+                      if kind is not None else "") or None
 
         sections_qs = QuestionnaireSection.objects.order_by("order", "id")
         questions_qs = QuestionnaireQuestion.objects.order_by("order", "id")
@@ -310,8 +396,10 @@ def get_questionnaire_spec(gender: str | None = None, kind: str | None = None):
             questions_qs = questions_qs.filter(**{question_flag: True})
 
         if gender_value is not None:
-            sections_qs = sections_qs.filter(Q(gender="") | Q(gender=gender_value))
-            questions_qs = questions_qs.filter(Q(gender="") | Q(gender=gender_value))
+            sections_qs = sections_qs.filter(
+                Q(gender="") | Q(gender=gender_value))
+            questions_qs = questions_qs.filter(
+                Q(gender="") | Q(gender=gender_value))
 
         sections_qs = sections_qs.prefetch_related(
             Prefetch(
@@ -319,7 +407,8 @@ def get_questionnaire_spec(gender: str | None = None, kind: str | None = None):
                 queryset=questions_qs.prefetch_related(
                     Prefetch(
                         "choices",
-                        queryset=QuestionnaireChoice.objects.order_by("order", "id"),
+                        queryset=QuestionnaireChoice.objects.order_by(
+                            "order", "id"),
                     )
                 ),
             )
@@ -351,7 +440,8 @@ def get_questionnaire_spec(gender: str | None = None, kind: str | None = None):
                 )
             if not questions:
                 continue
-            spec.append({"id": section.code, "title": section.title, "questions": questions})
+            spec.append(
+                {"id": section.code, "title": section.title, "questions": questions})
         return spec
     except (OperationalError, ProgrammingError):
         return _normalize_questionnaire_spec(QUESTIONNAIRE_SPEC)
@@ -364,7 +454,8 @@ def questionnaire_gender_for_profile(profile, kind: str) -> str | None:
 
     if kind == "ideal":
         looking_for = getattr(profile, "looking_for", None)
-        looking_for_value = (str(looking_for).strip() if looking_for is not None else "") or None
+        looking_for_value = (str(looking_for).strip()
+                             if looking_for is not None else "") or None
         if looking_for_value == "men":
             return "male"
         if looking_for_value == "women":

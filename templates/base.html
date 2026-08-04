@@ -216,6 +216,7 @@
         {% if request.user.is_authenticated %}
         <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'feed' %}">Лента</a>
         <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'matches' %}">Совпадения</a>
+        <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'self_search' %}">Поиск</a>
         <a class="relative rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'notifications' %}">
           Уведомления
           {% if unread_notifications_count %}
@@ -250,6 +251,7 @@
         {% if request.user.is_authenticated %}
         <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'feed' %}">Лента</a>
         <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'matches' %}">Совпадения</a>
+        <a class="rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'self_search' %}">Поиск</a>
         <a class="flex items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-white/10 btn-press" href="{% url 'notifications' %}">
           <span>Уведомления</span>
           {% if unread_notifications_count %}
@@ -297,10 +299,67 @@
 
   <footer class="border-t border-white/10 bg-slate-950/30 py-8 text-center text-sm text-slate-400 mt-16">
     <div class="mx-auto max-w-6xl px-4">
-      <p>&copy; 2026 Всё Всерьёз. Найди серьезные отношения.</p>
+      <nav class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs sm:text-sm">
+        <a class="hover:text-slate-200" href="{% url 'legal_terms' %}">Пользовательское соглашение</a>
+        <a class="hover:text-slate-200" href="{% url 'legal_privacy' %}">Политика обработки ПДн</a>
+        <a class="hover:text-slate-200" href="{% url 'legal_photo_rules' %}">Правила загрузки фото</a>
+        <a class="hover:text-slate-200" href="{% url 'legal_site_rules' %}">Правила пользования Сайтом</a>
+        <a class="hover:text-slate-200" href="mailto:y.u.r.a.l@mail.ru">Контакты</a>
+      </nav>
+      <p class="mt-4 max-w-2xl mx-auto text-xs text-slate-500">
+        Используя сайт, вы принимаете
+        <a class="underline underline-offset-4 hover:text-slate-300" href="{% url 'legal_terms' %}">Пользовательское соглашение</a>.
+        Обработка ваших данных осуществляется в соответствии с
+        <a class="underline underline-offset-4 hover:text-slate-300" href="{% url 'legal_privacy' %}">Политикой обработки персональных данных</a>.
+      </p>
+      <p class="mt-4">&copy; 2026 Всё Всерьёз. Найди серьезные отношения.</p>
       <p class="mt-2 text-xs">Разработано с любовью 💜</p>
     </div>
   </footer>
+
+  <div id="cookie-banner" class="fixed inset-x-0 bottom-0 z-50 hidden border-t border-white/10 bg-slate-950/95 px-4 py-4 backdrop-blur sm:px-6">
+    <div class="mx-auto flex max-w-6xl flex-col items-center gap-3 text-center sm:flex-row sm:justify-between sm:text-left">
+      <p class="text-xs text-slate-300 sm:text-sm">
+        Мы используем cookies для авторизации, сохранения настроек и корректной работы сайта. Подробнее в
+        <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_privacy' %}">Политике обработки персональных данных</a>
+        и
+        <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_terms' %}">Пользовательском соглашении</a>.
+      </p>
+      <button id="cookie-banner-accept" type="button"
+        class="shrink-0 rounded-xl bg-fuchsia-500 px-4 py-2 text-sm font-medium text-white hover:bg-fuchsia-400">
+        Понятно
+      </button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const COOKIE_NAME = 'cookie_consent_ack';
+
+      function getCookie(name) {
+        const match = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+        return match ? decodeURIComponent(match[1]) : null;
+      }
+
+      function setCookie(name, value, days) {
+        const expires = new Date(Date.now() + days * 864e5).toUTCString();
+        document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/; SameSite=Lax';
+      }
+
+      const banner = document.getElementById('cookie-banner');
+      if (banner && !getCookie(COOKIE_NAME)) {
+        banner.classList.remove('hidden');
+      }
+
+      const acceptBtn = document.getElementById('cookie-banner-accept');
+      if (acceptBtn) {
+        acceptBtn.addEventListener('click', function () {
+          setCookie(COOKIE_NAME, '1', 365);
+          banner.classList.add('hidden');
+        });
+      }
+    })();
+  </script>
 
   <script>
     (function () {
