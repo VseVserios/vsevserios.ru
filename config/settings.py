@@ -5,18 +5,22 @@ from cryptography.fernet import Fernet
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-change-me-for-production")
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY", "django-insecure-change-me-for-production")
 DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() == "true"
 
 # Fallback key is for local/dev only; production MUST set DJANGO_FERNET_KEY (see .env).
-FERNET = Fernet(os.environ.get("DJANGO_FERNET_KEY", "ZcK7YYgFgsxpy9-K6PFrDYSh3n10n-weQuOY_wOSRvg=").encode())
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,testserver").split(",")
+FERNET = Fernet(os.environ.get("DJANGO_FERNET_KEY",
+                "ZcK7YYgFgsxpy9-K6PFrDYSh3n10n-weQuOY_wOSRvg=").encode())
+ALLOWED_HOSTS = os.environ.get(
+    "DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,testserver").split(",")
 
 _csrf_trusted_origins = os.environ.get(
     "DJANGO_CSRF_TRUSTED_ORIGINS",
     "https://vsevseryoz.ru,https://www.vsevseryoz.ru",
 ).strip()
-CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_trusted_origins.split(",") if o.strip()] if _csrf_trusted_origins else []
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_trusted_origins.split(
+    ",") if o.strip()] if _csrf_trusted_origins else []
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -77,9 +81,12 @@ DATABASES = {
 }
 
 if os.environ.get("DATABASE_URL"):
-    _ssl_require_env = os.environ.get("DJANGO_DB_SSL_REQUIRE", "").strip().lower()
-    ssl_require = not DEBUG if _ssl_require_env == "" else _ssl_require_env not in ("0", "false", "no")
-    DATABASES["default"] = dj_database_url.config(conn_max_age=600, ssl_require=ssl_require)
+    _ssl_require_env = os.environ.get(
+        "DJANGO_DB_SSL_REQUIRE", "").strip().lower()
+    ssl_require = not DEBUG if _ssl_require_env == "" else _ssl_require_env not in (
+        "0", "false", "no")
+    DATABASES["default"] = dj_database_url.config(
+        conn_max_age=600, ssl_require=ssl_require)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -111,21 +118,30 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "feed"
 LOGOUT_REDIRECT_URL = "landing"
 
-EMAIL_BACKEND = os.environ.get("DJANGO_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_BACKEND = os.environ.get(
+    "DJANGO_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
 EMAIL_HOST = os.environ.get("DJANGO_EMAIL_HOST", "smtp.yandex.ru")
 EMAIL_PORT = int(os.environ.get("DJANGO_EMAIL_PORT", "587"))
-EMAIL_HOST_USER = os.environ.get("DJANGO_EMAIL_HOST_USER", "vsevseryoz@yandex.ru")
-EMAIL_HOST_PASSWORD = os.environ.get("DJANGO_EMAIL_HOST_PASSWORD", "viektjkurxzawkya")
-EMAIL_USE_TLS = os.environ.get("DJANGO_EMAIL_USE_TLS", "1").strip() not in ("0", "false", "False")
-EMAIL_USE_SSL = os.environ.get("DJANGO_EMAIL_USE_SSL", "0").strip() not in ("0", "false", "False")
-DEFAULT_FROM_EMAIL = os.environ.get("DJANGO_DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "no-reply@example.com")
+EMAIL_HOST_USER = os.environ.get(
+    "DJANGO_EMAIL_HOST_USER", "vsevseryoz@yandex.ru")
+EMAIL_HOST_PASSWORD = os.environ.get(
+    "DJANGO_EMAIL_HOST_PASSWORD", "viektjkurxzawkya")
+EMAIL_USE_TLS = os.environ.get(
+    "DJANGO_EMAIL_USE_TLS", "1").strip() not in ("0", "false", "False")
+EMAIL_USE_SSL = os.environ.get(
+    "DJANGO_EMAIL_USE_SSL", "0").strip() not in ("0", "false", "False")
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "DJANGO_DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "no-reply@example.com")
 
-EMAIL_VERIFICATION_CODE_TTL_SECONDS = int(os.environ.get("EMAIL_VERIFICATION_CODE_TTL_SECONDS", "600"))
+EMAIL_VERIFICATION_CODE_TTL_SECONDS = int(
+    os.environ.get("EMAIL_VERIFICATION_CODE_TTL_SECONDS", "600"))
 EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS = int(
     os.environ.get("EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS", "60")
 )
-EMAIL_VERIFICATION_MAX_ATTEMPTS = int(os.environ.get("EMAIL_VERIFICATION_MAX_ATTEMPTS", "10"))
-EMAIL_VERIFICATION_MAX_SENDS = int(os.environ.get("EMAIL_VERIFICATION_MAX_SENDS", "20"))
+EMAIL_VERIFICATION_MAX_ATTEMPTS = int(
+    os.environ.get("EMAIL_VERIFICATION_MAX_ATTEMPTS", "10"))
+EMAIL_VERIFICATION_MAX_SENDS = int(
+    os.environ.get("EMAIL_VERIFICATION_MAX_SENDS", "20"))
 
 LOGGING = {
     "version": 1,
