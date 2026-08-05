@@ -1,11 +1,15 @@
 import os
 from pathlib import Path
 import dj_database_url
+from cryptography.fernet import Fernet
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-change-me-for-production")
 DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() == "true"
+
+# Fallback key is for local/dev only; production MUST set DJANGO_FERNET_KEY (see .env).
+FERNET = Fernet(os.environ.get("DJANGO_FERNET_KEY", "ZcK7YYgFgsxpy9-K6PFrDYSh3n10n-weQuOY_wOSRvg=").encode())
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,testserver").split(",")
 
 _csrf_trusted_origins = os.environ.get(
