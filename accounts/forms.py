@@ -37,6 +37,11 @@ class RegisterForm(UserCreationForm):
         error_messages={
             "required": "Нужно принять Политику обработки персональных данных."},
     )
+    special_category_agree = forms.BooleanField(
+        required=False,
+        error_messages={
+            "required": "Нужно принять согласие на обработку специальных категорий персональных данных."},
+    )
 
     class Meta:
         model = User
