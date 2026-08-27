@@ -31,6 +31,18 @@ class Profile(models.Model):
     questionnaire_me = models.JSONField(default=dict, blank=True)
     questionnaire_ideal = models.JSONField(default=dict, blank=True)
 
+    class PrivacyChoices(models.TextChoices):
+        EVERYONE = "everyone", "Всем зарегистрированным пользователям"
+        NOBODY = "nobody", "Никому"
+        MATCHES = "matches", "Только совпадениям/симпатиям"
+
+    sensitive_data_visibility = models.CharField(
+        max_length=16,
+        choices=PrivacyChoices.choices,
+        default=PrivacyChoices.MATCHES,
+        blank=True,
+    )
+
     class Theme(models.TextChoices):
         DARK = "dark", "Тёмная"
         LIGHT = "light", "Светлая"

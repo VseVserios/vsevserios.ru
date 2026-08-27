@@ -95,7 +95,7 @@
 
             <div class="mt-6">
                 {% for section in sections %}
-                {% if section.is_sensitive and form.special_category_consent %}
+                {% if section.is_sensitive and form.has_sensitive_section %}
                 <div class="rounded-3xl border border-fuchsia-400/20 bg-fuchsia-500/5 p-6" data-wizard-item
                     data-section-id="{{ section.id }}" data-section-title="{{ section.title }}" data-question-id="__consent_{{ section.id }}">
                     <div class="text-xs text-slate-400">{{ section.title }}</div>

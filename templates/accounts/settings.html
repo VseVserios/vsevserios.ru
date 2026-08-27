@@ -109,6 +109,27 @@
         </form>
       </div>
 
+      <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+        <div class="text-sm font-medium">Приватность специальных категорий данных</div>
+        <div class="mt-2 text-sm text-slate-300">Настрой видимость ответов на вопросы из раздела «Сексуальная совместимость» (специальные категории персональных данных).</div>
+
+        <form method="post" class="mt-4 space-y-4" data-loading-text="Сохраняю…">
+          {% csrf_token %}
+          <input type="hidden" name="settings_kind" value="privacy" />
+
+          <div>
+            <label class="mb-1 block text-sm text-slate-200">Кто может видеть ваши ответы</label>
+            <select name="sensitive_data_visibility" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white">
+              <option value="everyone" {% if profile.sensitive_data_visibility == 'everyone' %}selected{% endif %}>Всем зарегистрированным пользователям</option>
+              <option value="matches" {% if profile.sensitive_data_visibility == 'matches' or not profile.sensitive_data_visibility %}selected{% endif %}>Только совпадениям/симпатиям</option>
+              <option value="nobody" {% if profile.sensitive_data_visibility == 'nobody' %}selected{% endif %}>Никому</option>
+            </select>
+          </div>
+
+          <button type="submit" class="w-full rounded-xl bg-white/10 px-4 py-3 font-medium hover:bg-white/15" data-loading-text="Сохраняю…">Сохранить настройки приватности</button>
+        </form>
+      </div>
+
       <div class="mt-6 rounded-3xl border border-white/10 bg-gradient-to-br from-fuchsia-500/10 to-indigo-500/10 p-6" data-reveal>
         <div class="text-sm font-semibold">Быстрые ссылки</div>
         <div class="mt-3 grid gap-3 sm:grid-cols-2">

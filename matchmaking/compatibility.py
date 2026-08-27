@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from profiles.questionnaire import get_questionnaire_spec, questionnaire_gender_for_profile
+from profiles.questionnaire import SENSITIVE_SECTION_IDS, get_questionnaire_spec, questionnaire_gender_for_profile
 
 
 def build_question_specs(spec=None):
@@ -141,6 +141,21 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
 
     spec = spec or get_questionnaire_spec()
 
+    # Проверяем согласие на специальные категории для обоих пользователей
+    a_consent = getattr(profile_a.user, 'special_category_consent', False)
+    b_consent = getattr(profile_b.user, 'special_category_consent', False)
+
+    # Проверяем настройки видимости для специальных категорий
+    a_visibility = getattr(profile_a, 'sensitive_data_visibility', 'matches')
+    b_visibility = getattr(profile_b, 'sensitive_data_visibility', 'matches')
+
+    # Определяем, можно ли показывать специальные категории
+    # Можно показывать, если:
+    # 1. Оба пользователя дали согласие
+    # 2. И хотя бы один из них настроил видимость не как "никому"
+    # 3. Если видимость "matches", то только если есть совпадение (пока упростим - считаем, что если оба дали согласие, то можно)
+    show_sensitive = a_consent and b_consent and a_visibility != 'nobody' and b_visibility != 'nobody'
+
     a_ideal_gender = questionnaire_gender_for_profile(profile_a, "ideal")
     a_me_gender = questionnaire_gender_for_profile(profile_a, "me")
     b_me_gender = questionnaire_gender_for_profile(profile_b, "me")
@@ -167,9 +182,15 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
     b_to_a_compared = 0
 
     for section in spec:
+        section_id = section.get("id")
         section_questions = section.get("questions") or []
         if not section_questions:
             continue
+
+        # Пропускаем специальные категории, если нет согласия или если настройка видимости "никому"
+        if section_id in SENSITIVE_SECTION_IDS:
+            if not show_sensitive:
+                continue
 
         questions_out = []
 
@@ -308,6 +329,17 @@ def score_expected_vs_actual(
 def compatibility(profile_a, profile_b, question_specs: dict | None = None):
     question_specs = question_specs or build_question_specs()
 
+    # Проверяем согласие на специальные категории для обоих пользователей
+    a_consent = getattr(profile_a.user, 'special_category_consent', False)
+    b_consent = getattr(profile_b.user, 'special_category_consent', False)
+
+    # Проверяем настройки видимости для специальных категорий
+    a_visibility = getattr(profile_a, 'sensitive_data_visibility', 'matches')
+    b_visibility = getattr(profile_b, 'sensitive_data_visibility', 'matches')
+
+    # Определяем, можно ли показывать специальные категории
+    show_sensitive = a_consent and b_consent and a_visibility != 'nobody' and b_visibility != 'nobody'
+
     a_ideal_gender = questionnaire_gender_for_profile(profile_a, "ideal")
     a_me_gender = questionnaire_gender_for_profile(profile_a, "me")
     b_ideal_gender = questionnaire_gender_for_profile(profile_b, "ideal")
@@ -330,6 +362,13 @@ def compatibility(profile_a, profile_b, question_specs: dict | None = None):
 
     for qid, qspec in (question_specs or {}).items():
         if (qspec.get("input_type") or "choice") == "text":
+            continue
+
+        # Проверяем, относится ли вопрос к специальным категориям по ID
+        is_sensitive = qid.startswith("sexual_")
+
+        # Пропускаем специальные категории, если нет согласия или если настройка видимости "никому"
+        if is_sensitive and not show_sensitive:
             continue
 
         show_in_ideal = bool(qspec.get("show_in_ideal", True))

@@ -224,6 +224,14 @@ def account_settings(request):
             messages.success(request, "Уведомления сохранены.")
             return redirect("account_settings")
 
+        elif kind == "privacy":
+            privacy = (request.POST.get("sensitive_data_visibility")
+                     or profile.sensitive_data_visibility).strip() or profile.sensitive_data_visibility
+            profile.sensitive_data_visibility = privacy
+            profile.save(update_fields=["sensitive_data_visibility", "updated_at"])
+            messages.success(request, "Настройки приватности сохранены.")
+            return redirect("account_settings")
+
         else:
             form = AccountSettingsForm(instance=user)
     else:
