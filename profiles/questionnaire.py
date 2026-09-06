@@ -12,8 +12,8 @@ SCALE_CHOICES = [
 ]
 
 # Разделы анкеты, ответы в которых относятся к специальным категориям
-# персональных данных (сведения о сексуальной жизни, ст. 10 152-ФЗ).
-SENSITIVE_SECTION_IDS = {"sexual"}
+# персональных данных (сведения о сексуальной жизни, религиозные взгляды, ст. 10 152-ФЗ).
+SENSITIVE_SECTION_IDS = {"sexual", "religious"}
 
 
 def _normalize_questionnaire_spec(spec):
@@ -225,6 +225,32 @@ QUESTIONNAIRE_SPEC = [
             {"id": "sexual_09", "text": "Мне важна эмоциональная близость",
                 "choices": SCALE_CHOICES},
             {"id": "sexual_10", "text": "Мне важна совместимость по темпераменту",
+                "choices": SCALE_CHOICES},
+        ],
+    },
+    {
+        "id": "religious",
+        "title": "Религиозные убеждения",
+        "questions": [
+            {"id": "religious_01", "text": "Вера важна для меня",
+                "choices": SCALE_CHOICES},
+            {"id": "religious_02", "text": "Я регулярно посещаю религиозные службы",
+                "choices": SCALE_CHOICES},
+            {"id": "religious_03", "text": "Религиозные традиции важны в моей жизни",
+                "choices": SCALE_CHOICES},
+            {"id": "religious_04", "text": "Я хотел(а) бы, чтобы партнёр разделял мои убеждения",
+                "choices": SCALE_CHOICES},
+            {"id": "religious_05", "text": "Я готов(а) уважать убеждения партнёра, даже если они отличаются",
+                "choices": SCALE_CHOICES},
+            {"id": "religious_06", "text": "Религия влияет на мои решения в жизни",
+                "choices": SCALE_CHOICES},
+            {"id": "religious_07", "text": "Я открыт(а) к обсуждению религиозных вопросов",
+                "choices": SCALE_CHOICES},
+            {"id": "religious_08", "text": "Духовное развитие важно для меня",
+                "choices": SCALE_CHOICES},
+            {"id": "religious_09", "text": "Я практикую религиозные обряды",
+                "choices": SCALE_CHOICES},
+            {"id": "religious_10", "text": "Религиозные ценности влияют на мой выбор партнёра",
                 "choices": SCALE_CHOICES},
         ],
     },

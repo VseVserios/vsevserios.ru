@@ -14,7 +14,7 @@
                 {% endif %}
                 <div>
                     <div class="text-lg font-semibold">{{ profile.display_name|default:request.user.username }}</div>
-                    <div class="text-sm text-slate-300">{{ profile.city }}</div>
+                    <div class="text-sm text-slate-300">{{ profile.city }}{% if profile.native_language %} • {{ profile.native_language }}{% endif %}</div>
                     <div class="mt-1 text-sm text-slate-300">
                         {% if profile.age %}{{ profile.age }} лет{% endif %}
                     </div>

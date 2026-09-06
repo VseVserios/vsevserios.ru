@@ -19,7 +19,7 @@
                 <div class="text-3xl font-semibold tracking-tight">
                     {{ profile.display_name|default:profile.user.username }}{% if profile.age %}, {{ profile.age }}{% endif %}
                 </div>
-                <div class="mt-1 text-sm text-slate-300">{{ profile.city }}</div>
+                <div class="mt-1 text-sm text-slate-300">{{ profile.city }}{% if profile.native_language %} • {{ profile.native_language }}{% endif %}</div>
                 <div class="mt-4 text-slate-200">{{ profile.bio|linebreaksbr }}</div>
 
                 {% if request.user.is_authenticated and request.user.id != profile.user_id %}

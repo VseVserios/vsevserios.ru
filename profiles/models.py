@@ -27,21 +27,10 @@ class Profile(models.Model):
         max_length=16, choices=Gender.choices, blank=True)
     looking_for = models.CharField(
         max_length=16, choices=LookingFor.choices, blank=True)
+    native_language = models.CharField(max_length=64, blank=True, verbose_name="Родной язык")
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
     questionnaire_me = models.JSONField(default=dict, blank=True)
     questionnaire_ideal = models.JSONField(default=dict, blank=True)
-
-    class PrivacyChoices(models.TextChoices):
-        EVERYONE = "everyone", "Всем зарегистрированным пользователям"
-        NOBODY = "nobody", "Никому"
-        MATCHES = "matches", "Только совпадениям/симпатиям"
-
-    sensitive_data_visibility = models.CharField(
-        max_length=16,
-        choices=PrivacyChoices.choices,
-        default=PrivacyChoices.MATCHES,
-        blank=True,
-    )
 
     class Theme(models.TextChoices):
         DARK = "dark", "Тёмная"
@@ -165,3 +154,29 @@ class QuestionnaireChoice(models.Model):
 
     def __str__(self) -> str:
         return f"QuestionnaireChoice({self.question_id}:{self.value})"
+
+
+class SectionVisibility(models.Model):
+    class PrivacyChoices(models.TextChoices):
+        EVERYONE = "everyone", "Всем зарегистрированным пользователям"
+        NOBODY = "nobody", "Никому"
+        MATCHES = "matches", "Только совпадениям/симпатиям"
+
+    profile = models.OneToOneField(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name="section_visibility",
+    )
+    sexual_visibility = models.CharField(
+        max_length=16,
+        choices=PrivacyChoices.choices,
+        default=PrivacyChoices.MATCHES,
+    )
+    religious_visibility = models.CharField(
+        max_length=16,
+        choices=PrivacyChoices.choices,
+        default=PrivacyChoices.MATCHES,
+    )
+
+    def __str__(self) -> str:
+        return f"SectionVisibility({self.profile_id})"

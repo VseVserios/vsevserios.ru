@@ -225,10 +225,21 @@ def account_settings(request):
             return redirect("account_settings")
 
         elif kind == "privacy":
-            privacy = (request.POST.get("sensitive_data_visibility")
-                     or profile.sensitive_data_visibility).strip() or profile.sensitive_data_visibility
-            profile.sensitive_data_visibility = privacy
-            profile.save(update_fields=["sensitive_data_visibility", "updated_at"])
+            from profiles.models import SectionVisibility
+
+            section_visibility, created = SectionVisibility.objects.get_or_create(
+                profile=profile
+            )
+
+            sexual_privacy = (request.POST.get("sexual_visibility")
+                            or section_visibility.sexual_visibility).strip() or section_visibility.sexual_visibility
+            religious_privacy = (request.POST.get("religious_visibility")
+                              or section_visibility.religious_visibility).strip() or section_visibility.religious_visibility
+
+            section_visibility.sexual_visibility = sexual_privacy
+            section_visibility.religious_visibility = religious_privacy
+            section_visibility.save()
+
             messages.success(request, "Настройки приватности сохранены.")
             return redirect("account_settings")
 
@@ -237,12 +248,19 @@ def account_settings(request):
     else:
         form = AccountSettingsForm(instance=user)
 
+    from profiles.models import SectionVisibility
+
+    section_visibility, _ = SectionVisibility.objects.get_or_create(
+        profile=profile
+    )
+
     return render(
         request,
         "accounts/settings.html",
         {
             "form": form,
             "profile": profile,
+            "section_visibility": section_visibility,
         },
     )
 

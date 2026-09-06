@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from profiles.models import SectionVisibility
 from profiles.questionnaire import SENSITIVE_SECTION_IDS, get_questionnaire_spec, questionnaire_gender_for_profile
 
 
@@ -145,16 +146,43 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
     a_consent = getattr(profile_a.user, 'special_category_consent', False)
     b_consent = getattr(profile_b.user, 'special_category_consent', False)
 
-    # Проверяем настройки видимости для специальных категорий
-    a_visibility = getattr(profile_a, 'sensitive_data_visibility', 'matches')
-    b_visibility = getattr(profile_b, 'sensitive_data_visibility', 'matches')
+    # Получаем настройки видимости по разделам для обоих пользователей
+    try:
+        a_section_visibility = profile_a.section_visibility
+    except:
+        a_section_visibility = None
 
-    # Определяем, можно ли показывать специальные категории
-    # Можно показывать, если:
-    # 1. Оба пользователя дали согласие
-    # 2. И хотя бы один из них настроил видимость не как "никому"
-    # 3. Если видимость "matches", то только если есть совпадение (пока упростим - считаем, что если оба дали согласие, то можно)
-    show_sensitive = a_consent and b_consent and a_visibility != 'nobody' and b_visibility != 'nobody'
+    try:
+        b_section_visibility = profile_b.section_visibility
+    except:
+        b_section_visibility = None
+
+    # Функция для проверки видимости конкретного раздела
+    def can_show_section(section_id):
+        if section_id not in SENSITIVE_SECTION_IDS:
+            return True  # Не специальный раздел - всегда показываем
+
+        if not a_consent or not b_consent:
+            return False  # Нет согласия - не показываем
+
+        # Получаем настройки видимости для конкретного раздела
+        a_visibility = 'matches'
+        b_visibility = 'matches'
+
+        if a_section_visibility:
+            if section_id == 'sexual':
+                a_visibility = a_section_visibility.sexual_visibility
+            elif section_id == 'religious':
+                a_visibility = a_section_visibility.religious_visibility
+
+        if b_section_visibility:
+            if section_id == 'sexual':
+                b_visibility = b_section_visibility.sexual_visibility
+            elif section_id == 'religious':
+                b_visibility = b_section_visibility.religious_visibility
+
+        # Показываем только если оба не выбрали "никому"
+        return a_visibility != 'nobody' and b_visibility != 'nobody'
 
     a_ideal_gender = questionnaire_gender_for_profile(profile_a, "ideal")
     a_me_gender = questionnaire_gender_for_profile(profile_a, "me")
@@ -170,9 +198,9 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
     a_me_allowed_for_actual = _allowed_question_ids_for_gender(a_me_gender)
 
     a_expected = profile_a.questionnaire_ideal or {}
-    a_actual = profile_a.questionnaire_me or {}
+    a_me = profile_a.questionnaire_me or {}
     b_expected = profile_b.questionnaire_ideal or {}
-    b_actual = profile_b.questionnaire_me or {}
+    b_me = profile_b.questionnaire_me or {}
 
     sections_out = []
 
@@ -187,10 +215,69 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
         if not section_questions:
             continue
 
-        # Пропускаем специальные категории, если нет согласия или если настройка видимости "никому"
-        if section_id in SENSITIVE_SECTION_IDS:
-            if not show_sensitive:
-                continue
+        # Проверяем, можно ли показывать детали этого раздела
+        show_details = can_show_section(section_id)
+
+        # Если это специальный раздел и нельзя показывать детали,
+        # всё равно считаем совместимость, но не добавляем детали вопросов
+        if section_id in SENSITIVE_SECTION_IDS and not show_details:
+            # Считаем совместимость, но не добавляем вопросы
+            s_a_to_b_total = 0.0
+            s_a_to_b_compared = 0
+            s_b_to_a_total = 0.0
+            s_b_to_a_compared = 0
+
+            for q in section_questions:
+                qid = q.get("id")
+                if not qid:
+                    continue
+
+                show_in_ideal = bool(q.get("show_in_ideal", True))
+
+                a_to_b_part = None
+                b_to_a_part = None
+
+                a_to_b_allowed = (a_ideal_allowed if show_in_ideal else a_me_allowed) & b_me_allowed
+                if qid in a_to_b_allowed:
+                    a_to_b_part = _score_question(q, (a_expected if show_in_ideal else a_me), b_me)
+                    if a_to_b_part is not None:
+                        s_a_to_b_total += float(a_to_b_part["score"])
+                        s_a_to_b_compared += 1
+                        a_to_b_total += float(a_to_b_part["score"])
+                        a_to_b_compared += 1
+
+                b_to_a_allowed = (b_ideal_allowed if show_in_ideal else b_me_allowed) & a_me_allowed_for_actual
+                if qid in b_to_a_allowed:
+                    b_to_a_part = _score_question(q, (b_expected if show_in_ideal else b_me), a_me)
+                    if b_to_a_part is not None:
+                        s_b_to_a_total += float(b_to_a_part["score"])
+                        s_b_to_a_compared += 1
+                        b_to_a_total += float(b_to_a_part["score"])
+                        b_to_a_compared += 1
+
+            s_a_to_b_percent = (
+                int(round((s_a_to_b_total / s_a_to_b_compared) * 100)) if s_a_to_b_compared else None
+            )
+            s_b_to_a_percent = (
+                int(round((s_b_to_a_total / s_b_to_a_compared) * 100)) if s_b_to_a_compared else None
+            )
+
+            section_parts = [p for p in (s_a_to_b_percent, s_b_to_a_percent) if p is not None]
+            s_overall = int(round(sum(section_parts) / len(section_parts))) if section_parts else None
+
+            sections_out.append(
+                {
+                    "id": section.get("id") or "",
+                    "title": section.get("title") or "",
+                    "overall": s_overall,
+                    "a_to_b": s_a_to_b_percent,
+                    "b_to_a": s_b_to_a_percent,
+                    "a_compared": s_a_to_b_compared,
+                    "b_compared": s_b_to_a_compared,
+                    "questions": [],  # Пустой список вопросов - только общий процент
+                }
+            )
+            continue
 
         questions_out = []
 
@@ -333,12 +420,43 @@ def compatibility(profile_a, profile_b, question_specs: dict | None = None):
     a_consent = getattr(profile_a.user, 'special_category_consent', False)
     b_consent = getattr(profile_b.user, 'special_category_consent', False)
 
-    # Проверяем настройки видимости для специальных категорий
-    a_visibility = getattr(profile_a, 'sensitive_data_visibility', 'matches')
-    b_visibility = getattr(profile_b, 'sensitive_data_visibility', 'matches')
+    # Получаем настройки видимости по разделам для обоих пользователей
+    try:
+        a_section_visibility = profile_a.section_visibility
+    except:
+        a_section_visibility = None
 
-    # Определяем, можно ли показывать специальные категории
-    show_sensitive = a_consent and b_consent and a_visibility != 'nobody' and b_visibility != 'nobody'
+    try:
+        b_section_visibility = profile_b.section_visibility
+    except:
+        b_section_visibility = None
+
+    # Функция для проверки видимости конкретного раздела
+    def can_show_section(section_id):
+        if section_id not in SENSITIVE_SECTION_IDS:
+            return True  # Не специальный раздел - всегда показываем
+
+        if not a_consent or not b_consent:
+            return False  # Нет согласия - не показываем
+
+        # Получаем настройки видимости для конкретного раздела
+        a_visibility = 'matches'
+        b_visibility = 'matches'
+
+        if a_section_visibility:
+            if section_id == 'sexual':
+                a_visibility = a_section_visibility.sexual_visibility
+            elif section_id == 'religious':
+                a_visibility = a_section_visibility.religious_visibility
+
+        if b_section_visibility:
+            if section_id == 'sexual':
+                b_visibility = b_section_visibility.sexual_visibility
+            elif section_id == 'religious':
+                b_visibility = b_section_visibility.religious_visibility
+
+        # Показываем только если оба не выбрали "никому"
+        return a_visibility != 'nobody' and b_visibility != 'nobody'
 
     a_ideal_gender = questionnaire_gender_for_profile(profile_a, "ideal")
     a_me_gender = questionnaire_gender_for_profile(profile_a, "me")
@@ -365,11 +483,18 @@ def compatibility(profile_a, profile_b, question_specs: dict | None = None):
             continue
 
         # Проверяем, относится ли вопрос к специальным категориям по ID
-        is_sensitive = qid.startswith("sexual_")
+        is_sensitive = qid.startswith("sexual_") or qid.startswith("religious_")
 
-        # Пропускаем специальные категории, если нет согласия или если настройка видимости "никому"
-        if is_sensitive and not show_sensitive:
-            continue
+        # Для специальных категорий проверяем секцию
+        if is_sensitive:
+            section_id = None
+            if qid.startswith("sexual_"):
+                section_id = "sexual"
+            elif qid.startswith("religious_"):
+                section_id = "religious"
+
+            if section_id and not can_show_section(section_id):
+                continue
 
         show_in_ideal = bool(qspec.get("show_in_ideal", True))
 

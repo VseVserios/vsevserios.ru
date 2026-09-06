@@ -13,6 +13,7 @@ class OnboardingForm(forms.ModelForm):
             "city",
             "gender",
             "looking_for",
+            "native_language",
             "bio",
             "avatar",
         )
@@ -22,6 +23,7 @@ class OnboardingForm(forms.ModelForm):
             "city": "Город",
             "gender": "Пол",
             "looking_for": "Ищу",
+            "native_language": "Родной язык",
             "bio": "О себе",
             "avatar": "Аватар",
         }
