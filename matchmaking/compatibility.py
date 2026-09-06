@@ -298,7 +298,7 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
 
             a_to_b_allowed = (a_ideal_allowed if show_in_ideal else a_me_allowed) & b_me_allowed
             if qid in a_to_b_allowed:
-                a_to_b_part = _score_question(q, (a_expected if show_in_ideal else a_actual), b_actual)
+                a_to_b_part = _score_question(q, (a_expected if show_in_ideal else a_me), b_me)
                 if a_to_b_part is not None:
                     s_a_to_b_total += float(a_to_b_part["score"])
                     s_a_to_b_compared += 1
@@ -307,7 +307,7 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
 
             b_to_a_allowed = (b_ideal_allowed if show_in_ideal else b_me_allowed) & a_me_allowed_for_actual
             if qid in b_to_a_allowed:
-                b_to_a_part = _score_question(q, (b_expected if show_in_ideal else b_actual), a_actual)
+                b_to_a_part = _score_question(q, (b_expected if show_in_ideal else b_me), a_me)
                 if b_to_a_part is not None:
                     s_b_to_a_total += float(b_to_a_part["score"])
                     s_b_to_a_compared += 1

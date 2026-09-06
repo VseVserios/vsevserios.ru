@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Profile, ProfilePhoto
+from .models import Profile, ProfilePhoto, SectionVisibility
 from .questionnaire import SENSITIVE_SECTION_IDS, get_questionnaire_spec_for_profile
 
 
@@ -37,6 +37,20 @@ class PhotoUploadForm(forms.ModelForm):
     class Meta:
         model = ProfilePhoto
         fields = ("image",)
+
+
+class SectionVisibilityForm(forms.ModelForm):
+    class Meta:
+        model = SectionVisibility
+        fields = ("sexual_visibility", "religious_visibility")
+        labels = {
+            "sexual_visibility": "Видимость раздела «Сексуальная совместимость»",
+            "religious_visibility": "Видимость раздела «Религиозные убеждения»",
+        }
+        widgets = {
+            "sexual_visibility": forms.RadioSelect,
+            "religious_visibility": forms.RadioSelect,
+        }
 
 
 class _PeerRadioSelect(forms.RadioSelect):

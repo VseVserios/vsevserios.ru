@@ -10,6 +10,8 @@
         class="mt-6 space-y-5 rounded-2xl border border-white/10 bg-white/5 p-6">
         {% csrf_token %}
 
+        <h2 class="text-lg font-semibold">Основная информация</h2>
+
         <div class="grid gap-4 md:grid-cols-2">
             {% for field in form %}
             <div class="{% if field.name == 'bio' or field.name == 'native_language' %}md:col-span-2{% endif %}">
@@ -17,6 +19,31 @@
                 {{ field }}
                 {% if field.errors %}
                 <div class="mt-1 text-sm text-rose-300">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <h2 class="mt-8 text-lg font-semibold">Настройки видимости разделов анкеты</h2>
+        <p class="text-sm text-slate-300">
+            Управляйте тем, кто видит ваши ответы в специальных разделах анкеты.
+            Если выбрано «Никому», другим пользователям будет показан только общий процент совместимости по разделу.
+        </p>
+
+        <div class="space-y-6">
+            {% for field in visibility_form %}
+            <div>
+                <div class="mb-3 font-medium">{{ field.label }}</div>
+                <div class="space-y-2">
+                    {% for choice in field %}
+                    <label class="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100 hover:bg-white/10 cursor-pointer">
+                        {{ choice.tag }}
+                        <span>{{ choice.choice_label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% if field.errors %}
+                <div class="mt-2 text-sm text-rose-300">{{ field.errors }}</div>
                 {% endif %}
             </div>
             {% endfor %}

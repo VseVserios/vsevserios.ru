@@ -5,8 +5,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from matchmaking.models import UserBan, UserBlock
 
-from .forms import OnboardingForm, PhotoUploadForm, QuestionnaireForm
-from .models import Profile, ProfilePhoto
+from .forms import OnboardingForm, PhotoUploadForm, QuestionnaireForm, SectionVisibilityForm
+from .models import Profile, ProfilePhoto, SectionVisibility
 from .questionnaire import SENSITIVE_SECTION_IDS, get_questionnaire_spec_for_profile, questionnaire_progress
 
 
@@ -186,15 +186,28 @@ def questionnaire(request, kind: str):
 def edit_profile(request):
     profile = request.user.profile
 
+    section_visibility, created = SectionVisibility.objects.get_or_create(
+        profile=profile
+    )
+
     if request.method == "POST":
         form = OnboardingForm(request.POST, request.FILES, instance=profile)
-        if form.is_valid():
+        visibility_form = SectionVisibilityForm(
+            request.POST, instance=section_visibility
+        )
+        if form.is_valid() and visibility_form.is_valid():
             form.save()
+            visibility_form.save()
             return redirect("me")
     else:
         form = OnboardingForm(instance=profile)
+        visibility_form = SectionVisibilityForm(instance=section_visibility)
 
-    return render(request, "profiles/edit.html", {"form": form})
+    return render(
+        request,
+        "profiles/edit.html",
+        {"form": form, "visibility_form": visibility_form},
+    )
 
 
 @login_required
