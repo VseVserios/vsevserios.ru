@@ -20,6 +20,14 @@ class User(AbstractUser):
     special_category_consent_revoked_at = models.DateTimeField(
         null=True, blank=True)
 
+    sexual_consent = models.BooleanField(default=False)
+    sexual_consent_at = models.DateTimeField(null=True, blank=True)
+    sexual_consent_revoked_at = models.DateTimeField(null=True, blank=True)
+
+    religious_consent = models.BooleanField(default=False)
+    religious_consent_at = models.DateTimeField(null=True, blank=True)
+    religious_consent_revoked_at = models.DateTimeField(null=True, blank=True)
+
     def __str__(self) -> str:
         return self.get_username()
 
@@ -30,6 +38,10 @@ class ConsentEvent(models.Model):
         PRIVACY = "privacy", "Политика обработки персональных данных — принята"
         SPECIAL_CATEGORY_GIVEN = "special_category_given", "Согласие на спецкатегории — дано"
         SPECIAL_CATEGORY_REVOKED = "special_category_revoked", "Согласие на спецкатегории — отозвано"
+        SEXUAL_CONSENT_GIVEN = "sexual_consent_given", "Согласие на сексуальные данные — дано"
+        SEXUAL_CONSENT_REVOKED = "sexual_consent_revoked", "Согласие на сексуальные данные — отозвано"
+        RELIGIOUS_CONSENT_GIVEN = "religious_consent_given", "Согласие на религиозные данные — дано"
+        RELIGIOUS_CONSENT_REVOKED = "religious_consent_revoked", "Согласие на религиозные данные — отозвано"
 
     user = models.ForeignKey(
         "accounts.User",

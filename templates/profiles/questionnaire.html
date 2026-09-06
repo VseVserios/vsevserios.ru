@@ -94,24 +94,33 @@
             </div>
 
             <div class="mt-6">
-                {% if form.has_sensitive_section %}
+                {% for section in sections %}
+                {% if section.is_sensitive and form.has_sensitive_section %}
                 <div class="rounded-3xl border border-fuchsia-400/20 bg-fuchsia-500/5 p-6" data-wizard-item
-                    data-section-id="consent" data-section-title="Согласие" data-question-id="__consent">
-                    <div class="text-lg font-semibold leading-snug">Согласие на обработку специальных категорий данных</div>
+                    data-section-id="{{ section.id }}" data-section-title="{{ section.title }}" data-question-id="__consent_{{ section.id }}">
+                    <div class="text-xs text-slate-400">{{ section.title }}</div>
+                    <div class="mt-2 text-lg font-semibold leading-snug">Согласие на обработку специальных категорий данных</div>
                     <div class="mt-2 text-sm text-slate-300">
-                        Ответы в разделах «Сексуальная совместимость» и «Религиозные убеждения» относятся к специальным категориям персональных данных (сведения о сексуальной жизни и религиозные убеждения согласно ст. 10 152-ФЗ).
-                        Чтобы сохранить ответы в этих разделах, подтверди согласие на их обработку.
+                        {% if section.id == 'sexual' %}
+                        Ответы в этом разделе относятся к специальным категориям персональных данных (сведения о сексуальной жизни).
+                        {% elif section.id == 'religious' %}
+                        Ответы в этом разделе относятся к специальным категориям персональных данных (религиозные убеждения).
+                        {% endif %}
+                        Чтобы сохранить ответы, подтверди согласие на их обработку.
                     </div>
                     <label class="mt-4 flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100">
-                        {{ form.special_category_consent }}
+                        {% if section.id == 'sexual' %}
+                        {{ form.sexual_consent }}
+                        {% elif section.id == 'religious' %}
+                        {{ form.religious_consent }}
+                        {% endif %}
                         <span>Я даю согласие на обработку специальных категорий персональных данных согласно
                             <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_special_category' %}" target="_blank" rel="noopener">тексту согласия</a>.
-                            Без этого ответы в разделах «Сексуальная совместимость» и «Религиозные убеждения» сохранены не будут.
+                            Без этого ответы раздела «{{ section.title }}» сохранены не будут.
                         </span>
                     </label>
                 </div>
                 {% endif %}
-                {% for section in sections %}
                 {% for q in section.questions %}
                 <div class="rounded-3xl border border-white/10 bg-slate-950/30 p-6" data-wizard-item
                     data-section-id="{{ section.id }}" data-section-title="{{ section.title }}" data-question-id="{{ q.id }}">

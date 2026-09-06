@@ -143,8 +143,10 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
     spec = spec or get_questionnaire_spec()
 
     # Проверяем согласие на специальные категории для обоих пользователей
-    a_consent = getattr(profile_a.user, 'special_category_consent', False)
-    b_consent = getattr(profile_b.user, 'special_category_consent', False)
+    a_sexual_consent = getattr(profile_a.user, 'sexual_consent', False)
+    a_religious_consent = getattr(profile_a.user, 'religious_consent', False)
+    b_sexual_consent = getattr(profile_b.user, 'sexual_consent', False)
+    b_religious_consent = getattr(profile_b.user, 'religious_consent', False)
 
     # Получаем настройки видимости по разделам для обоих пользователей
     try:
@@ -162,8 +164,13 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
         if section_id not in SENSITIVE_SECTION_IDS:
             return True  # Не специальный раздел - всегда показываем
 
-        if not a_consent or not b_consent:
-            return False  # Нет согласия - не показываем
+        # Проверяем согласие для конкретного раздела
+        if section_id == 'sexual':
+            if not a_sexual_consent or not b_sexual_consent:
+                return False  # Нет согласия на сексуальные данные - не показываем
+        elif section_id == 'religious':
+            if not a_religious_consent or not b_religious_consent:
+                return False  # Нет согласия на религиозные данные - не показываем
 
         # Получаем настройки видимости для конкретного раздела
         a_visibility = 'matches'
@@ -417,8 +424,10 @@ def compatibility(profile_a, profile_b, question_specs: dict | None = None):
     question_specs = question_specs or build_question_specs()
 
     # Проверяем согласие на специальные категории для обоих пользователей
-    a_consent = getattr(profile_a.user, 'special_category_consent', False)
-    b_consent = getattr(profile_b.user, 'special_category_consent', False)
+    a_sexual_consent = getattr(profile_a.user, 'sexual_consent', False)
+    a_religious_consent = getattr(profile_a.user, 'religious_consent', False)
+    b_sexual_consent = getattr(profile_b.user, 'sexual_consent', False)
+    b_religious_consent = getattr(profile_b.user, 'religious_consent', False)
 
     # Получаем настройки видимости по разделам для обоих пользователей
     try:
@@ -436,8 +445,13 @@ def compatibility(profile_a, profile_b, question_specs: dict | None = None):
         if section_id not in SENSITIVE_SECTION_IDS:
             return True  # Не специальный раздел - всегда показываем
 
-        if not a_consent or not b_consent:
-            return False  # Нет согласия - не показываем
+        # Проверяем согласие для конкретного раздела
+        if section_id == 'sexual':
+            if not a_sexual_consent or not b_sexual_consent:
+                return False  # Нет согласия на сексуальные данные - не показываем
+        elif section_id == 'religious':
+            if not a_religious_consent or not b_religious_consent:
+                return False  # Нет согласия на религиозные данные - не показываем
 
         # Получаем настройки видимости для конкретного раздела
         a_visibility = 'matches'
