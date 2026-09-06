@@ -112,7 +112,16 @@
 
       <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
         <div class="text-sm font-medium">Приватность специальных категорий данных</div>
-        <div class="mt-2 text-sm text-slate-300">Настрой видимость ответов на вопросы из разделов «Сексуальная совместимость» и «Религиозные убеждения» (специальные категории персональных данных).</div>
+        <div class="mt-2 text-sm text-slate-300">Настрой видимость ответов на вопросы из разделов «Сексуальная совместимость» и «Религиозные убеждения» (специальные категории персональных данных согласно ст. 10 152-ФЗ).</div>
+
+        <div class="mt-3 rounded-2xl border border-white/10 bg-slate-950/30 p-4 text-xs text-slate-300">
+          <div class="font-medium text-slate-200">Как это работает:</div>
+          <ul class="mt-2 space-y-1 list-disc list-inside">
+            <li><span class="text-white">Всем зарегистрированным пользователям</span> — ваши ответы видны всем пользователям сайта</li>
+            <li><span class="text-white">Только совпадениям/симпатиям</span> — ответы видны только тем, с кем у вас совпадение или взаимная симпатия</li>
+            <li><span class="text-white">Никому (только общий процент)</span> — ответы скрыты, другим показывается только общий процент совместимости по разделу</li>
+          </ul>
+        </div>
 
         <form method="post" class="mt-4 space-y-4" data-loading-text="Сохраняю…">
           {% csrf_token %}
