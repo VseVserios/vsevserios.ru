@@ -131,7 +131,7 @@
             <label class="mb-1 block text-sm text-slate-200">Видимость раздела «Сексуальная совместимость»</label>
             <select name="sexual_visibility" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white">
               <option value="everyone" {% if section_visibility.sexual_visibility == 'everyone' %}selected{% endif %}>Всем зарегистрированным пользователям</option>
-              <option value="matches" {% if section_visibility.sexual_visibility == 'matches' or not section_visibility.sexual_visibility %}selected{% endif %}>Только совпадениям/симпатиям</option>
+              <option value="matches" {% if section_visibility.sexual_visibility == 'matches' or section_visibility.sexual_visibility == '' or section_visibility.sexual_visibility is None %}selected{% endif %}>Только совпадениям/симпатиям</option>
               <option value="nobody" {% if section_visibility.sexual_visibility == 'nobody' %}selected{% endif %}>Никому (только общий процент)</option>
             </select>
           </div>
@@ -140,7 +140,7 @@
             <label class="mb-1 block text-sm text-slate-200">Видимость раздела «Религиозные убеждения»</label>
             <select name="religious_visibility" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white">
               <option value="everyone" {% if section_visibility.religious_visibility == 'everyone' %}selected{% endif %}>Всем зарегистрированным пользователям</option>
-              <option value="matches" {% if section_visibility.religious_visibility == 'matches' or not section_visibility.religious_visibility %}selected{% endif %}>Только совпадениям/симпатиям</option>
+              <option value="matches" {% if section_visibility.religious_visibility == 'matches' or section_visibility.religious_visibility == '' or section_visibility.religious_visibility is None %}selected{% endif %}>Только совпадениям/симпатиям</option>
               <option value="nobody" {% if section_visibility.religious_visibility == 'nobody' %}selected{% endif %}>Никому (только общий процент)</option>
             </select>
           </div>
@@ -184,6 +184,28 @@
               {% endif %}
             </div>
             <a class="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10" href="{% url 'legal_privacy' %}" target="_blank" rel="noopener">Открыть</a>
+          </div>
+
+          <div class="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3 text-sm">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <div class="font-medium">Согласие на обработку специальных категорий данных (общее)</div>
+                {% if request.user.special_category_consent %}
+                <div class="text-xs text-emerald-300">Дано {{ request.user.special_category_consent_at|date:"d.m.Y H:i" }}</div>
+                {% elif request.user.special_category_consent_revoked_at %}
+                <div class="text-xs text-amber-300">Отозвано {{ request.user.special_category_consent_revoked_at|date:"d.m.Y H:i" }}</div>
+                {% else %}
+                <div class="text-xs text-slate-400">Не дано</div>
+                {% endif %}
+              </div>
+              <a class="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10" href="{% url 'legal_special_category' %}" target="_blank" rel="noopener">Текст</a>
+            </div>
+            {% if request.user.special_category_consent %}
+            <form method="post" action="{% url 'revoke_special_category_consent' %}" class="mt-3">
+              {% csrf_token %}
+              <button type="submit" class="w-full rounded-xl border border-rose-300/30 bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-100 hover:bg-rose-500/20">Отозвать согласие</button>
+            </form>
+            {% endif %}
           </div>
 
           <div class="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3 text-sm">

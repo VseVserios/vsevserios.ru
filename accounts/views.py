@@ -231,10 +231,15 @@ def account_settings(request):
                 profile=profile
             )
 
-            sexual_privacy = (request.POST.get("sexual_visibility")
-                            or section_visibility.sexual_visibility).strip() or section_visibility.sexual_visibility
-            religious_privacy = (request.POST.get("religious_visibility")
-                              or section_visibility.religious_visibility).strip() or section_visibility.religious_visibility
+            sexual_privacy = request.POST.get("sexual_visibility")
+            religious_privacy = request.POST.get("religious_visibility")
+
+            # Validate choices
+            valid_choices = ['everyone', 'matches', 'nobody']
+            if sexual_privacy not in valid_choices:
+                sexual_privacy = section_visibility.sexual_visibility or 'matches'
+            if religious_privacy not in valid_choices:
+                religious_privacy = section_visibility.religious_visibility or 'matches'
 
             section_visibility.sexual_visibility = sexual_privacy
             section_visibility.religious_visibility = religious_privacy
