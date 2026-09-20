@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import Http404
@@ -9,6 +11,8 @@ from matchmaking.models import UserBan, UserBlock
 
 from .forms import MessageForm
 from .models import Message
+
+logger = logging.getLogger(__name__)
 
 
 def _mark_chat_notifications_read(user) -> None:
@@ -29,7 +33,7 @@ def _user_is_in_match(match: Match, user) -> bool:
     # Администраторы могут писать в администраторские чаты
     if user.is_superuser and match.is_admin_chat:
         return True
-    
+
     if user.id not in (match.user1_id, match.user2_id):
         return False
 
@@ -53,10 +57,12 @@ def inbox(request):
     _mark_chat_notifications_read(request.user)
 
     blocked_ids = set(
-        UserBlock.objects.filter(blocker=request.user).values_list("blocked_id", flat=True)
+        UserBlock.objects.filter(blocker=request.user).values_list(
+            "blocked_id", flat=True)
     )
     blocked_by_ids = set(
-        UserBlock.objects.filter(blocked=request.user).values_list("blocker_id", flat=True)
+        UserBlock.objects.filter(blocked=request.user).values_list(
+            "blocker_id", flat=True)
     )
 
     # Для администраторов показываем ВСЕ административные чаты (всех пользователей)
@@ -92,7 +98,7 @@ def inbox(request):
             other = m.user1 if m.user2.is_superuser else m.user2
         else:
             other = m.other(request.user)
-        
+
         if not other.is_active:
             continue
         if UserBan.objects.active().filter(user=other).exists():
@@ -135,7 +141,8 @@ def inbox(request):
 
 @login_required
 def room(request, match_id: int):
-    match = get_object_or_404(Match.objects.select_related("user1", "user2"), id=match_id)
+    match = get_object_or_404(
+        Match.objects.select_related("user1", "user2"), id=match_id)
 
     if not _user_is_in_match(match, request.user):
         raise Http404
@@ -152,7 +159,8 @@ def room(request, match_id: int):
     form = MessageForm()
 
     now = timezone.now()
-    Message.objects.filter(match=match, read_at__isnull=True).exclude(sender=request.user).update(read_at=now)
+    Message.objects.filter(match=match, read_at__isnull=True).exclude(
+        sender=request.user).update(read_at=now)
 
     return render(
         request,
@@ -176,7 +184,8 @@ def messages_partial(request, match_id: int):
     _mark_chat_notifications_read(request.user)
 
     now = timezone.now()
-    Message.objects.filter(match=match, read_at__isnull=True).exclude(sender=request.user).update(read_at=now)
+    Message.objects.filter(match=match, read_at__isnull=True).exclude(
+        sender=request.user).update(read_at=now)
 
     qs = Message.objects.filter(match=match).select_related("sender")
     return render(request, "chat/_messages.html", {"match": match, "messages": qs})
@@ -241,10 +250,11 @@ def send_newsletter(request):
 
     message_text = request.POST.get("message_text", "").strip()
     if not message_text:
-        print("[NEWSLETTER] Пустое сообщение!")
+        logger.warning("[NEWSLETTER] Пустое сообщение!")
         return redirect("chat_inbox")
-    
-    print(f"[NEWSLETTER] Начало отправки рассылки от {request.user.username}: {message_text[:50]}")
+
+    logger.info("[NEWSLETTER] Начало отправки рассылки от %s: %s",
+                request.user.username, message_text[:50])
 
     from django.contrib.auth import get_user_model
 
@@ -260,34 +270,39 @@ def send_newsletter(request):
             Q(user1=request.user, user2=user) |
             Q(user1=user, user2=request.user)
         ).first()
-        
+
         if not match:
-            print(f"[NEWSLETTER] Чат не найден для пользователя {user.username}")
+            logger.warning(
+                "[NEWSLETTER] Чат не найден для пользователя %s", user.username)
             continue
-        
+
         msg = Message.objects.create(
             match=match,
             sender=request.user,
             text=message_text,
         )
         sent_count += 1
-        print(f"[NEWSLETTER] Сообщение {msg.id} отправлено пользователю {user.username}")
-        
+        logger.info(
+            "[NEWSLETTER] Сообщение %s отправлено пользователю %s", msg.id, user.username)
+
         # Отправить уведомление пользователю
         try:
             from accounts.models import UserNotification
             from accounts.notifications import create_user_notification
-            
+
             create_user_notification(
                 recipient=user,
                 event=UserNotification.Event.NEW_MESSAGE,
                 title="📢 Рассылка от администратора",
-                body=message_text[:120] + "..." if len(message_text) > 120 else message_text,
+                body=message_text[:120] +
+                "..." if len(message_text) > 120 else message_text,
                 url=f"/chat/{match.id}/",
             )
-        except Exception as e:
-            print(f"[NEWSLETTER] Ошибка при отправке уведомления: {e}")
-    
-    print(f"[NEWSLETTER] Рассылка завершена: {sent_count} сообщений отправлено")
+        except Exception:
+            logger.exception(
+                "[NEWSLETTER] Ошибка при отправке уведомления пользователю %s", user.username)
+
+    logger.info(
+        "[NEWSLETTER] Рассылка завершена: %s сообщений отправлено", sent_count)
 
     return redirect("chat_inbox")

@@ -36,7 +36,8 @@ def _normalize_many(value):
     if value is None:
         return None
     if isinstance(value, (list, tuple, set)):
-        items = [str(x).strip() for x in value if x is not None and str(x).strip() != ""]
+        items = [str(x).strip()
+                 for x in value if x is not None and str(x).strip() != ""]
         return items or None
     v = _normalize(value)
     return [v] if v is not None else None
@@ -85,7 +86,8 @@ def _score_single_answer(spec, expected: str, actual: str):
 
 
 def _score_multiple_answer(expected_items: list[str], actual_items: list[str]):
-    e = {str(x).strip() for x in (expected_items or []) if str(x).strip() != ""}
+    e = {str(x).strip()
+         for x in (expected_items or []) if str(x).strip() != ""}
     a = {str(x).strip() for x in (actual_items or []) if str(x).strip() != ""}
     if not e or not a:
         return None
@@ -151,12 +153,12 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
     # Получаем настройки видимости по разделам для обоих пользователей
     try:
         a_section_visibility = profile_a.section_visibility
-    except:
+    except SectionVisibility.DoesNotExist:
         a_section_visibility = None
 
     try:
         b_section_visibility = profile_b.section_visibility
-    except:
+    except SectionVisibility.DoesNotExist:
         b_section_visibility = None
 
     # Функция для проверки видимости конкретного раздела
@@ -199,7 +201,8 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
     b_me_allowed = _allowed_question_ids_for_gender(b_me_gender)
 
     b_ideal_gender = questionnaire_gender_for_profile(profile_b, "ideal")
-    b_me_gender_for_expected = questionnaire_gender_for_profile(profile_b, "me")
+    b_me_gender_for_expected = questionnaire_gender_for_profile(
+        profile_b, "me")
     b_ideal_allowed = _allowed_question_ids_for_gender(b_ideal_gender)
     b_me_allowed = _allowed_question_ids_for_gender(b_me_gender_for_expected)
     a_me_allowed_for_actual = _allowed_question_ids_for_gender(a_me_gender)
@@ -244,18 +247,22 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
                 a_to_b_part = None
                 b_to_a_part = None
 
-                a_to_b_allowed = (a_ideal_allowed if show_in_ideal else a_me_allowed) & b_me_allowed
+                a_to_b_allowed = (
+                    a_ideal_allowed if show_in_ideal else a_me_allowed) & b_me_allowed
                 if qid in a_to_b_allowed:
-                    a_to_b_part = _score_question(q, (a_expected if show_in_ideal else a_me), b_me)
+                    a_to_b_part = _score_question(
+                        q, (a_expected if show_in_ideal else a_me), b_me)
                     if a_to_b_part is not None:
                         s_a_to_b_total += float(a_to_b_part["score"])
                         s_a_to_b_compared += 1
                         a_to_b_total += float(a_to_b_part["score"])
                         a_to_b_compared += 1
 
-                b_to_a_allowed = (b_ideal_allowed if show_in_ideal else b_me_allowed) & a_me_allowed_for_actual
+                b_to_a_allowed = (
+                    b_ideal_allowed if show_in_ideal else b_me_allowed) & a_me_allowed_for_actual
                 if qid in b_to_a_allowed:
-                    b_to_a_part = _score_question(q, (b_expected if show_in_ideal else b_me), a_me)
+                    b_to_a_part = _score_question(
+                        q, (b_expected if show_in_ideal else b_me), a_me)
                     if b_to_a_part is not None:
                         s_b_to_a_total += float(b_to_a_part["score"])
                         s_b_to_a_compared += 1
@@ -263,14 +270,18 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
                         b_to_a_compared += 1
 
             s_a_to_b_percent = (
-                int(round((s_a_to_b_total / s_a_to_b_compared) * 100)) if s_a_to_b_compared else None
+                int(round((s_a_to_b_total / s_a_to_b_compared) * 100)
+                    ) if s_a_to_b_compared else None
             )
             s_b_to_a_percent = (
-                int(round((s_b_to_a_total / s_b_to_a_compared) * 100)) if s_b_to_a_compared else None
+                int(round((s_b_to_a_total / s_b_to_a_compared) * 100)
+                    ) if s_b_to_a_compared else None
             )
 
-            section_parts = [p for p in (s_a_to_b_percent, s_b_to_a_percent) if p is not None]
-            s_overall = int(round(sum(section_parts) / len(section_parts))) if section_parts else None
+            section_parts = [p for p in (
+                s_a_to_b_percent, s_b_to_a_percent) if p is not None]
+            s_overall = int(round(sum(section_parts) /
+                            len(section_parts))) if section_parts else None
 
             sections_out.append(
                 {
@@ -303,18 +314,22 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
             a_to_b_part = None
             b_to_a_part = None
 
-            a_to_b_allowed = (a_ideal_allowed if show_in_ideal else a_me_allowed) & b_me_allowed
+            a_to_b_allowed = (
+                a_ideal_allowed if show_in_ideal else a_me_allowed) & b_me_allowed
             if qid in a_to_b_allowed:
-                a_to_b_part = _score_question(q, (a_expected if show_in_ideal else a_me), b_me)
+                a_to_b_part = _score_question(
+                    q, (a_expected if show_in_ideal else a_me), b_me)
                 if a_to_b_part is not None:
                     s_a_to_b_total += float(a_to_b_part["score"])
                     s_a_to_b_compared += 1
                     a_to_b_total += float(a_to_b_part["score"])
                     a_to_b_compared += 1
 
-            b_to_a_allowed = (b_ideal_allowed if show_in_ideal else b_me_allowed) & a_me_allowed_for_actual
+            b_to_a_allowed = (
+                b_ideal_allowed if show_in_ideal else b_me_allowed) & a_me_allowed_for_actual
             if qid in b_to_a_allowed:
-                b_to_a_part = _score_question(q, (b_expected if show_in_ideal else b_me), a_me)
+                b_to_a_part = _score_question(
+                    q, (b_expected if show_in_ideal else b_me), a_me)
                 if b_to_a_part is not None:
                     s_b_to_a_total += float(b_to_a_part["score"])
                     s_b_to_a_compared += 1
@@ -340,14 +355,18 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
             continue
 
         s_a_to_b_percent = (
-            int(round((s_a_to_b_total / s_a_to_b_compared) * 100)) if s_a_to_b_compared else None
+            int(round((s_a_to_b_total / s_a_to_b_compared) * 100)
+                ) if s_a_to_b_compared else None
         )
         s_b_to_a_percent = (
-            int(round((s_b_to_a_total / s_b_to_a_compared) * 100)) if s_b_to_a_compared else None
+            int(round((s_b_to_a_total / s_b_to_a_compared) * 100)
+                ) if s_b_to_a_compared else None
         )
 
-        section_parts = [p for p in (s_a_to_b_percent, s_b_to_a_percent) if p is not None]
-        s_overall = int(round(sum(section_parts) / len(section_parts))) if section_parts else None
+        section_parts = [p for p in (
+            s_a_to_b_percent, s_b_to_a_percent) if p is not None]
+        s_overall = int(round(sum(section_parts) /
+                        len(section_parts))) if section_parts else None
 
         sections_out.append(
             {
@@ -362,8 +381,10 @@ def compatibility_breakdown(profile_a, profile_b, spec=None):
             }
         )
 
-    a_to_b_percent = int(round((a_to_b_total / a_to_b_compared) * 100)) if a_to_b_compared else None
-    b_to_a_percent = int(round((b_to_a_total / b_to_a_compared) * 100)) if b_to_a_compared else None
+    a_to_b_percent = int(
+        round((a_to_b_total / a_to_b_compared) * 100)) if a_to_b_compared else None
+    b_to_a_percent = int(
+        round((b_to_a_total / b_to_a_compared) * 100)) if b_to_a_compared else None
     parts = [p for p in (a_to_b_percent, b_to_a_percent) if p is not None]
     overall = int(round(sum(parts) / len(parts))) if parts else None
 
@@ -432,12 +453,12 @@ def compatibility(profile_a, profile_b, question_specs: dict | None = None):
     # Получаем настройки видимости по разделам для обоих пользователей
     try:
         a_section_visibility = profile_a.section_visibility
-    except:
+    except SectionVisibility.DoesNotExist:
         a_section_visibility = None
 
     try:
         b_section_visibility = profile_b.section_visibility
-    except:
+    except SectionVisibility.DoesNotExist:
         b_section_visibility = None
 
     # Функция для проверки видимости конкретного раздела
@@ -497,7 +518,8 @@ def compatibility(profile_a, profile_b, question_specs: dict | None = None):
             continue
 
         # Проверяем, относится ли вопрос к специальным категориям по ID
-        is_sensitive = qid.startswith("sexual_") or qid.startswith("religious_")
+        is_sensitive = qid.startswith(
+            "sexual_") or qid.startswith("religious_")
 
         # Для специальных категорий проверяем секцию
         if is_sensitive:
@@ -512,16 +534,20 @@ def compatibility(profile_a, profile_b, question_specs: dict | None = None):
 
         show_in_ideal = bool(qspec.get("show_in_ideal", True))
 
-        a_allowed = (a_ideal_allowed if show_in_ideal else a_me_allowed) & b_me_allowed
+        a_allowed = (
+            a_ideal_allowed if show_in_ideal else a_me_allowed) & b_me_allowed
         if qid in a_allowed:
-            part = _score_question(qspec, (a_expected if show_in_ideal else a_me), b_me)
+            part = _score_question(
+                qspec, (a_expected if show_in_ideal else a_me), b_me)
             if part is not None:
                 a_total += float(part["score"])
                 a_compared += 1
 
-        b_allowed = (b_ideal_allowed if show_in_ideal else b_me_allowed) & a_me_allowed
+        b_allowed = (
+            b_ideal_allowed if show_in_ideal else b_me_allowed) & a_me_allowed
         if qid in b_allowed:
-            part = _score_question(qspec, (b_expected if show_in_ideal else b_me), a_me)
+            part = _score_question(
+                qspec, (b_expected if show_in_ideal else b_me), a_me)
             if part is not None:
                 b_total += float(part["score"])
                 b_compared += 1

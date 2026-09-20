@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 
 from .models import Profile, ProfilePhoto, SectionVisibility
 from .questionnaire import SENSITIVE_SECTION_IDS, get_questionnaire_spec_for_profile
@@ -31,6 +32,24 @@ class OnboardingForm(forms.ModelForm):
             "birth_date": forms.DateInput(attrs={"type": "date"}),
             "bio": forms.Textarea(attrs={"rows": 4}),
         }
+
+    def clean_birth_date(self):
+        birth_date = self.cleaned_data.get("birth_date")
+        if birth_date:
+            today = timezone.now().date()
+            if birth_date > today:
+                raise forms.ValidationError(
+                    "Дата рождения не может быть в будущем.")
+            age = today.year - birth_date.year - (
+                (today.month, today.day) < (birth_date.month, birth_date.day)
+            )
+            if age < 18:
+                raise forms.ValidationError(
+                    "Регистрация на сайте доступна только с 18 лет.")
+            if age > 120:
+                raise forms.ValidationError(
+                    "Проверьте указанную дату рождения.")
+        return birth_date
 
 
 class PhotoUploadForm(forms.ModelForm):
@@ -156,8 +175,10 @@ class QuestionnaireForm(forms.Form):
             )
 
     def cleaned_answers(self) -> dict:
-        sexual_consent_given = bool(self.cleaned_data.get("sexual_consent")) if self.has_sensitive_section else True
-        religious_consent_given = bool(self.cleaned_data.get("religious_consent")) if self.has_sensitive_section else True
+        sexual_consent_given = bool(self.cleaned_data.get(
+            "sexual_consent")) if self.has_sensitive_section else True
+        religious_consent_given = bool(self.cleaned_data.get(
+            "religious_consent")) if self.has_sensitive_section else True
         answers = {}
         for qid in self._question_ids:
             # Check which section this question belongs to
@@ -195,8 +216,10 @@ class QuestionnaireForm(forms.Form):
             from accounts.models import ConsentEvent
 
             user = self.profile.user
-            sexual_consent_given = bool(self.cleaned_data.get("sexual_consent"))
-            religious_consent_given = bool(self.cleaned_data.get("religious_consent"))
+            sexual_consent_given = bool(
+                self.cleaned_data.get("sexual_consent"))
+            religious_consent_given = bool(
+                self.cleaned_data.get("religious_consent"))
 
             # Handle sexual consent
             if sexual_consent_given and not user.sexual_consent:
