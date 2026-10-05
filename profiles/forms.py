@@ -165,16 +165,15 @@ class QuestionnaireForm(forms.Form):
         self.has_sensitive_section = kind == "me" and bool(
             self._sensitive_question_ids)
 
-        # Всегда показываем галочки для чувствительных разделов, если есть вопросы из этих разделов
-        if kind == "me":
-            self.fields["sexual_consent"] = forms.BooleanField(
-                required=False,
-                initial=profile.user.sexual_consent,
-            )
-            self.fields["religious_consent"] = forms.BooleanField(
-                required=False,
-                initial=profile.user.religious_consent,
-            )
+        # Показываем галочки для чувствительных разделов
+        self.fields["sexual_consent"] = forms.BooleanField(
+            required=False,
+            initial=profile.user.sexual_consent,
+        )
+        self.fields["religious_consent"] = forms.BooleanField(
+            required=False,
+            initial=profile.user.religious_consent,
+        )
 
     def clean(self):
         cleaned_data = super().clean()
