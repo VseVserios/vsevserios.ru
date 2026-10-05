@@ -164,8 +164,9 @@ class QuestionnaireForm(forms.Form):
 
         self.has_sensitive_section = kind == "me" and bool(
             self._sensitive_question_ids)
-        if self.has_sensitive_section:
-            # Показываем галочки для всех чувствительных разделов
+
+        # Всегда показываем галочки для чувствительных разделов, если есть вопросы из этих разделов
+        if kind == "me":
             self.fields["sexual_consent"] = forms.BooleanField(
                 required=False,
                 initial=profile.user.sexual_consent,
@@ -176,10 +177,8 @@ class QuestionnaireForm(forms.Form):
             )
 
     def cleaned_answers(self) -> dict:
-        sexual_consent_given = bool(self.cleaned_data.get(
-            "sexual_consent")) if self.has_sensitive_section else True
-        religious_consent_given = bool(self.cleaned_data.get(
-            "religious_consent")) if self.has_sensitive_section else True
+        sexual_consent_given = bool(self.cleaned_data.get("sexual_consent"))
+        religious_consent_given = bool(self.cleaned_data.get("religious_consent"))
         answers = {}
         for qid in self._question_ids:
             # Check which section this question belongs to
@@ -211,7 +210,7 @@ class QuestionnaireForm(forms.Form):
         self.profile.save(
             update_fields=[f"questionnaire_{self.kind}", "updated_at"])
 
-        if self.has_sensitive_section:
+        if kind == "me":
             from django.utils import timezone
 
             from accounts.models import ConsentEvent
