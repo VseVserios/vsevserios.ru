@@ -158,7 +158,7 @@ def questionnaire(request, kind: str):
                 "id": sid,
                 "title": section["title"],
                 "hint": section_hints.get(sid, ""),
-                "is_sensitive": sid in SENSITIVE_SECTION_IDS,
+                "is_sensitive": section.get("is_sensitive", sid in SENSITIVE_SECTION_IDS),
                 "questions": rows,
             }
         )

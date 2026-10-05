@@ -206,6 +206,7 @@ QUESTIONNAIRE_SPEC = [
     {
         "id": "sexual",
         "title": "Сексуальная совместимость",
+        "is_sensitive": True,
         "questions": [
             {"id": "sexual_01", "text": "Интим — важная часть отношений",
                 "choices": SCALE_CHOICES},
@@ -231,6 +232,7 @@ QUESTIONNAIRE_SPEC = [
     {
         "id": "religious",
         "title": "Религиозные убеждения",
+        "is_sensitive": True,
         "questions": [
             {"id": "religious_01", "text": "Вера важна для меня",
                 "choices": SCALE_CHOICES},
