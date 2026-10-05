@@ -176,6 +176,35 @@ class QuestionnaireForm(forms.Form):
                 initial=profile.user.religious_consent,
             )
 
+    def clean(self):
+        cleaned_data = super().clean()
+        if self.kind == "me":
+            sexual_consent_given = bool(cleaned_data.get("sexual_consent"))
+            religious_consent_given = bool(cleaned_data.get("religious_consent"))
+
+            # Проверяем, есть ли ответы из чувствительных разделов без согласия
+            has_sexual_answers = any(
+                qid.startswith("sexual_") and cleaned_data.get(qid)
+                for qid in self._question_ids
+            )
+            has_religious_answers = any(
+                qid.startswith("religious_") and cleaned_data.get(qid)
+                for qid in self._question_ids
+            )
+
+            if has_sexual_answers and not sexual_consent_given:
+                self.add_error(
+                    None,
+                    "Чтобы сохранить ответы из раздела «Сексуальная совместимость», необходимо дать согласие на обработку данных о сексуальной жизни."
+                )
+            if has_religious_answers and not religious_consent_given:
+                self.add_error(
+                    None,
+                    "Чтобы сохранить ответы из раздела «Религиозные убеждения», необходимо дать согласие на обработку данных о религиозных убеждениях."
+                )
+
+        return cleaned_data
+
     def cleaned_answers(self) -> dict:
         sexual_consent_given = bool(self.cleaned_data.get("sexual_consent"))
         religious_consent_given = bool(self.cleaned_data.get("religious_consent"))
