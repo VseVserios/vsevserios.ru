@@ -3,11 +3,16 @@ from django.urls import path
 from .views import (
     SignInView,
     SignOutView,
+    accept_privacy,
+    accept_terms,
     account_settings,
     consent_history,
     deactivate_account,
     delete_account,
     forgot_username,
+    give_religious_consent,
+    give_sexual_consent,
+    give_special_category_consent,
     legal_photo_rules,
     legal_privacy,
     legal_site_rules,
@@ -47,6 +52,31 @@ urlpatterns = [
         "settings/consents/special-category/revoke/",
         revoke_special_category_consent,
         name="revoke_special_category_consent",
+    ),
+    path(
+        "settings/consents/special-category/give/",
+        give_special_category_consent,
+        name="give_special_category_consent",
+    ),
+    path(
+        "settings/consents/sexual/give/",
+        give_sexual_consent,
+        name="give_sexual_consent",
+    ),
+    path(
+        "settings/consents/religious/give/",
+        give_religious_consent,
+        name="give_religious_consent",
+    ),
+    path(
+        "settings/consents/terms/accept/",
+        accept_terms,
+        name="accept_terms",
+    ),
+    path(
+        "settings/consents/privacy/accept/",
+        accept_privacy,
+        name="accept_privacy",
     ),
 
     path("payment/", payment_page, name="payment"),

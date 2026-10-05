@@ -108,17 +108,37 @@
                         {% endif %}
                         Чтобы сохранить ответы, подтверди согласие на их обработку.
                     </div>
-                    <label class="mt-4 flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100">
-                        {% if section.id == 'sexual' %}
-                        {{ form.sexual_consent }}
-                        {% elif section.id == 'religious' %}
-                        {{ form.religious_consent }}
+                    {% if section.id == 'sexual' %}
+                        {% if request.user.sexual_consent_revoked_at %}
+                        <div class="mt-4 rounded-2xl border border-amber-300/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                            Вы отозвали согласие на обработку этих данных. Чтобы снова дать согласие, перейдите в
+                            <a class="underline underline-offset-4 hover:text-white" href="{% url 'account_settings' %}#consents">Настройки → Управление согласиями</a>.
+                        </div>
+                        {% else %}
+                        <label class="mt-4 flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100">
+                            {{ form.sexual_consent }}
+                            <span>Я даю согласие на обработку специальных категорий персональных данных согласно
+                                <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_special_category' %}" target="_blank" rel="noopener">тексту согласия</a>.
+                                Без этого ответы раздела «{{ section.title }}» сохранены не будут.
+                            </span>
+                        </label>
                         {% endif %}
-                        <span>Я даю согласие на обработку специальных категорий персональных данных согласно
-                            <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_special_category' %}" target="_blank" rel="noopener">тексту согласия</a>.
-                            Без этого ответы раздела «{{ section.title }}» сохранены не будут.
-                        </span>
-                    </label>
+                    {% elif section.id == 'religious' %}
+                        {% if request.user.religious_consent_revoked_at %}
+                        <div class="mt-4 rounded-2xl border border-amber-300/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                            Вы отозвали согласие на обработку этих данных. Чтобы снова дать согласие, перейдите в
+                            <a class="underline underline-offset-4 hover:text-white" href="{% url 'account_settings' %}#consents">Настройки → Управление согласиями</a>.
+                        </div>
+                        {% else %}
+                        <label class="mt-4 flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100">
+                            {{ form.religious_consent }}
+                            <span>Я даю согласие на обработку специальных категорий персональных данных согласно
+                                <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_special_category' %}" target="_blank" rel="noopener">тексту согласия</a>.
+                                Без этого ответы раздела «{{ section.title }}» сохранены не будут.
+                            </span>
+                        </label>
+                        {% endif %}
+                    {% endif %}
                 </div>
                 {% endif %}
                 {% for q in section.questions %}

@@ -165,14 +165,20 @@ class QuestionnaireForm(forms.Form):
         self.has_sensitive_section = kind == "me" and bool(
             self._sensitive_question_ids)
         if self.has_sensitive_section:
-            self.fields["sexual_consent"] = forms.BooleanField(
-                required=False,
-                initial=profile.user.sexual_consent,
-            )
-            self.fields["religious_consent"] = forms.BooleanField(
-                required=False,
-                initial=profile.user.religious_consent,
-            )
+            # Скрываем галочку, если согласие было отозвано (пользователь явно отказался)
+            sexual_show_consent = profile.user.sexual_consent or (not profile.user.sexual_consent_revoked_at)
+            religious_show_consent = profile.user.religious_consent or (not profile.user.religious_consent_revoked_at)
+
+            if sexual_show_consent:
+                self.fields["sexual_consent"] = forms.BooleanField(
+                    required=False,
+                    initial=profile.user.sexual_consent,
+                )
+            if religious_show_consent:
+                self.fields["religious_consent"] = forms.BooleanField(
+                    required=False,
+                    initial=profile.user.religious_consent,
+                )
 
     def cleaned_answers(self) -> dict:
         sexual_consent_given = bool(self.cleaned_data.get(
