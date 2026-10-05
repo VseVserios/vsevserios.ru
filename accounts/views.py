@@ -539,6 +539,21 @@ def accept_terms(request):
 
 
 @login_required
+def revoke_terms(request):
+    if request.method == "POST":
+        user = request.user
+        if user.terms_accepted_at:
+            user.terms_accepted_at = None
+            user.save(update_fields=["terms_accepted_at"])
+            messages.success(
+                request,
+                "Пользовательское соглашение отозвано."
+            )
+        return redirect("account_settings")
+    return redirect("account_settings")
+
+
+@login_required
 def accept_privacy(request):
     if request.method == "POST":
         user = request.user
@@ -550,6 +565,21 @@ def accept_privacy(request):
             messages.success(
                 request,
                 "Политика обработки персональных данных принята."
+            )
+        return redirect("account_settings")
+    return redirect("account_settings")
+
+
+@login_required
+def revoke_privacy(request):
+    if request.method == "POST":
+        user = request.user
+        if user.privacy_accepted_at:
+            user.privacy_accepted_at = None
+            user.save(update_fields=["privacy_accepted_at"])
+            messages.success(
+                request,
+                "Политика обработки персональных данных отозвана."
             )
         return redirect("account_settings")
     return redirect("account_settings")

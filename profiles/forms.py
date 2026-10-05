@@ -165,21 +165,12 @@ class QuestionnaireForm(forms.Form):
         self.has_sensitive_section = kind == "me" and bool(
             self._sensitive_question_ids)
 
-        # Показываем галочки для чувствительных разделов
-        self.fields["sexual_consent"] = forms.BooleanField(
-            required=False,
-            initial=profile.user.sexual_consent,
-        )
-        self.fields["religious_consent"] = forms.BooleanField(
-            required=False,
-            initial=profile.user.religious_consent,
-        )
-
     def clean(self):
         cleaned_data = super().clean()
         if self.kind == "me":
-            sexual_consent_given = bool(cleaned_data.get("sexual_consent"))
-            religious_consent_given = bool(cleaned_data.get("religious_consent"))
+            # Проверяем согласия из профиля пользователя
+            sexual_consent_given = self.profile.user.sexual_consent
+            religious_consent_given = self.profile.user.religious_consent
 
             # Проверяем, есть ли ответы из чувствительных разделов без согласия
             has_sexual_answers = any(
@@ -194,19 +185,21 @@ class QuestionnaireForm(forms.Form):
             if has_sexual_answers and not sexual_consent_given:
                 self.add_error(
                     None,
-                    "Чтобы сохранить ответы из раздела «Сексуальная совместимость», необходимо дать согласие на обработку данных о сексуальной жизни."
+                    "Чтобы сохранить ответы из раздела «Сексуальная совместимость», необходимо дать согласие на обработку данных о сексуальной жизни в настройках профиля."
                 )
             if has_religious_answers and not religious_consent_given:
                 self.add_error(
                     None,
-                    "Чтобы сохранить ответы из раздела «Религиозные убеждения», необходимо дать согласие на обработку данных о религиозных убеждениях."
+                    "Чтобы сохранить ответы из раздела «Религиозные убеждения», необходимо дать согласие на обработку данных о религиозных убеждениях в настройках профиля."
                 )
 
         return cleaned_data
 
     def cleaned_answers(self) -> dict:
-        sexual_consent_given = bool(self.cleaned_data.get("sexual_consent"))
-        religious_consent_given = bool(self.cleaned_data.get("religious_consent"))
+        # Проверяем согласия из профиля пользователя
+        sexual_consent_given = self.profile.user.sexual_consent
+        religious_consent_given = self.profile.user.religious_consent
+
         answers = {}
         for qid in self._question_ids:
             # Check which section this question belongs to
@@ -237,42 +230,5 @@ class QuestionnaireForm(forms.Form):
             raise ValueError("Invalid questionnaire kind")
         self.profile.save(
             update_fields=[f"questionnaire_{self.kind}", "updated_at"])
-
-        if kind == "me":
-            from django.utils import timezone
-
-            from accounts.models import ConsentEvent
-
-            user = self.profile.user
-            sexual_consent_given = bool(
-                self.cleaned_data.get("sexual_consent"))
-            religious_consent_given = bool(
-                self.cleaned_data.get("religious_consent"))
-
-            # Handle sexual consent
-            if sexual_consent_given and not user.sexual_consent:
-                user.sexual_consent = True
-                user.sexual_consent_at = timezone.now()
-                user.sexual_consent_revoked_at = None
-                user.save(update_fields=[
-                    "sexual_consent",
-                    "sexual_consent_at",
-                    "sexual_consent_revoked_at",
-                ])
-                ConsentEvent.objects.create(
-                    user=user, kind=ConsentEvent.Kind.SEXUAL_CONSENT_GIVEN)
-
-            # Handle religious consent
-            if religious_consent_given and not user.religious_consent:
-                user.religious_consent = True
-                user.religious_consent_at = timezone.now()
-                user.religious_consent_revoked_at = None
-                user.save(update_fields=[
-                    "religious_consent",
-                    "religious_consent_at",
-                    "religious_consent_revoked_at",
-                ])
-                ConsentEvent.objects.create(
-                    user=user, kind=ConsentEvent.Kind.RELIGIOUS_CONSENT_GIVEN)
 
         return self.profile

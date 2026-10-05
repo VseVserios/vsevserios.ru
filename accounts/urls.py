@@ -31,7 +31,9 @@ from .views import (
     payment_topup,
     register,
     resend_verification,
+    revoke_privacy,
     revoke_special_category_consent,
+    revoke_terms,
     verify_email_view,
 )
 
@@ -77,6 +79,16 @@ urlpatterns = [
         "settings/consents/privacy/accept/",
         accept_privacy,
         name="accept_privacy",
+    ),
+    path(
+        "settings/consents/privacy/revoke/",
+        revoke_privacy,
+        name="revoke_privacy",
+    ),
+    path(
+        "settings/consents/terms/revoke/",
+        revoke_terms,
+        name="revoke_terms",
     ),
 
     path("payment/", payment_page, name="payment"),
