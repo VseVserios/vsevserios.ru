@@ -111,13 +111,17 @@
                     <label class="mt-4 flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100">
                         {% if section.id == 'sexual' %}
                         {{ form.sexual_consent }}
-                        {% elif section.id == 'religious' %}
-                        {{ form.religious_consent }}
-                        {% endif %}
-                        <span>Я даю согласие на обработку специальных категорий персональных данных согласно
+                        <span>Я даю согласие на обработку данных о сексуальной жизни согласно
                             <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_special_category' %}" target="_blank" rel="noopener">тексту согласия</a>.
                             Без этого ответы раздела «{{ section.title }}» сохранены не будут.
                         </span>
+                        {% elif section.id == 'religious' %}
+                        {{ form.religious_consent }}
+                        <span>Я даю согласие на обработку данных о религиозных убеждениях согласно
+                            <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_special_category' %}" target="_blank" rel="noopener">тексту согласия</a>.
+                            Без этого ответы раздела «{{ section.title }}» сохранены не будут.
+                        </span>
+                        {% endif %}
                     </label>
                 </div>
                 {% endif %}
