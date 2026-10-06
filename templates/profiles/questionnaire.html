@@ -101,22 +101,14 @@
                     <div class="text-xs text-slate-400">{{ section.title }}</div>
                     <div class="mt-2 text-lg font-semibold leading-snug">Согласие на обработку специальных категорий данных</div>
                     <div class="mt-2 text-sm text-slate-300">
-                        {% if section.id == 'sexual' %}
-                        Ответы в этом разделе относятся к специальным категориям персональных данных (сведения о сексуальной жизни).
-                        {% elif section.id == 'religious' %}
-                        Ответы в этом разделе относятся к специальным категориям персональных данных (религиозные убеждения).
-                        {% endif %}
-                        Чтобы сохранить ответы, подтверди согласие на их обработку.
+                        Ответы в разделах «Сексуальная совместимость» и «Религиозные убеждения» относятся к специальным категориям персональных данных (ст. 10 152-ФЗ).
+                        Это одно общее согласие сразу на оба раздела — чтобы сохранить ответы, подтверди его.
                     </div>
                     <label class="mt-4 flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100">
-                        {% if section.id == 'sexual' %}
-                        {{ form.sexual_consent }}
-                        {% elif section.id == 'religious' %}
-                        {{ form.religious_consent }}
-                        {% endif %}
+                        {{ form.special_category_consent }}
                         <span>Я даю согласие на обработку специальных категорий персональных данных согласно
                             <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_special_category' %}" target="_blank" rel="noopener">тексту согласия</a>.
-                            Без этого ответы раздела «{{ section.title }}» сохранены не будут.
+                            Без этого ответы разделов «Сексуальная совместимость» и «Религиозные убеждения» сохранены не будут.
                         </span>
                     </label>
                 </div>
@@ -324,6 +316,21 @@
         });
 
         show(current, { noScroll: true });
+
+        // Общее согласие на спецкатегории данных рендерится дважды (для разделов
+        // "sexual" и "religious"), держим оба чекбокса синхронизированными.
+        const consentCheckboxes = Array.from(
+            root.querySelectorAll('input[name="special_category_consent"]')
+        );
+        if (consentCheckboxes.length > 1) {
+            consentCheckboxes.forEach((cb, idx) => {
+                cb.addEventListener('change', () => {
+                    consentCheckboxes.forEach((other) => {
+                        other.checked = cb.checked;
+                    });
+                });
+            });
+        }
     })();
 </script>
 {% endblock %}
