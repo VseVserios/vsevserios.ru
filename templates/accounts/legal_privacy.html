@@ -19,5 +19,21 @@
     <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6 text-sm leading-relaxed text-slate-200 sm:p-8">
         {% include 'accounts/legal/_privacy_policy.html' %}
     </div>
+
+    {% if request.user.is_authenticated %}
+    <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="text-sm font-medium">Принять политику</div>
+        <div class="mt-2 text-sm text-slate-300">
+            {% if request.user.privacy_accepted_at %}
+            <div class="text-emerald-300">Вы уже приняли эту политику {{ request.user.privacy_accepted_at|date:"d.m.Y H:i" }}</div>
+            {% else %}
+            <form method="post" action="{% url 'accept_privacy' %}" class="mt-4">
+                {% csrf_token %}
+                <button type="submit" class="w-full rounded-xl bg-fuchsia-500 px-4 py-3 font-medium text-white hover:bg-fuchsia-400">Я принимаю политику обработки персональных данных</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

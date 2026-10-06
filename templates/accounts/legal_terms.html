@@ -25,5 +25,21 @@
         <p class="mt-6 mb-2 font-semibold text-white">Приложение № 2. Правила пользования Сайтом</p>
         {% include 'accounts/legal/_site_rules.html' %}
     </div>
+
+    {% if request.user.is_authenticated %}
+    <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="text-sm font-medium">Принять соглашение</div>
+        <div class="mt-2 text-sm text-slate-300">
+            {% if request.user.terms_accepted_at %}
+            <div class="text-emerald-300">Вы уже приняли это соглашение {{ request.user.terms_accepted_at|date:"d.m.Y H:i" }}</div>
+            {% else %}
+            <form method="post" action="{% url 'accept_terms' %}" class="mt-4">
+                {% csrf_token %}
+                <button type="submit" class="w-full rounded-xl bg-fuchsia-500 px-4 py-3 font-medium text-white hover:bg-fuchsia-400">Я принимаю пользовательское соглашение</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -453,6 +453,139 @@ def revoke_special_category_consent(request):
 
 
 @login_required
+def give_special_category_consent(request):
+    if request.method == "POST":
+        user = request.user
+        if not user.special_category_consent:
+            user.special_category_consent = True
+            user.special_category_consent_at = timezone.now()
+            user.special_category_consent_revoked_at = None
+            user.save(update_fields=[
+                "special_category_consent",
+                "special_category_consent_at",
+                "special_category_consent_revoked_at",
+            ])
+            ConsentEvent.objects.create(
+                user=user, kind=ConsentEvent.Kind.SPECIAL_CATEGORY_GIVEN)
+            messages.success(
+                request,
+                "Согласие на обработку специальных категорий данных дано."
+            )
+        return redirect("account_settings")
+    return redirect("account_settings")
+
+
+@login_required
+def give_sexual_consent(request):
+    if request.method == "POST":
+        user = request.user
+        if not user.sexual_consent:
+            user.sexual_consent = True
+            user.sexual_consent_at = timezone.now()
+            user.sexual_consent_revoked_at = None
+            user.save(update_fields=[
+                "sexual_consent",
+                "sexual_consent_at",
+                "sexual_consent_revoked_at",
+            ])
+            ConsentEvent.objects.create(
+                user=user, kind=ConsentEvent.Kind.SEXUAL_CONSENT_GIVEN)
+            messages.success(
+                request,
+                "Согласие на обработку данных о сексуальной жизни дано."
+            )
+        return redirect("account_settings")
+    return redirect("account_settings")
+
+
+@login_required
+def give_religious_consent(request):
+    if request.method == "POST":
+        user = request.user
+        if not user.religious_consent:
+            user.religious_consent = True
+            user.religious_consent_at = timezone.now()
+            user.religious_consent_revoked_at = None
+            user.save(update_fields=[
+                "religious_consent",
+                "religious_consent_at",
+                "religious_consent_revoked_at",
+            ])
+            ConsentEvent.objects.create(
+                user=user, kind=ConsentEvent.Kind.RELIGIOUS_CONSENT_GIVEN)
+            messages.success(
+                request,
+                "Согласие на обработку данных о религиозных убеждениях дано."
+            )
+        return redirect("account_settings")
+    return redirect("account_settings")
+
+
+@login_required
+def accept_terms(request):
+    if request.method == "POST":
+        user = request.user
+        if not user.terms_accepted_at:
+            user.terms_accepted_at = timezone.now()
+            user.save(update_fields=["terms_accepted_at"])
+            ConsentEvent.objects.create(
+                user=user, kind=ConsentEvent.Kind.TERMS)
+            messages.success(
+                request,
+                "Пользовательское соглашение принято."
+            )
+        return redirect("account_settings")
+    return redirect("account_settings")
+
+
+@login_required
+def revoke_terms(request):
+    if request.method == "POST":
+        user = request.user
+        if user.terms_accepted_at:
+            user.terms_accepted_at = None
+            user.save(update_fields=["terms_accepted_at"])
+            messages.success(
+                request,
+                "Пользовательское соглашение отозвано."
+            )
+        return redirect("account_settings")
+    return redirect("account_settings")
+
+
+@login_required
+def accept_privacy(request):
+    if request.method == "POST":
+        user = request.user
+        if not user.privacy_accepted_at:
+            user.privacy_accepted_at = timezone.now()
+            user.save(update_fields=["privacy_accepted_at"])
+            ConsentEvent.objects.create(
+                user=user, kind=ConsentEvent.Kind.PRIVACY)
+            messages.success(
+                request,
+                "Политика обработки персональных данных принята."
+            )
+        return redirect("account_settings")
+    return redirect("account_settings")
+
+
+@login_required
+def revoke_privacy(request):
+    if request.method == "POST":
+        user = request.user
+        if user.privacy_accepted_at:
+            user.privacy_accepted_at = None
+            user.save(update_fields=["privacy_accepted_at"])
+            messages.success(
+                request,
+                "Политика обработки персональных данных отозвана."
+            )
+        return redirect("account_settings")
+    return redirect("account_settings")
+
+
+@login_required
 def payment_page(request):
     from decimal import Decimal, InvalidOperation
 
