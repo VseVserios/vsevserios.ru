@@ -56,11 +56,11 @@
                     <div class="text-sm font-medium">Фото</div>
                     <a class="text-sm text-slate-300 hover:text-white" href="{% url 'panel_photos' %}?q={{ profile.user.username|urlencode }}">Все</a>
                 </div>
-                <div class="mt-4 grid grid-cols-3 gap-2">
+                <div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {% for photo in photos %}
                     <img class="h-20 w-full rounded-2xl object-cover" src="{{ photo.image.url }}" alt="photo" />
                     {% empty %}
-                    <div class="col-span-3 text-sm text-slate-300">Нет фото.</div>
+                    <div class="col-span-2 text-sm text-slate-300 sm:col-span-3">Нет фото.</div>
                     {% endfor %}
                 </div>
             </div>

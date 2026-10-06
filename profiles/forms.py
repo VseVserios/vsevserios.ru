@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 
 from .models import Profile, ProfilePhoto, SectionVisibility
 from .questionnaire import SENSITIVE_SECTION_IDS, get_questionnaire_spec_for_profile
@@ -31,6 +32,24 @@ class OnboardingForm(forms.ModelForm):
             "birth_date": forms.DateInput(attrs={"type": "date"}),
             "bio": forms.Textarea(attrs={"rows": 4}),
         }
+
+    def clean_birth_date(self):
+        birth_date = self.cleaned_data.get("birth_date")
+        if birth_date:
+            today = timezone.now().date()
+            if birth_date > today:
+                raise forms.ValidationError(
+                    "Дата рождения не может быть в будущем.")
+            age = today.year - birth_date.year - (
+                (today.month, today.day) < (birth_date.month, birth_date.day)
+            )
+            if age < 18:
+                raise forms.ValidationError(
+                    "Регистрация на сайте доступна только с 18 лет.")
+            if age > 120:
+                raise forms.ValidationError(
+                    "Проверьте указанную дату рождения.")
+        return birth_date
 
 
 class PhotoUploadForm(forms.ModelForm):
@@ -143,27 +162,22 @@ class QuestionnaireForm(forms.Form):
                         initial=initial_answers.get(qid, ""),
                     )
 
+        # Единое согласие на обработку специальных категорий данных —
+        # распространяется сразу на разделы "sexual" и "religious".
         self.has_sensitive_section = kind == "me" and bool(
             self._sensitive_question_ids)
         if self.has_sensitive_section:
-            self.fields["sexual_consent"] = forms.BooleanField(
+            self.fields["special_category_consent"] = forms.BooleanField(
                 required=False,
-                initial=profile.user.sexual_consent,
-            )
-            self.fields["religious_consent"] = forms.BooleanField(
-                required=False,
-                initial=profile.user.religious_consent,
+                initial=profile.user.special_category_consent,
             )
 
     def cleaned_answers(self) -> dict:
-        sexual_consent_given = bool(self.cleaned_data.get("sexual_consent")) if self.has_sensitive_section else True
-        religious_consent_given = bool(self.cleaned_data.get("religious_consent")) if self.has_sensitive_section else True
+        consent_given = bool(self.cleaned_data.get(
+            "special_category_consent")) if self.has_sensitive_section else True
         answers = {}
         for qid in self._question_ids:
-            # Check which section this question belongs to
-            if qid.startswith("sexual_") and not sexual_consent_given:
-                continue
-            if qid.startswith("religious_") and not religious_consent_given:
+            if qid in self._sensitive_question_ids and not consent_given:
                 continue
             v = self.cleaned_data.get(qid)
             if v is None:
@@ -195,33 +209,19 @@ class QuestionnaireForm(forms.Form):
             from accounts.models import ConsentEvent
 
             user = self.profile.user
-            sexual_consent_given = bool(self.cleaned_data.get("sexual_consent"))
-            religious_consent_given = bool(self.cleaned_data.get("religious_consent"))
+            consent_given = bool(
+                self.cleaned_data.get("special_category_consent"))
 
-            # Handle sexual consent
-            if sexual_consent_given and not user.sexual_consent:
-                user.sexual_consent = True
-                user.sexual_consent_at = timezone.now()
-                user.sexual_consent_revoked_at = None
+            if consent_given and not user.special_category_consent:
+                user.special_category_consent = True
+                user.special_category_consent_at = timezone.now()
+                user.special_category_consent_revoked_at = None
                 user.save(update_fields=[
-                    "sexual_consent",
-                    "sexual_consent_at",
-                    "sexual_consent_revoked_at",
+                    "special_category_consent",
+                    "special_category_consent_at",
+                    "special_category_consent_revoked_at",
                 ])
                 ConsentEvent.objects.create(
-                    user=user, kind=ConsentEvent.Kind.SEXUAL_CONSENT_GIVEN)
-
-            # Handle religious consent
-            if religious_consent_given and not user.religious_consent:
-                user.religious_consent = True
-                user.religious_consent_at = timezone.now()
-                user.religious_consent_revoked_at = None
-                user.save(update_fields=[
-                    "religious_consent",
-                    "religious_consent_at",
-                    "religious_consent_revoked_at",
-                ])
-                ConsentEvent.objects.create(
-                    user=user, kind=ConsentEvent.Kind.RELIGIOUS_CONSENT_GIVEN)
+                    user=user, kind=ConsentEvent.Kind.SPECIAL_CATEGORY_GIVEN)
 
         return self.profile
