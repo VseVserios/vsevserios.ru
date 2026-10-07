@@ -52,7 +52,8 @@
         <fieldset disabled>
         {% endif %}
 
-        <div class="rounded-3xl border border-white/10 bg-white/5 p-6" data-wizard data-kind="{{ kind }}">
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-6" data-wizard data-kind="{{ kind }}" data-editable="{{ editable|yesno:'1,0' }}">
+            {% if editable %}
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <div class="text-xs text-slate-400" id="wizard-step-counter"></div>
@@ -73,6 +74,11 @@
             <div class="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/10">
                 <div id="wizard-progress-bar" class="h-2 rounded-full bg-fuchsia-500" style="width: 0%"></div>
             </div>
+            {% else %}
+            <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+                Режим просмотра: показаны все разделы и ответы. Нажмите на любой ответ, чтобы узнать, как его изменить.
+            </div>
+            {% endif %}
 
             <div class="mt-4 flex gap-2 overflow-x-auto pb-1">
                 {% for section in sections %}
@@ -83,7 +89,7 @@
                         {% if section.hint %}
                         <span class="group relative inline-flex items-center">
                             <span tabindex="0" class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-slate-950/40 text-[11px] font-semibold text-slate-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/60">?</span>
-                            <span class="pointer-events-none absolute left-1/2 top-full z-10 mt-2 w-64 -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-950/95 p-3 text-xs text-slate-200 opacity-0 shadow-xl backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100">
+                            <span class="pointer-events-none absolute left-1/2 top-full z-10 mt-2 w-64 max-w-[90vw] -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-950/95 p-3 text-xs text-slate-200 opacity-0 shadow-xl backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100">
                                 {{ section.hint }}
                             </span>
                         </span>
@@ -122,32 +128,32 @@
                             {% if section.hint %}
                             <span class="group relative inline-flex items-center">
                                 <span tabindex="0" class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-slate-950/40 text-[11px] font-semibold text-slate-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/60">?</span>
-                                <span class="pointer-events-none absolute left-0 top-full z-10 mt-2 w-72 rounded-2xl border border-white/10 bg-slate-950/95 p-3 text-xs text-slate-200 opacity-0 shadow-xl backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100">
+                                <span class="pointer-events-none absolute left-0 top-full z-10 mt-2 w-72 max-w-[90vw] rounded-2xl border border-white/10 bg-slate-950/95 p-3 text-xs text-slate-200 opacity-0 shadow-xl backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100">
                                     {{ section.hint }}
                                 </span>
                             </span>
                             {% endif %}
                         </div>
-                        {% if not editable %}
-                        <a href="?edit=1&q={{ q.id }}"
-                            class="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-100 hover:bg-white/10">Редактировать</a>
-                        {% endif %}
                     </div>
                     {% if section.hint %}
                     <div class="group relative mt-2">
-                        <div tabindex="0" class="text-lg font-semibold leading-snug focus:outline-none">{{ q.text }}</div>
-                        <div class="pointer-events-none absolute left-0 top-full z-10 mt-2 w-80 rounded-2xl border border-white/10 bg-slate-950/95 p-3 text-xs text-slate-200 opacity-0 shadow-xl backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100">
+                        <div tabindex="0" class="break-words text-lg font-semibold leading-snug focus:outline-none">{{ q.text }}</div>
+                        <div class="pointer-events-none absolute left-0 top-full z-10 mt-2 w-80 max-w-[90vw] rounded-2xl border border-white/10 bg-slate-950/95 p-3 text-xs text-slate-200 opacity-0 shadow-xl backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100">
                             {{ section.hint }}
                         </div>
                     </div>
                     {% else %}
-                    <div class="mt-2 text-lg font-semibold leading-snug">{{ q.text }}</div>
+                    <div class="mt-2 break-words text-lg font-semibold leading-snug">{{ q.text }}</div>
                     {% endif %}
                     {% if q.input_type == 'text' %}
                     <div class="mt-1 text-xs text-slate-400">Свободный ввод</div>
+                    {% if editable %}
                     <div class="mt-5">
                         {{ q.field }}
                     </div>
+                    {% else %}
+                    <div class="mt-5 whitespace-pre-wrap break-words rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100">{{ q.field.value|default:"Нет ответа" }}</div>
+                    {% endif %}
                     {% else %}
                     {% if q.is_multiple %}
                     <div class="mt-1 text-xs text-slate-400">Можно выбрать несколько вариантов</div>
@@ -159,7 +165,7 @@
                             {{ choice.tag }}
                             <label for="{{ choice.id_for_label }}"
                                 class="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100 transition hover:bg-white/10 peer-checked:border-fuchsia-400/60 peer-checked:bg-fuchsia-500/10">
-                                <span class="leading-snug">{{ choice.choice_label }}</span>
+                                <span class="break-words leading-snug">{{ choice.choice_label }}</span>
                             </label>
                         </div>
                         {% endfor %}
@@ -181,18 +187,15 @@
         <div class="sticky bottom-4 mt-6">
             <div class="rounded-2xl border border-white/10 bg-slate-950/70 p-4 backdrop-blur">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="text-sm text-slate-300">{% if editable %}Можно сохранять в любой момент.{% else %}Режим просмотра — изменения отключены.{% endif %}</div>
+                    <div class="text-sm text-slate-300">{% if editable %}Можно сохранять в любой момент.{% else %}Режим просмотра — нажмите на ответ, чтобы узнать, как его изменить.{% endif %}</div>
                     <div class="flex flex-wrap gap-3">
+                        {% if editable %}
                         <button type="button" id="wizard-prev-bottom"
                             class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 font-medium text-white hover:bg-white/10">Предыдущий</button>
                         <button type="button" id="wizard-next-bottom"
                             class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 font-medium text-white hover:bg-white/10">Следующий</button>
-                        {% if editable %}
                         <button type="submit"
                             class="rounded-xl bg-fuchsia-500 px-5 py-3 font-medium text-white hover:bg-fuchsia-400">Сохранить</button>
-                        {% else %}
-                        <a href="?edit=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
-                            class="rounded-xl bg-fuchsia-500 px-5 py-3 text-center font-medium text-white hover:bg-fuchsia-400">Редактировать</a>
                         {% endif %}
                         <a href="{% url 'me' %}"
                             class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-center font-medium text-white hover:bg-white/10">К профилю</a>
@@ -216,6 +219,7 @@
         if (!items.length) return;
 
         const kind = root.getAttribute('data-kind') || '';
+        const editableMode = root.getAttribute('data-editable') === '1';
         const storageKey = 'questionnaire_wizard:' + kind;
 
         function getQueryParam(name) {
@@ -231,10 +235,48 @@
             return Math.max(a, Math.min(b, n));
         }
 
+        // Режим просмотра: все разделы и вопросы видны сразу, без постраничной навигации.
+        if (!editableMode) {
+            let hintTimer = null;
+            function showEditHint(questionId) {
+                let toast = document.getElementById('view-mode-hint');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'view-mode-hint';
+                    toast.className = 'fixed inset-x-4 bottom-24 z-50 mx-auto max-w-sm rounded-2xl border border-fuchsia-400/30 bg-slate-950/95 p-4 text-sm text-slate-100 shadow-xl backdrop-blur sm:inset-x-auto sm:right-6 sm:bottom-6';
+                    document.body.appendChild(toast);
+                }
+                toast.innerHTML =
+                    '<div class="font-medium">Режим просмотра</div>' +
+                    '<div class="mt-1 text-slate-300">Ответы здесь только для чтения. Чтобы изменить этот ответ, перейдите в редактирование.</div>' +
+                    '<a href="?edit=1&q=' + encodeURIComponent(questionId) + '" class="mt-3 inline-block rounded-xl bg-fuchsia-500 px-4 py-2 text-xs font-medium text-white hover:bg-fuchsia-400">Редактировать этот вопрос</a>';
+                clearTimeout(hintTimer);
+                hintTimer = setTimeout(() => toast.remove(), 7000);
+            }
+
+            root.addEventListener('click', (e) => {
+                const t = e.target;
+                if (!(t instanceof HTMLElement)) return;
+                const secBtn = t.closest('[data-wizard-section]');
+                if (secBtn) {
+                    const id = secBtn.getAttribute('data-wizard-section');
+                    const el = items.find((it) => it.getAttribute('data-section-id') === id);
+                    if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                    return;
+                }
+                const interactive = t.closest('label[for], textarea, input, [data-view-answer]');
+                if (!interactive) return;
+                const item = t.closest('[data-wizard-item]');
+                if (!item) return;
+                showEditHint(item.getAttribute('data-question-id') || '');
+            });
+            return;
+        }
+
+        const targetQ = (getQueryParam('q') || '').trim();
         let current = parseInt(sessionStorage.getItem(storageKey) || '0', 10);
         current = Number.isFinite(current) ? clamp(current, 0, items.length - 1) : 0;
 
-        const targetQ = (getQueryParam('q') || '').trim();
         if (targetQ) {
             const idx = items.findIndex((el) => (el.getAttribute('data-question-id') || '') === targetQ);
             if (idx !== -1) {

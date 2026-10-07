@@ -14,6 +14,7 @@ SECTION_CODE_OVERRIDES = {
     "Работа": "work",
     "Расходы на жену": "wife_expenses",
     "Сексуальная совместимость": "sexual",
+    "Религиозные убеждения": "religious",
     "Отдых": "rest",
     "Язык любви": "love_language",
     "Тест": "tests",
@@ -159,7 +160,8 @@ def _heuristic_find_columns(ws):
 def _find_header(ws):
     max_scan = min(ws.max_row or 0, 20)
     for row_idx in range(1, max_scan + 1):
-        headers = [_normalize_header(ws.cell(row=row_idx, column=c).value) for c in range(1, ws.max_column + 1)]
+        headers = [_normalize_header(ws.cell(row=row_idx, column=c).value)
+                   for c in range(1, ws.max_column + 1)]
         question_col = None
         answers_col = None
         multiple_col = None
@@ -207,7 +209,8 @@ class Command(BaseCommand):
         try:
             from openpyxl import load_workbook
         except ImportError as e:
-            raise CommandError("openpyxl is required. Install it and try again.") from e
+            raise CommandError(
+                "openpyxl is required. Install it and try again.") from e
 
         file_path = Path(options["path"]).expanduser()
         if not file_path.is_absolute():
@@ -225,42 +228,45 @@ class Command(BaseCommand):
                 f"File: {file_path}"
             ) from e
         except OSError as e:
-            raise CommandError(f"Cannot open Excel file: {file_path} ({e})") from e
+            raise CommandError(
+                f"Cannot open Excel file: {file_path} ({e})") from e
 
         only_tests = bool(options.get("only_tests"))
 
         parsed_sections = []
-        used_section_codes: set[str] = set()
+        sections_by_code: dict[str, dict] = {}
         used_question_codes: set[str] = set()
 
         for sheet_order, sheet_name in enumerate(wb.sheetnames, start=1):
             ws = wb[sheet_name]
-            is_tests_sheet = str(sheet_name).strip().lower() in {"тест", "тесты"}
+            is_tests_sheet = str(sheet_name).strip().lower() in {
+                "тест", "тесты"}
             if only_tests and not is_tests_sheet:
                 if len(wb.sheetnames) != 1:
                     continue
             header = _find_header(ws)
             if header is None:
-                raise CommandError(f"Cannot find header row with 'Вопрос'/'Ответы' in sheet: {sheet_name}")
+                raise CommandError(
+                    f"Cannot find header row with 'Вопрос'/'Ответы' in sheet: {sheet_name}")
 
             header_row, question_col, answers_col, multiple_col = header
 
             if only_tests:
                 base_section_code = "tests"
             else:
-                base_section_code = SECTION_CODE_OVERRIDES.get(str(sheet_name).strip())
+                base_section_code = SECTION_CODE_OVERRIDES.get(
+                    str(sheet_name).strip())
                 if not base_section_code:
                     base_section_code = f"section_{sheet_order:02d}"
 
+            # Листы с одинаковым названием раздела (например, из-за повторного экспорта)
+            # объединяются в один раздел, а не создают дубликат.
             section_code = base_section_code
-            suffix = 2
-            while section_code in used_section_codes:
-                section_code = f"{base_section_code}_{suffix}"
-                suffix += 1
-            used_section_codes.add(section_code)
+            existing_entry = sections_by_code.get(section_code)
 
             questions = []
-            question_order = 0
+            question_order = len(
+                existing_entry["questions"]) if existing_entry else 0
 
             for row_idx in range(header_row + 1, (ws.max_row or 0) + 1):
                 q_raw = ws.cell(row=row_idx, column=question_col).value
@@ -316,7 +322,8 @@ class Command(BaseCommand):
                 if options.get("all_multiple"):
                     row_is_multiple = True
                 elif multiple_col is not None:
-                    row_is_multiple = _parse_bool(ws.cell(row=row_idx, column=multiple_col).value)
+                    row_is_multiple = _parse_bool(
+                        ws.cell(row=row_idx, column=multiple_col).value)
                 else:
                     row_is_multiple = _guess_is_multiple(q_text)
 
@@ -336,36 +343,46 @@ class Command(BaseCommand):
             if not questions:
                 continue
 
-            parsed_sections.append(
-                {
-                    "code": section_code,
-                    "title": "Тесты" if only_tests else str(sheet_name).strip(),
-                    "order": sheet_order,
-                    "questions": questions,
-                }
-            )
+            if existing_entry is not None:
+                existing_entry["questions"].extend(questions)
+                continue
+
+            entry = {
+                "code": section_code,
+                "title": "Тесты" if only_tests else str(sheet_name).strip(),
+                "order": sheet_order,
+                "questions": questions,
+            }
+            sections_by_code[section_code] = entry
+            parsed_sections.append(entry)
 
         section_count = len(parsed_sections)
         question_count = sum(len(s["questions"]) for s in parsed_sections)
-        choice_count = sum(len(q["choices"]) for s in parsed_sections for q in s["questions"])
+        choice_count = sum(len(q["choices"])
+                           for s in parsed_sections for q in s["questions"])
 
         self.stdout.write(
             f"Parsed: sections={section_count} questions={question_count} choices={choice_count} file={file_path}"
         )
 
         if not options.get("apply"):
-            self.stdout.write("Dry-run mode. Re-run with --apply to write to DB.")
+            self.stdout.write(
+                "Dry-run mode. Re-run with --apply to write to DB.")
             return
 
         from profiles.models import QuestionnaireChoice, QuestionnaireQuestion, QuestionnaireSection
 
-        section_field_names = {f.name for f in QuestionnaireSection._meta.get_fields()}
+        section_field_names = {
+            f.name for f in QuestionnaireSection._meta.get_fields()}
 
         with transaction.atomic():
             if only_tests:
-                tests_sections = QuestionnaireSection.objects.filter(code="tests")
-                tests_questions = QuestionnaireQuestion.objects.filter(section__in=tests_sections)
-                QuestionnaireChoice.objects.filter(question__in=tests_questions).delete()
+                tests_sections = QuestionnaireSection.objects.filter(
+                    code="tests")
+                tests_questions = QuestionnaireQuestion.objects.filter(
+                    section__in=tests_sections)
+                QuestionnaireChoice.objects.filter(
+                    question__in=tests_questions).delete()
                 tests_questions.delete()
                 tests_sections.delete()
             else:
@@ -382,7 +399,8 @@ class Command(BaseCommand):
                     "order": section["order"],
                 }
 
-                section_obj = QuestionnaireSection.objects.create(**section_kwargs)
+                section_obj = QuestionnaireSection.objects.create(
+                    **section_kwargs)
 
                 for q_order, q in enumerate(section["questions"], start=1):
                     question_obj = QuestionnaireQuestion.objects.create(
