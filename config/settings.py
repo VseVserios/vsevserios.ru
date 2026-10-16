@@ -47,6 +47,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "accounts.middleware.BannedUserMiddleware",
     "accounts.middleware.EmailVerificationRequiredMiddleware",
+    "accounts.middleware.TermsAndPrivacyRequiredMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -142,6 +143,9 @@ EMAIL_VERIFICATION_MAX_ATTEMPTS = int(
     os.environ.get("EMAIL_VERIFICATION_MAX_ATTEMPTS", "10"))
 EMAIL_VERIFICATION_MAX_SENDS = int(
     os.environ.get("EMAIL_VERIFICATION_MAX_SENDS", "20"))
+
+REQUIRE_TERMS_AND_PRIVACY = os.environ.get(
+    "REQUIRE_TERMS_AND_PRIVACY", "true").lower() == "true"
 
 LOGGING = {
     "version": 1,

@@ -76,7 +76,7 @@
             </div>
             {% else %}
             <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
-                Режим просмотра: показаны все разделы и ответы. Нажмите на любой ответ, чтобы узнать, как его изменить.
+                Режим просмотра: показаны все разделы и ответы. Нажмите «Редактировать» рядом с вопросом, чтобы изменить его.
             </div>
             {% endif %}
 
@@ -134,6 +134,9 @@
                             </span>
                             {% endif %}
                         </div>
+                        {% if not editable %}
+                        <a href="?edit=1&q={{ q.id }}" class="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-100 hover:bg-white/10">Редактировать</a>
+                        {% endif %}
                     </div>
                     {% if section.hint %}
                     <div class="group relative mt-2">
@@ -187,7 +190,7 @@
         <div class="sticky bottom-4 mt-6">
             <div class="rounded-2xl border border-white/10 bg-slate-950/70 p-4 backdrop-blur">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="text-sm text-slate-300">{% if editable %}Можно сохранять в любой момент.{% else %}Режим просмотра — нажмите на ответ, чтобы узнать, как его изменить.{% endif %}</div>
+                    <div class="text-sm text-slate-300">{% if editable %}Можно сохранять в любой момент.{% else %}Режим просмотра — нажмите «Редактировать» рядом с вопросом, чтобы изменить его.{% endif %}</div>
                     <div class="flex flex-wrap gap-3">
                         {% if editable %}
                         <button type="button" id="wizard-prev-bottom"
@@ -196,6 +199,9 @@
                             class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 font-medium text-white hover:bg-white/10">Следующий</button>
                         <button type="submit"
                             class="rounded-xl bg-fuchsia-500 px-5 py-3 font-medium text-white hover:bg-fuchsia-400">Сохранить</button>
+                        {% else %}
+                        <a href="?edit=1"
+                            class="rounded-xl bg-fuchsia-500 px-5 py-3 text-center font-medium text-white hover:bg-fuchsia-400">Редактировать анкету</a>
                         {% endif %}
                         <a href="{% url 'me' %}"
                             class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-center font-medium text-white hover:bg-white/10">К профилю</a>
@@ -221,6 +227,14 @@
         const kind = root.getAttribute('data-kind') || '';
         const editableMode = root.getAttribute('data-editable') === '1';
         const storageKey = 'questionnaire_wizard:' + kind;
+
+        // В режиме просмотра показываем все вопросы сразу без мастера
+        if (!editableMode) {
+            items.forEach((el) => {
+                el.classList.remove('hidden');
+            });
+            return;
+        }
 
         function getQueryParam(name) {
             try {
