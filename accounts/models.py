@@ -159,3 +159,43 @@ class UserNotification(models.Model):
         self.is_read = True
         self.read_at = timezone.now()
         self.save(update_fields=["is_read", "read_at"])
+
+
+class YookassaPayment(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Ожидает оплаты"
+        SUCCEEDED = "succeeded", "Успешно оплачено"
+        CANCELED = "canceled", "Отменено"
+        FAILED = "failed", "Ошибка оплаты"
+
+    class PaymentMethod(models.TextChoices):
+        BANK_CARD = "bank_card", "Банковская карта"
+        SBERBANK = "sberbank", "СБП (Сбер)"
+        YOO_MONEY = "yoo_money", "ЮMoney"
+        ALFABANK = "alfabank", "Альфа-Банк"
+        TINKOFF_BANK = "tinkoff_bank", "Т-Банк"
+
+    user = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.CASCADE,
+        related_name="yookassa_payments",
+    )
+    payment_id = models.CharField(max_length=255, unique=True, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3, default="RUB")
+    description = models.CharField(max_length=255, default="Пополнение баланса")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    payment_method = models.CharField(max_length=20, choices=PaymentMethod.choices, blank=True)
+    confirmation_url = models.URLField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "status"]),
+            models.Index(fields=["payment_id"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"YookassaPayment({self.user_id}:{self.amount} {self.currency})"

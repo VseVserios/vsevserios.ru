@@ -40,7 +40,7 @@ class EmailVerificationRequiredMiddleware:
             def _safe_reverse(name: str):
                 try:
                     return reverse(name)
-                except NoReverseMatch:
+                except NoReverseMatch4:
                     return None
 
             allowed_prefixes = (

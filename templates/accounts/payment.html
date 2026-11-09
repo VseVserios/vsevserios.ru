@@ -6,7 +6,7 @@
 <div class="mx-auto max-w-2xl" data-reveal>
   <div>
     <h1 class="text-2xl font-semibold tracking-tight">Оплата услуги</h1>
-    <p class="mt-1 text-sm text-slate-300">Внутренний Кошелёк Сайта. Реальный платёжный шлюз пока не подключён — пополнение имитируется.</p>
+    <p class="mt-1 text-sm text-slate-300">Внутренний Кошелёк Сайта. Пополнение через ЮKassa с поддержкой СБП (Сбер), банковских карт и других методов.</p>
   </div>
 
   <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
@@ -20,11 +20,12 @@
       Возврат неиспользованных средств возможен по обращению в поддержку в порядке, предусмотренном Пользовательским соглашением.
     </div>
 
-    <form method="post" action="{% url 'payment_topup' %}" class="mt-4 flex flex-col gap-3 sm:flex-row">
+    <form method="post" action="{% url 'yookassa_create_payment' %}" class="mt-4 flex flex-col gap-3 sm:flex-row">
       {% csrf_token %}
-      <input type="number" name="amount" min="1" step="1" placeholder="Сумма пополнения, ₽" class="flex-1" required />
-      <button type="submit" class="rounded-xl bg-fuchsia-500 px-4 py-3 text-sm font-medium text-white hover:bg-fuchsia-400 sm:w-auto">Пополнить</button>
+      <input type="number" name="amount" min="100" step="1" placeholder="Сумма пополнения, ₽ (от 100)" class="flex-1" required />
+      <button type="submit" class="rounded-xl bg-fuchsia-500 px-4 py-3 text-sm font-medium text-white hover:bg-fuchsia-400 sm:w-auto">Оплатить через ЮKassa</button>
     </form>
+    <div class="mt-2 text-xs text-slate-400">Доступны: СБП (Сбер), банковские карты, ЮMoney и другие методы оплаты.</div>
   </div>
 
   <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>

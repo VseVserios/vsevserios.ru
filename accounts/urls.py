@@ -35,6 +35,9 @@ from .views import (
     revoke_special_category_consent,
     revoke_terms,
     verify_email_view,
+    yookassa_create_payment,
+    yookassa_payment_success,
+    yookassa_webhook,
 )
 
 urlpatterns = [
@@ -93,6 +96,9 @@ urlpatterns = [
 
     path("payment/", payment_page, name="payment"),
     path("payment/topup/", payment_topup, name="payment_topup"),
+    path("payment/yookassa/create/", yookassa_create_payment, name="yookassa_create_payment"),
+    path("payment/yookassa/success/", yookassa_payment_success, name="yookassa_payment_success"),
+    path("payment/yookassa/webhook/", yookassa_webhook, name="yookassa_webhook"),
     path("payment/self-search/subscribe/",
          payment_self_search_subscribe, name="payment_self_search"),
 

@@ -147,6 +147,13 @@ EMAIL_VERIFICATION_MAX_SENDS = int(
 REQUIRE_TERMS_AND_PRIVACY = os.environ.get(
     "REQUIRE_TERMS_AND_PRIVACY", "true").lower() == "true"
 
+# ЮKassa настройки
+YOOKASSA_SHOP_ID = os.environ.get("YOOKASSA_SHOP_ID", "1499327")
+YOOKASSA_API_KEY = os.environ.get("YOOKASSA_API_KEY", "live_G8NeOYypJR6_xf9bBEMeytWMqUdUv3VdmYLBkLNHrZo")
+YOOKASSA_SBP_LEGAL_ID = os.environ.get("YOOKASSA_SBP_LEGAL_ID", "LA0005860413")
+YOOKASSA_SBP_MERCHANT_ID = os.environ.get("YOOKASSA_SBP_MERCHANT_ID", "MA0007242544")
+YOOKASSA_SBP_MCC = os.environ.get("YOOKASSA_SBP_MCC", "7273")
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

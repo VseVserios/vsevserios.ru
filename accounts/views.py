@@ -726,6 +726,199 @@ def verify_email_view(request):
 
 
 @login_required
+def yookassa_create_payment(request):
+    """
+    Создаёт платёж через ЮKassa и возвращает URL для оплаты
+    """
+    from decimal import Decimal, InvalidOperation
+
+    from .models import YookassaPayment
+    from .yookassa_service import YookassaService
+
+    if request.method != "POST":
+        raise Http404
+
+    raw_amount = (request.POST.get("amount") or "").strip().replace(",", ".")
+    try:
+        amount = Decimal(raw_amount)
+    except (InvalidOperation, ValueError):
+        amount = None
+
+    if amount is None or amount <= 0:
+        messages.error(request, "Введите корректную сумму пополнения.")
+        return redirect("payment")
+
+    # Минимальная сумма 100₽
+    if amount < 100:
+        messages.error(request, "Минимальная сумма пополнения — 100₽.")
+        return redirect("payment")
+
+    # Максимальная сумма 100000₽
+    if amount > 100000:
+        messages.error(request, "Максимальная сумма пополнения — 100000₽.")
+        return redirect("payment")
+
+    try:
+        yookassa = YookassaService()
+        return_url = request.build_absolute_uri("/accounts/payment/yookassa/success/")
+
+        payment_obj = yookassa.create_payment(
+            amount=amount,
+            description=f"Пополнение баланса пользователя {request.user.username}",
+            return_url=return_url,
+            user_id=request.user.id
+        )
+
+        # Сохраняем платёж в БД
+        payment = YookassaPayment.objects.create(
+            user=request.user,
+            payment_id=payment_obj.id,
+            amount=amount,
+            currency="RUB",
+            status=YookassaPayment.Status.PENDING,
+            confirmation_url=payment_obj.confirmation.confirmation_url
+        )
+
+        return redirect(payment.confirmation_url)
+
+    except Exception as e:
+        messages.error(request, f"Ошибка создания платежа: {str(e)}")
+        return redirect("payment")
+
+
+@login_required
+def yookassa_payment_success(request):
+    """
+    Обрабатывает успешное возвращение после оплаты
+    """
+    from .models import YookassaPayment
+    from .yookassa_service import YookassaService
+    from .wallet import topup_wallet
+
+    payment_id = request.GET.get("payment_id")
+    if not payment_id:
+        messages.error(request, "Не передан ID платежа.")
+        return redirect("payment")
+
+    try:
+        payment = YookassaPayment.objects.get(payment_id=payment_id, user=request.user)
+
+        # Проверяем статус платежа через API
+        yookassa = YookassaService()
+        payment_obj = yookassa.get_payment(payment_id)
+
+        if payment_obj.status == "succeeded":
+            if payment.status != YookassaPayment.Status.SUCCEEDED:
+                # Пополняем баланс
+                topup_wallet(
+                    request.user,
+                    payment.amount,
+                    description=f"Пополнение через ЮKassa (платёж {payment_id})"
+                )
+
+                # Обновляем статус
+                payment.status = YookassaPayment.Status.SUCCEEDED
+                payment.payment_method = payment_obj.payment_method.type
+                payment.save()
+
+                messages.success(request, f"Баланс успешно пополнен на {payment.amount}₽.")
+            else:
+                messages.info(request, "Платёж уже был обработан ранее.")
+        elif payment_obj.status == "canceled":
+            payment.status = YookassaPayment.Status.CANCELED
+            payment.save()
+            messages.error(request, "Платёж был отменён.")
+        elif payment_obj.status == "failed":
+            payment.status = YookassaPayment.Status.FAILED
+            payment.save()
+            messages.error(request, "Оплата не удалась. Попробуйте ещё раз.")
+        else:
+            messages.info(request, "Платёж в обработке. Статус обновится автоматически.")
+
+    except YookassaPayment.DoesNotExist:
+        messages.error(request, "Платёж не найден.")
+    except Exception as e:
+        messages.error(request, f"Ошибка обработки платежа: {str(e)}")
+
+    return redirect("payment")
+
+
+def yookassa_webhook(request):
+    """
+    Обрабатывает HTTP-уведомления от ЮKassa
+    """
+    import json
+    from django.views.decorators.csrf import csrf_exempt
+    from django.http import JsonResponse
+
+    from .models import YookassaPayment
+    from .wallet import topup_wallet
+
+    # Webhook от ЮKassa не требует CSRF проверки
+    @csrf_exempt
+    def _webhook_view(request):
+        if request.method != "POST":
+            return JsonResponse({"error": "Method not allowed"}, status=405)
+
+        try:
+            data = json.loads(request.body)
+            event = data.get("event")
+            object_data = data.get("object", {})
+
+            if event == "payment.succeeded":
+                payment_id = object_data.get("id")
+                metadata = object_data.get("metadata", {})
+                user_id = metadata.get("user_id")
+
+                try:
+                    payment = YookassaPayment.objects.get(payment_id=payment_id)
+                    
+                    if payment.status != YookassaPayment.Status.SUCCEEDED:
+                        # Пополняем баланс
+                        topup_wallet(
+                            payment.user,
+                            payment.amount,
+                            description=f"Пополнение через ЮKassa (webhook, платёж {payment_id})"
+                        )
+
+                        # Обновляем статус
+                        payment.status = YookassaPayment.Status.SUCCEEDED
+                        payment.payment_method = object_data.get("payment_method", {}).get("type", "")
+                        payment.save()
+
+                except YookassaPayment.DoesNotExist:
+                    # Логируем ошибку, но возвращаем 200 чтобы ЮKassa не повторял
+                    pass
+
+            elif event == "payment.canceled":
+                payment_id = object_data.get("id")
+                try:
+                    payment = YookassaPayment.objects.get(payment_id=payment_id)
+                    payment.status = YookassaPayment.Status.CANCELED
+                    payment.save()
+                except YookassaPayment.DoesNotExist:
+                    pass
+
+            elif event == "payment.failed":
+                payment_id = object_data.get("id")
+                try:
+                    payment = YookassaPayment.objects.get(payment_id=payment_id)
+                    payment.status = YookassaPayment.Status.FAILED
+                    payment.save()
+                except YookassaPayment.DoesNotExist:
+                    pass
+
+            return JsonResponse({"status": "ok"}, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return _webhook_view(request)
+
+
+@login_required
 def resend_verification(request):
     if request.method != "POST":
         raise Http404
