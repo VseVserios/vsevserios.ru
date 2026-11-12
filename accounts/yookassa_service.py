@@ -1,62 +1,63 @@
+import uuid
 from decimal import Decimal
+
 from django.conf import settings
 from yookassa import Configuration, Payment
-from yookassa.domain.common import PaymentMethodType
+
+
+class YookassaNotConfigured(Exception):
+    """Не заданы YOOKASSA_SHOP_ID / YOOKASSA_API_KEY."""
 
 
 class YookassaService:
     def __init__(self):
-        self.shop_id = getattr(settings, "YOOKASSA_SHOP_ID", "1499327")
+        self.shop_id = getattr(settings, "YOOKASSA_SHOP_ID", "")
         self.api_key = getattr(settings, "YOOKASSA_API_KEY", "")
-        self.sbp_legal_id = getattr(settings, "YOOKASSA_SBP_LEGAL_ID", "")
-        self.sbp_merchant_id = getattr(settings, "YOOKASSA_SBP_MERCHANT_ID", "")
-        self.sbp_mcc = getattr(settings, "YOOKASSA_SBP_MCC", "7273")
+        if not self.shop_id or not self.api_key:
+            raise YookassaNotConfigured("Платежи не настроены на сервере.")
 
         Configuration.account_id = self.shop_id
         Configuration.secret_key = self.api_key
 
-    def create_payment(self, amount: Decimal, description: str, return_url: str, user_id: int):
-        """
-        Создаёт платёж в ЮKassa с поддержкой СБП
-        """
+    def create_payment(
+        self,
+        amount: Decimal,
+        description: str,
+        return_url: str,
+        user_id: int,
+        *,
+        idempotence_key: str | None = None,
+        customer_email: str = "",
+    ):
+        """Создаёт платёж; способ оплаты (карта, СБП и т.д.) клиент выбирает на странице ЮKassa."""
+        value = f"{Decimal(amount):.2f}"
         payment_data = {
-            "amount": {
-                "value": str(amount),
-                "currency": "RUB"
-            },
-            "confirmation": {
-                "type": "redirect",
-                "return_url": return_url
-            },
+            "amount": {"value": value, "currency": "RUB"},
+            "confirmation": {"type": "redirect", "return_url": return_url},
             "capture": True,
-            "description": description,
-            "metadata": {
-                "user_id": str(user_id)
-            }
+            "description": description[:128],
+            "metadata": {"user_id": str(user_id)},
         }
 
-        # Добавляем методы оплаты с СБП
-        payment_data["payment_method_data"] = {
-            "type": PaymentMethodType.sberbank,
-            "sberbank": {
-                "legal_id": self.sbp_legal_id,
-                "merchant_id": self.sbp_merchant_id,
-                "mcc": self.sbp_mcc
+        if getattr(settings, "YOOKASSA_SEND_RECEIPT", False) and customer_email:
+            receipt = {
+                "customer": {"email": customer_email},
+                "items": [
+                    {
+                        "description": description[:128],
+                        "quantity": "1.00",
+                        "amount": {"value": value, "currency": "RUB"},
+                        "vat_code": settings.YOOKASSA_VAT_CODE,
+                        "payment_mode": "full_payment",
+                        "payment_subject": "service",
+                    }
+                ],
             }
-        }
+            if settings.YOOKASSA_TAX_SYSTEM_CODE:
+                receipt["tax_system_code"] = int(settings.YOOKASSA_TAX_SYSTEM_CODE)
+            payment_data["receipt"] = receipt
 
-        try:
-            payment = Payment.create(payment_data)
-            return payment
-        except Exception as e:
-            raise Exception(f"Ошибка создания платежа: {str(e)}")
+        return Payment.create(payment_data, idempotence_key or str(uuid.uuid4()))
 
     def get_payment(self, payment_id: str):
-        """
-        Получает информацию о платеже по ID
-        """
-        try:
-            payment = Payment.find_one(payment_id)
-            return payment
-        except Exception as e:
-            raise Exception(f"Ошибка получения платежа: {str(e)}")
+        return Payment.find_one(payment_id)

@@ -22,7 +22,10 @@
           <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="{% url 'password_change' %}">Сменить пароль</a>
           <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="{% url 'edit_profile' %}">Внешний вид профиля</a>
           <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="{% url 'photos_manage' %}">Фотографии</a>
+          {% if not payment_exempt %}
           <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="{% url 'payment' %}">Кошелёк и оплата</a>
+          <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="{% url 'admin_search' %}">Подбор администратором</a>
+          {% endif %}
           <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="#privacy">Приватность данных</a>
           <a class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10" href="#consents">Управление согласиями</a>
         </div>

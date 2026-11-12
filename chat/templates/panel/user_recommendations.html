@@ -1,0 +1,74 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Панель — Рекомендации{% endblock %}
+
+{% block panel_heading %}Рекомендации: {{ target_user.username }}{% endblock %}
+{% block panel_subtitle %}Подбор по совпадению анкет (кто мне подходит ↔ я).{% endblock %}
+
+{% block panel_top_actions %}
+<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_detail' target_user.id %}">Назад</a>
+<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_profile_detail' target_profile.id %}">Профиль</a>
+<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'panel_user_search_orders' target_user.id %}">Заказы подбора</a>
+{% endblock %}
+
+{% block panel_content %}
+<div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+    <form method="get" class="grid gap-3 sm:grid-cols-3 sm:items-end">
+        <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm text-slate-200" for="q">Поиск</label>
+            <input id="q" name="q" value="{{ q }}" placeholder="username / имя / город" />
+        </div>
+        <div class="flex items-center gap-2 sm:col-span-3">
+            <input id="only_new" type="checkbox" name="only_new" value="1" {% if only_new %}checked{% endif %} />
+            <label class="text-sm text-slate-200" for="only_new">Только ещё не рекомендованных</label>
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="submit" class="rounded-xl bg-fuchsia-500 px-4 py-3 text-sm font-medium text-white hover:bg-fuchsia-400">Искать</button>
+            <a href="{% url 'panel_user_recommendations' target_user.id %}" class="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium hover:bg-white/10">Сброс</a>
+        </div>
+    </form>
+</div>
+
+<div class="mt-6 space-y-4">
+    {% for row in rows %}
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                <div class="text-lg font-semibold">
+                    <a class="hover:underline" href="{% url 'panel_profile_detail' row.profile.id %}">
+                        {{ row.profile.display_name|default:row.user.username }}
+                    </a>
+                </div>
+                <div class="mt-1 text-sm text-slate-300">{{ row.profile.city|default:'—' }} · @{{ row.user.username }}</div>
+            </div>
+        </div>
+
+        <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                <a class="text-sm text-slate-300 hover:text-white" href="{% url 'public_profile' row.user.id %}">Public</a>
+            </div>
+
+            <form method="post" action="{% url 'panel_user_recommend_send' target_user.id %}" class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                {% csrf_token %}
+                <input type="hidden" name="recommended_user_id" value="{{ row.user.id }}" />
+                <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                {% if active_orders %}
+                <select name="order_id" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white sm:w-auto">
+                    <option value="">Без заказа (бесплатно)</option>
+                    {% for order in active_orders %}
+                    <option value="{{ order.id }}">{{ order.get_tier_display }} · {{ order.price }}₽</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+                <input name="note" value="" placeholder="Заметка (необязательно)" />
+                <button type="submit" class="rounded-xl bg-white/10 px-4 py-3 text-sm font-medium hover:bg-white/15">
+                    {% if row.already_recommended %}Отправить повторно{% else %}Отправить{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+    {% empty %}
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-8 text-sm text-slate-300">Кандидаты не найдены.</div>
+    {% endfor %}
+</div>
+{% endblock %}

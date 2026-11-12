@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}История согласий{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-2xl" data-reveal>
+  <div class="flex items-center justify-between gap-4">
+    <h1 class="text-2xl font-semibold tracking-tight">История согласий</h1>
+    <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'account_settings' %}#consents">Назад в настройки</a>
+  </div>
+
+  <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6">
+    {% if events %}
+    <div class="grid gap-3">
+      {% for event in events %}
+      <div class="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3 text-sm">
+        <span>{{ event.get_kind_display }}</span>
+        <span class="text-xs text-slate-400">{{ event.created_at|date:"d.m.Y H:i" }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-sm text-slate-300">Записей пока нет.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

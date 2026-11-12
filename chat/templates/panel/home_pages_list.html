@@ -1,0 +1,53 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Панель — Главная{% endblock %}
+
+{% block panel_heading %}Главная{% endblock %}
+{% block panel_subtitle %}Страницы и блоки главной страницы.{% endblock %}
+
+{% block panel_top_actions %}
+<a class="rounded-xl bg-fuchsia-500 px-4 py-2 text-sm font-medium text-white hover:bg-fuchsia-400" href="{% url 'panel_home_page_create' %}">Новая страница</a>
+{% endblock %}
+
+{% block panel_content %}
+<div class="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+    <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-950/40 text-slate-300">
+                <tr>
+                    <th class="px-4 py-3 text-left font-medium">ID</th>
+                    <th class="px-4 py-3 text-left font-medium">Slug</th>
+                    <th class="px-4 py-3 text-left font-medium">Название</th>
+                    <th class="px-4 py-3 text-left font-medium">Активна</th>
+                    <th class="px-4 py-3 text-left font-medium">Обновлена</th>
+                    <th class="px-4 py-3 text-left font-medium"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/10">
+                {% for p in page_obj.object_list %}
+                <tr class="hover:bg-white/5">
+                    <td class="px-4 py-3 text-slate-300">{{ p.id }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ p.slug }}</td>
+                    <td class="px-4 py-3">
+                        <a class="font-medium hover:underline" href="{% url 'panel_home_page_edit' p.id %}">{{ p.title|default:p.slug }}</a>
+                    </td>
+                    <td class="px-4 py-3 text-slate-300">{% if p.is_active %}Да{% else %}Нет{% endif %}</td>
+                    <td class="px-4 py-3 text-slate-400">{{ p.updated_at|date:'d.m.Y H:i' }}</td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center justify-end gap-2">
+                            <a class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium hover:bg-white/10" href="{% url 'panel_home_page_edit' p.id %}">Редактировать</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td class="px-4 py-8 text-center text-slate-300" colspan="6">Страниц нет.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'panel/_pagination.html' with page_obj=page_obj base_qs=base_qs %}
+{% endblock %}

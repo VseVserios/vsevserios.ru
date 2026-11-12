@@ -9,6 +9,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
+from accounts.billing import is_payment_exempt
 from accounts.models import User
 from chat.models import Message
 from matchmaking.models import (
@@ -22,6 +23,7 @@ from matchmaking.models import (
     UserRecommendation,
     UserReport,
 )
+from matchmaking.services import OrderError, activate_admin_search
 from profiles.models import (
     Profile,
     ProfilePhoto,
@@ -529,12 +531,22 @@ def user_search_orders(request, user_id: int):
 
     if request.method == "POST":
         form = AdminSearchOrderForm(request.POST)
+        if is_payment_exempt(target_user):
+            messages.error(request, "Для администраторов заказ подбора не оформляется.")
+            return redirect("panel_user_search_orders", user_id=target_user.id)
         if form.is_valid():
             order = form.save(commit=False)
             order.client = target_user
             order.created_by = request.user
+            order.status = AdminSearchOrder.Status.REQUESTED
             order.save()
-            messages.success(request, "Заказ подбора создан")
+            try:
+                activate_admin_search(order)
+            except OrderError as exc:
+                messages.warning(
+                    request, f"Заказ создан, но не запущен: {exc}")
+            else:
+                messages.success(request, "Заказ подбора создан и запущен")
             return redirect("panel_user_search_orders", user_id=target_user.id)
     else:
         form = AdminSearchOrderForm()
@@ -554,13 +566,29 @@ def user_search_orders(request, user_id: int):
 
 
 @staff_or_matchmaker_required
+def user_search_order_activate(request, order_id: int):
+    if request.method != "POST":
+        raise Http404
+
+    order = get_object_or_404(AdminSearchOrder, id=order_id)
+    try:
+        activate_admin_search(order)
+    except OrderError as exc:
+        messages.error(request, str(exc))
+    else:
+        messages.success(request, "Заказ подтверждён и запущен")
+    return redirect("panel_user_search_orders", user_id=order.client_id)
+
+
+@staff_or_matchmaker_required
 def user_search_order_cancel(request, order_id: int):
     if request.method != "POST":
         raise Http404
 
     order = get_object_or_404(AdminSearchOrder, id=order_id)
-    order.status = AdminSearchOrder.Status.CANCELLED
-    order.save(update_fields=["status"])
+    if order.is_open:
+        order.status = AdminSearchOrder.Status.CANCELLED
+        order.save(update_fields=["status"])
     messages.success(request, "Заказ отменён")
     return redirect("panel_user_search_orders", user_id=order.client_id)
 

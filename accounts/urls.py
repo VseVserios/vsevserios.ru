@@ -28,7 +28,6 @@ from .views import (
     password_change,
     payment_page,
     payment_self_search_subscribe,
-    payment_topup,
     register,
     resend_verification,
     revoke_privacy,
@@ -95,7 +94,6 @@ urlpatterns = [
     ),
 
     path("payment/", payment_page, name="payment"),
-    path("payment/topup/", payment_topup, name="payment_topup"),
     path("payment/yookassa/create/", yookassa_create_payment, name="yookassa_create_payment"),
     path("payment/yookassa/success/", yookassa_payment_success, name="yookassa_payment_success"),
     path("payment/yookassa/webhook/", yookassa_webhook, name="yookassa_webhook"),

@@ -6,6 +6,7 @@ class AdminNotification(models.Model):
     class Event(models.TextChoices):
         NEW_USER = "new_user", "Новый пользователь"
         QUESTIONNAIRE_COMPLETED = "questionnaire_completed", "Анкета заполнена"
+        SEARCH_ORDER_REQUESTED = "search_order_requested", "Заявка на подбор"
 
     event = models.CharField(max_length=64, choices=Event.choices)
     user = models.ForeignKey(

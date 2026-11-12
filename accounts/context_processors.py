@@ -17,11 +17,14 @@ def unread_notifications(request):
 def staff_flags(request):
     user = getattr(request, "user", None)
     if not user or not getattr(user, "is_authenticated", False):
-        return {"is_matchmaker": False}
+        return {"is_matchmaker": False, "payment_exempt": False}
 
     try:
         is_matchmaker = user.groups.filter(name="matchmaker").exists()
     except Exception:
         is_matchmaker = False
 
-    return {"is_matchmaker": bool(is_matchmaker)}
+    return {
+        "is_matchmaker": bool(is_matchmaker),
+        "payment_exempt": bool(user.is_staff or user.is_superuser),
+    }

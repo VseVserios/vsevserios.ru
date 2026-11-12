@@ -1,0 +1,96 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Панель — Баны{% endblock %}
+
+{% block panel_heading %}Баны{% endblock %}
+{% block panel_subtitle %}Управление банами пользователей.{% endblock %}
+
+{% block panel_top_actions %}
+<a class="rounded-xl bg-fuchsia-500 px-4 py-2 text-sm font-medium text-white hover:bg-fuchsia-400" href="{% url 'panel_ban_create' %}">Новый бан</a>
+{% endblock %}
+
+{% block panel_content %}
+<div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+    <form method="get" class="grid gap-3 sm:grid-cols-3 sm:items-end">
+        <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm text-slate-200" for="q">Поиск</label>
+            <input id="q" name="q" value="{{ q }}" placeholder="username/email/reason/note" />
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="submit" class="rounded-xl bg-fuchsia-500 px-4 py-3 text-sm font-medium text-white hover:bg-fuchsia-400">Искать</button>
+            <a href="{% url 'panel_bans' %}" class="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium hover:bg-white/10">Сброс</a>
+        </div>
+
+        <label class="flex items-center gap-2 text-sm text-slate-200">
+            <input type="checkbox" name="active" value="1" {% if only_active %}checked{% endif %} />
+            Только активные
+        </label>
+    </form>
+</div>
+
+<div class="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+    <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-950/40 text-slate-300">
+                <tr>
+                    <th class="px-4 py-3 text-left font-medium">ID</th>
+                    <th class="px-4 py-3 text-left font-medium">User</th>
+                    <th class="px-4 py-3 text-left font-medium">Reason</th>
+                    <th class="px-4 py-3 text-left font-medium">Status</th>
+                    <th class="px-4 py-3 text-left font-medium">Создан</th>
+                    <th class="px-4 py-3 text-left font-medium">До</th>
+                    <th class="px-4 py-3 text-left font-medium"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/10">
+                {% for b in page_obj.object_list %}
+                <tr class="hover:bg-white/5">
+                    <td class="px-4 py-3 text-slate-300">{{ b.id }}</td>
+                    <td class="px-4 py-3">
+                        <a class="font-medium hover:underline" href="{% url 'panel_user_detail' b.user_id %}">{{ b.user.username }}</a>
+                    </td>
+                    <td class="px-4 py-3 text-slate-300">{{ b.get_reason_display }}</td>
+                    <td class="px-4 py-3">
+                        {% if b.revoked_at %}
+                        <span class="rounded-full bg-slate-500/15 px-2 py-1 text-xs text-slate-200">revoked</span>
+                        {% else %}
+                            {% if b.expires_at and b.expires_at <= now %}
+                            <span class="rounded-full bg-slate-500/15 px-2 py-1 text-xs text-slate-200">expired</span>
+                            {% else %}
+                            <span class="rounded-full bg-rose-500/15 px-2 py-1 text-xs text-rose-200">active</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-slate-400">{{ b.created_at|date:'d.m.Y H:i' }}</td>
+                    <td class="px-4 py-3 text-slate-400">{% if b.expires_at %}{{ b.expires_at|date:'d.m.Y H:i' }}{% else %}—{% endif %}</td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center justify-end gap-2">
+                            {% if b.is_active %}
+                            <form method="post" action="{% url 'panel_ban_revoke' b.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{% url 'panel_bans' %}?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ page_obj.number }}" />
+                                <button type="submit" class="rounded-xl bg-emerald-500/15 px-3 py-2 text-xs font-medium text-emerald-200 hover:bg-emerald-500/25">Разбанить</button>
+                            </form>
+                            {% else %}
+                            <span class="text-xs text-slate-400">—</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% if b.note %}
+                <tr class="bg-slate-950/20">
+                    <td class="px-4 py-3 text-slate-400" colspan="7">{{ b.note|linebreaksbr }}</td>
+                </tr>
+                {% endif %}
+                {% empty %}
+                <tr>
+                    <td class="px-4 py-8 text-center text-slate-300" colspan="7">Баны не найдены.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'panel/_pagination.html' with page_obj=page_obj base_qs=base_qs %}
+{% endblock %}

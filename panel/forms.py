@@ -3,6 +3,7 @@ from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.models import Group
 
 from accounts.models import User
+from matchmaking.forms import AdminSearchOrderFormMixin
 from matchmaking.models import AdminSearchOrder, HomeBlock, HomePage, UserBan
 from profiles.models import Profile, QuestionnaireChoice, QuestionnaireQuestion, QuestionnaireSection
 
@@ -81,7 +82,7 @@ class UserBanForm(forms.ModelForm):
         }
 
 
-class AdminSearchOrderForm(forms.ModelForm):
+class AdminSearchOrderForm(AdminSearchOrderFormMixin, forms.ModelForm):
     class Meta:
         model = AdminSearchOrder
         fields = ("tier", "required_criteria")

@@ -13,8 +13,9 @@
   </div>
 
   <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
-    {% if has_full_access %}
-      {% if subscription.paid_until %}
+    {% if payment_exempt %}
+    {% elif has_full_access %}
+      {% if subscription.paid_until and subscription.paid_until > subscription.trial_ends_at %}
       <div class="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
         Подписка активна до {{ subscription.paid_until|date:"d.m.Y" }}. Доступна подробная совместимость и Excel-выгрузка.
       </div>
@@ -27,7 +28,7 @@
       <div class="rounded-2xl border border-amber-300/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
         Пробный период закончился. Общий процент совместимости виден всегда, а подробная разбивка по вопросам, графики и анкета
         «Кто мне подходит» кандидата — по подписке 500₽/мес.
-        <a class="ml-1 underline underline-offset-4 hover:text-white" href="{% url 'payment_self_search' %}">Оформить подписку</a>.
+        <a class="ml-1 underline underline-offset-4 hover:text-white" href="{% url 'payment' %}">Оформить подписку</a>.
       </div>
     {% endif %}
 
