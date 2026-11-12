@@ -9,19 +9,21 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.text import slugify
 
+from accounts.billing import get_subscription, has_full_analysis_access, is_payment_exempt
 from accounts.models import User
 
-from .forms import ReportUserForm, SelfSearchCriteriaForm
+from .forms import ClientSearchOrderForm, ReportUserForm, SelfSearchCriteriaForm
 from .models import (
+    AdminSearchOrder,
     HomePage,
     Match,
     SelfSearchCriteria,
-    SelfSearchSubscription,
+    Swipe,
     UserBan,
     UserBlock,
     UserRecommendation,
 )
-from .services import record_swipe, run_self_search
+from .services import OrderError, record_swipe, request_admin_search, run_self_search
 
 
 FEED_FACT_SECTIONS = [
@@ -137,22 +139,12 @@ def _recommendation_pair_or_404(request, user_id: int):
     return rec, my_profile, other_user, other_profile
 
 
-def _self_search_has_full_access(user) -> bool:
-    sub = getattr(user, "self_search_subscription", None)
-    if sub is None:
-        sub = SelfSearchSubscription.objects.create(
-            user=user, trial_ends_at=timezone.now() + timezone.timedelta(days=30)
-        )
-    return sub.has_full_access()
-
-
 @login_required
 def recommendation_compatibility(request, user_id: int):
     rec, my_profile, other_user, other_profile = _recommendation_pair_or_404(
         request, user_id)
 
-    paywalled = bool(
-        rec.is_self_search) and not _self_search_has_full_access(request.user)
+    paywalled = not has_full_analysis_access(request.user, other_user)
 
     if paywalled:
         from .compatibility import compatibility
@@ -241,17 +233,17 @@ def recommendation_excel(request, user_id: int):
     rec, my_profile, other_user, other_profile = _recommendation_pair_or_404(
         request, user_id)
 
-    if rec.is_self_search and not _self_search_has_full_access(request.user):
+    if not has_full_analysis_access(request.user, other_user):
         messages.error(
             request,
-            "Подробная выгрузка доступна по подписке на самостоятельный поиск (500₽/мес).",
+            "Подробная выгрузка доступна по подписке (500₽/мес) или в пробный период.",
         )
         return redirect("recommendation_compatibility", user_id=user_id)
 
     from openpyxl import Workbook
     from openpyxl.utils import get_column_letter
 
-    from profiles.questionnaire import get_questionnaire_spec_for_profile
+    from profiles.questionnaire import SENSITIVE_SECTION_IDS, get_questionnaire_spec_for_profile
 
     wb = Workbook()
     wb.remove(wb.active)
@@ -268,7 +260,7 @@ def recommendation_excel(request, user_id: int):
         value_s = str(value)
         return choices_map.get(value_s, value_s)
 
-    def add_sheet(profile, kind: str, title: str):
+    def add_sheet(profile, kind: str, title: str, hide_sensitive: bool = False):
         spec = get_questionnaire_spec_for_profile(profile, kind)
         answers = profile.questionnaire_me if kind == "me" else profile.questionnaire_ideal
         answers = answers or {}
@@ -277,6 +269,8 @@ def recommendation_excel(request, user_id: int):
         ws.append(["Раздел", "Вопрос", "Ответ (значение)", "Ответ (текст)"])
 
         for section in spec:
+            if hide_sensitive and section.get("id") in SENSITIVE_SECTION_IDS:
+                continue
             section_title = section.get("title") or section.get("id") or ""
             for q in section.get("questions") or []:
                 qid = q.get("id")
@@ -304,8 +298,8 @@ def recommendation_excel(request, user_id: int):
 
     add_sheet(my_profile, "me", "Мои ответы")
     add_sheet(my_profile, "ideal", "Кто мне подходит")
-    add_sheet(other_profile, "me", "Ответы кандидата")
-    add_sheet(other_profile, "ideal", "Кто ему подходит")
+    add_sheet(other_profile, "me", "Ответы кандидата", hide_sensitive=True)
+    add_sheet(other_profile, "ideal", "Кто ему подходит", hide_sensitive=True)
 
     meta = wb.create_sheet(title="Инфо")
     meta.append(["Рекомендация ID", rec.id])
@@ -650,11 +644,8 @@ def matches(request):
 @login_required
 def self_search(request):
     criteria, _ = SelfSearchCriteria.objects.get_or_create(user=request.user)
-    sub = getattr(request.user, "self_search_subscription", None)
-    if sub is None:
-        sub = SelfSearchSubscription.objects.create(
-            user=request.user, trial_ends_at=timezone.now() + timezone.timedelta(days=30)
-        )
+    exempt = is_payment_exempt(request.user)
+    sub = None if exempt else get_subscription(request.user)
 
     if request.method == "POST":
         form = SelfSearchCriteriaForm(request.POST, instance=criteria)
@@ -680,6 +671,61 @@ def self_search(request):
         {
             "form": form,
             "subscription": sub,
-            "has_full_access": sub.has_full_access(),
+            "has_full_access": exempt or sub.has_full_access(),
+            "payment_exempt": exempt,
         },
     )
+
+
+@login_required
+def admin_search(request):
+    """Заказ платного подбора администратором: заявка клиента, оплата по факту взаимных симпатий."""
+    if is_payment_exempt(request.user):
+        messages.info(request, "Для администраторов подбор недоступен.")
+        return redirect("feed")
+
+    if request.method == "POST":
+        form = ClientSearchOrderForm(request.POST)
+        if form.is_valid():
+            try:
+                request_admin_search(
+                    request.user,
+                    tier=form.cleaned_data["tier"],
+                    required_criteria=form.cleaned_data["required_criteria"],
+                )
+            except OrderError as exc:
+                messages.error(request, str(exc))
+            else:
+                messages.success(
+                    request, "Заявка отправлена. Администратор подтвердит её и начнёт подбор.")
+                return redirect("admin_search")
+    else:
+        form = ClientSearchOrderForm()
+
+    orders = AdminSearchOrder.objects.filter(client=request.user)
+    return render(
+        request,
+        "matchmaking/admin_search.html",
+        {
+            "form": form,
+            "orders": orders,
+            "tiers": [
+                (tier, label, AdminSearchOrder.TIER_PRICES[tier])
+                for tier, label in AdminSearchOrder.Tier.choices
+            ],
+            "wallet_balance": request.user.wallet_balance,
+        },
+    )
+
+
+@login_required
+def admin_search_cancel(request, order_id: int):
+    if request.method != "POST":
+        raise Http404
+
+    order = get_object_or_404(AdminSearchOrder, id=order_id, client=request.user)
+    if order.is_open:
+        order.status = AdminSearchOrder.Status.CANCELLED
+        order.save(update_fields=["status"])
+        messages.success(request, "Заказ отменён.")
+    return redirect("admin_search")

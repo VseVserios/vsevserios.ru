@@ -1,6 +1,8 @@
 from django.urls import path
 
 from .views import (
+    admin_search,
+    admin_search_cancel,
     block_user,
     feed,
     matches,
@@ -19,6 +21,8 @@ urlpatterns = [
     path("swipe/undo/", undo_swipe, name="swipe_undo"),
     path("matches/", matches, name="matches"),
     path("self-search/", self_search, name="self_search"),
+    path("admin-search/", admin_search, name="admin_search"),
+    path("admin-search/<int:order_id>/cancel/", admin_search_cancel, name="admin_search_cancel"),
     path(
         "recommendations/<int:user_id>/compatibility/",
         recommendation_compatibility,

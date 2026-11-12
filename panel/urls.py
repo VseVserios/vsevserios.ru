@@ -42,6 +42,11 @@ urlpatterns = [
         name="panel_user_search_orders",
     ),
     path(
+        "search-orders/<int:order_id>/activate/",
+        views.user_search_order_activate,
+        name="panel_user_search_order_activate",
+    ),
+    path(
         "search-orders/<int:order_id>/cancel/",
         views.user_search_order_cancel,
         name="panel_user_search_order_cancel",
