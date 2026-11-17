@@ -17,6 +17,9 @@ db.sqlite3
 .env
 .env.*
 
+# Файлы в корне с именами не из ASCII (испорченная кодировка) ломают checkout на Windows/Linux
+/*[!\ -~]*
+
 # OS
 .DS_Store
 Thumbs.db
