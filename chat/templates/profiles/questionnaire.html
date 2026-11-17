@@ -1,0 +1,392 @@
+{% extends 'base.html' %}
+
+{% block title %}Оформи анкету{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-4xl">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Оформи анкету</h1>
+            <p class="mt-1 text-sm text-slate-300">
+                {% if kind == 'me' %}Расскажи о себе — это основа для подбора совпадений.{% else %}Опиши, кто тебе подходит: чем подробнее анкета, тем точнее подбор.{% endif %}
+            </p>
+        </div>
+
+        <div class="flex gap-2">
+            <a href="{% url 'questionnaire' 'me' %}"
+                class="rounded-xl px-4 py-2 text-sm font-medium {% if kind == 'me' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">
+                Моя анкета
+            </a>
+            <a href="{% url 'questionnaire' 'ideal' %}"
+                class="rounded-xl px-4 py-2 text-sm font-medium {% if kind == 'ideal' %}bg-fuchsia-500 text-white{% else %}border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10{% endif %}">
+                Кто мне подходит
+            </a>
+        </div>
+    </div>
+
+    <div class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-6">
+        <div class="flex items-center justify-between">
+            <div class="text-sm font-medium">Прогресс</div>
+            <div class="text-sm text-slate-300">{{ answered }} / {{ total }} ({{ percent }}%)</div>
+        </div>
+        <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/10" data-progress="{{ percent }}">
+            <div class="h-2 rounded-full bg-fuchsia-500" data-progress-bar></div>
+        </div>
+
+        {% if percent < 70 %}
+        <div class="mt-4 rounded-2xl border border-amber-300/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            Рекомендуем заполнить хотя бы 70% анкеты — так подбор совпадений будет намного точнее.
+        </div>
+        {% endif %}
+
+        <div class="mt-4 text-xs text-slate-400">
+            Другая анкета: {% if other_kind == 'me' %}Я{% else %}Кто мне подходит{% endif %} — {{ other_answered }} / {{ other_total }} ({{ other_percent }}%)
+        </div>
+    </div>
+
+
+    <form method="post" class="mt-6">
+        {% csrf_token %}
+
+        {% if not editable %}
+        <fieldset disabled>
+        {% endif %}
+
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-6" data-wizard data-kind="{{ kind }}" data-editable="{{ editable|yesno:'1,0' }}">
+            {% if editable %}
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <div class="text-xs text-slate-400" id="wizard-step-counter"></div>
+                    <div class="mt-1 text-sm text-slate-300" id="wizard-section-title"></div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="wizard-prev"
+                        class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10">
+                        Предыдущий
+                    </button>
+                    <button type="button" id="wizard-next"
+                        class="rounded-xl bg-fuchsia-500 px-4 py-2 text-sm font-medium text-white hover:bg-fuchsia-400">
+                        Следующий
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/10">
+                <div id="wizard-progress-bar" class="h-2 rounded-full bg-fuchsia-500" style="width: 0%"></div>
+            </div>
+            {% else %}
+            <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+                Режим просмотра: показаны все разделы и ответы. Нажмите «Редактировать» рядом с вопросом, чтобы изменить его.
+            </div>
+            {% endif %}
+
+            <div class="mt-4 flex gap-2 overflow-x-auto pb-1">
+                {% for section in sections %}
+                <button type="button" data-wizard-section="{{ section.id }}"
+                    class="shrink-0 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-slate-100 hover:bg-white/10">
+                    <span class="inline-flex items-center gap-2">
+                        <span>{{ section.title }}</span>
+                        {% if section.hint %}
+                        <span class="group relative inline-flex items-center">
+                            <span tabindex="0" class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-slate-950/40 text-[11px] font-semibold text-slate-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/60">?</span>
+                            <span class="pointer-events-none absolute left-1/2 top-full z-10 mt-2 w-64 max-w-[90vw] -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-950/95 p-3 text-xs text-slate-200 opacity-0 shadow-xl backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100">
+                                {{ section.hint }}
+                            </span>
+                        </span>
+                        {% endif %}
+                    </span>
+                </button>
+                {% endfor %}
+            </div>
+
+            <div class="mt-6">
+                {% for section in sections %}
+                {% if section.is_sensitive and form.has_sensitive_section %}
+                <div class="rounded-3xl border border-fuchsia-400/20 bg-fuchsia-500/5 p-6" data-wizard-item
+                    data-section-id="{{ section.id }}" data-section-title="{{ section.title }}" data-question-id="__consent_{{ section.id }}">
+                    <div class="text-xs text-slate-400">{{ section.title }}</div>
+                    <div class="mt-2 text-lg font-semibold leading-snug">Согласие на обработку специальных категорий данных</div>
+                    <div class="mt-2 text-sm text-slate-300">
+                        Ответы в разделах «Сексуальная совместимость» и «Религиозные убеждения» относятся к специальным категориям персональных данных (ст. 10 152-ФЗ).
+                        Это одно общее согласие сразу на оба раздела — чтобы сохранить ответы, подтверди его.
+                    </div>
+                    <label class="mt-4 flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100">
+                        {{ form.special_category_consent }}
+                        <span>Я даю согласие на обработку специальных категорий персональных данных согласно
+                            <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_special_category' %}" target="_blank" rel="noopener">тексту согласия</a>.
+                            Без этого ответы разделов «Сексуальная совместимость» и «Религиозные убеждения» сохранены не будут.
+                        </span>
+                    </label>
+                </div>
+                {% endif %}
+                {% for q in section.questions %}
+                <div class="rounded-3xl border border-white/10 bg-slate-950/30 p-6" data-wizard-item
+                    data-section-id="{{ section.id }}" data-section-title="{{ section.title }}" data-question-id="{{ q.id }}">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <div class="text-xs text-slate-400">{{ section.title }}</div>
+                            {% if section.hint %}
+                            <span class="group relative inline-flex items-center">
+                                <span tabindex="0" class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-slate-950/40 text-[11px] font-semibold text-slate-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/60">?</span>
+                                <span class="pointer-events-none absolute left-0 top-full z-10 mt-2 w-72 max-w-[90vw] rounded-2xl border border-white/10 bg-slate-950/95 p-3 text-xs text-slate-200 opacity-0 shadow-xl backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100">
+                                    {{ section.hint }}
+                                </span>
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% if not editable %}
+                        <a href="?edit=1&q={{ q.id }}" class="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-100 hover:bg-white/10">Редактировать</a>
+                        {% endif %}
+                    </div>
+                    {% if section.hint %}
+                    <div class="group relative mt-2">
+                        <div tabindex="0" class="break-words text-lg font-semibold leading-snug focus:outline-none">{{ q.text }}</div>
+                        <div class="pointer-events-none absolute left-0 top-full z-10 mt-2 w-80 max-w-[90vw] rounded-2xl border border-white/10 bg-slate-950/95 p-3 text-xs text-slate-200 opacity-0 shadow-xl backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100">
+                            {{ section.hint }}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="mt-2 break-words text-lg font-semibold leading-snug">{{ q.text }}</div>
+                    {% endif %}
+                    {% if q.input_type == 'text' %}
+                    <div class="mt-1 text-xs text-slate-400">Свободный ввод</div>
+                    {% if editable %}
+                    <div class="mt-5">
+                        {{ q.field }}
+                    </div>
+                    {% else %}
+                    <div class="mt-5 whitespace-pre-wrap break-words rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100">{{ q.field.value|default:"Нет ответа" }}</div>
+                    {% endif %}
+                    {% else %}
+                    {% if q.is_multiple %}
+                    <div class="mt-1 text-xs text-slate-400">Можно выбрать несколько вариантов</div>
+                    {% endif %}
+
+                    <div class="mt-5 grid gap-3">
+                        {% for choice in q.field %}
+                        <div class="relative">
+                            {{ choice.tag }}
+                            <label for="{{ choice.id_for_label }}"
+                                class="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100 transition hover:bg-white/10 peer-checked:border-fuchsia-400/60 peer-checked:bg-fuchsia-500/10">
+                                <span class="break-words leading-snug">{{ choice.choice_label }}</span>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if q.field.errors %}
+                    <div
+                        class="mt-3 rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                        {{ q.field.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="sticky bottom-4 mt-6">
+            <div class="rounded-2xl border border-white/10 bg-slate-950/70 p-4 backdrop-blur">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="text-sm text-slate-300">{% if editable %}Можно сохранять в любой момент.{% else %}Режим просмотра — нажмите «Редактировать» рядом с вопросом, чтобы изменить его.{% endif %}</div>
+                    <div class="flex flex-wrap gap-3">
+                        {% if editable %}
+                        <button type="button" id="wizard-prev-bottom"
+                            class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 font-medium text-white hover:bg-white/10">Предыдущий</button>
+                        <button type="button" id="wizard-next-bottom"
+                            class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 font-medium text-white hover:bg-white/10">Следующий</button>
+                        <button type="submit"
+                            class="rounded-xl bg-fuchsia-500 px-5 py-3 font-medium text-white hover:bg-fuchsia-400">Сохранить</button>
+                        {% else %}
+                        <a href="?edit=1"
+                            class="rounded-xl bg-fuchsia-500 px-5 py-3 text-center font-medium text-white hover:bg-fuchsia-400">Редактировать анкету</a>
+                        {% endif %}
+                        <a href="{% url 'me' %}"
+                            class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-center font-medium text-white hover:bg-white/10">К профилю</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if not editable %}
+        </fieldset>
+        {% endif %}
+    </form>
+</div>
+
+<script>
+    (function () {
+        const root = document.querySelector('[data-wizard]');
+        if (!root) return;
+
+        const items = Array.from(root.querySelectorAll('[data-wizard-item]'));
+        if (!items.length) return;
+
+        const kind = root.getAttribute('data-kind') || '';
+        const editableMode = root.getAttribute('data-editable') === '1';
+        const storageKey = 'questionnaire_wizard:' + kind;
+
+        // В режиме просмотра показываем все вопросы сразу без мастера
+        if (!editableMode) {
+            items.forEach((el) => {
+                el.classList.remove('hidden');
+            });
+            return;
+        }
+
+        function getQueryParam(name) {
+            try {
+                const u = new URL(window.location.href);
+                return u.searchParams.get(name);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function clamp(n, a, b) {
+            return Math.max(a, Math.min(b, n));
+        }
+
+        // Режим просмотра: все разделы и вопросы видны сразу, без постраничной навигации.
+        if (!editableMode) {
+            let hintTimer = null;
+            function showEditHint(questionId) {
+                let toast = document.getElementById('view-mode-hint');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'view-mode-hint';
+                    toast.className = 'fixed inset-x-4 bottom-24 z-50 mx-auto max-w-sm rounded-2xl border border-fuchsia-400/30 bg-slate-950/95 p-4 text-sm text-slate-100 shadow-xl backdrop-blur sm:inset-x-auto sm:right-6 sm:bottom-6';
+                    document.body.appendChild(toast);
+                }
+                toast.innerHTML =
+                    '<div class="font-medium">Режим просмотра</div>' +
+                    '<div class="mt-1 text-slate-300">Ответы здесь только для чтения. Чтобы изменить этот ответ, перейдите в редактирование.</div>' +
+                    '<a href="?edit=1&q=' + encodeURIComponent(questionId) + '" class="mt-3 inline-block rounded-xl bg-fuchsia-500 px-4 py-2 text-xs font-medium text-white hover:bg-fuchsia-400">Редактировать этот вопрос</a>';
+                clearTimeout(hintTimer);
+                hintTimer = setTimeout(() => toast.remove(), 7000);
+            }
+
+            root.addEventListener('click', (e) => {
+                const t = e.target;
+                if (!(t instanceof HTMLElement)) return;
+                const secBtn = t.closest('[data-wizard-section]');
+                if (secBtn) {
+                    const id = secBtn.getAttribute('data-wizard-section');
+                    const el = items.find((it) => it.getAttribute('data-section-id') === id);
+                    if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                    return;
+                }
+                const interactive = t.closest('label[for], textarea, input, [data-view-answer]');
+                if (!interactive) return;
+                const item = t.closest('[data-wizard-item]');
+                if (!item) return;
+                showEditHint(item.getAttribute('data-question-id') || '');
+            });
+            return;
+        }
+
+        const targetQ = (getQueryParam('q') || '').trim();
+        let current = parseInt(sessionStorage.getItem(storageKey) || '0', 10);
+        current = Number.isFinite(current) ? clamp(current, 0, items.length - 1) : 0;
+
+        if (targetQ) {
+            const idx = items.findIndex((el) => (el.getAttribute('data-question-id') || '') === targetQ);
+            if (idx !== -1) {
+                current = idx;
+                sessionStorage.setItem(storageKey, String(current));
+            }
+        }
+
+        const counterEl = document.getElementById('wizard-step-counter');
+        const sectionEl = document.getElementById('wizard-section-title');
+        const barEl = document.getElementById('wizard-progress-bar');
+
+        const prevBtns = [document.getElementById('wizard-prev'), document.getElementById('wizard-prev-bottom')].filter(Boolean);
+        const nextBtns = [document.getElementById('wizard-next'), document.getElementById('wizard-next-bottom')].filter(Boolean);
+
+        function setDisabled(btn, disabled) {
+            btn.disabled = disabled;
+            if (disabled) {
+                btn.classList.add('opacity-60');
+            } else {
+                btn.classList.remove('opacity-60');
+            }
+        }
+
+        function updateSectionPills(activeSectionId) {
+            root.querySelectorAll('[data-wizard-section]').forEach((btn) => {
+                const isActive = btn.getAttribute('data-wizard-section') === activeSectionId;
+                btn.classList.toggle('bg-fuchsia-500', isActive);
+                btn.classList.toggle('text-white', isActive);
+                btn.classList.toggle('bg-white/5', !isActive);
+                btn.classList.toggle('text-slate-100', !isActive);
+            });
+        }
+
+        function show(i, opts) {
+            current = clamp(i, 0, items.length - 1);
+            sessionStorage.setItem(storageKey, String(current));
+
+            items.forEach((el, idx) => {
+                el.classList.toggle('hidden', idx !== current);
+            });
+
+            const active = items[current];
+            const sectionTitle = active.getAttribute('data-section-title') || '';
+            const sectionId = active.getAttribute('data-section-id') || '';
+
+            if (counterEl) counterEl.textContent = 'Вопрос ' + (current + 1) + ' из ' + items.length;
+            if (sectionEl) sectionEl.textContent = sectionTitle;
+            if (barEl) barEl.style.width = Math.round(((current + 1) / items.length) * 100) + '%';
+
+            prevBtns.forEach((b) => setDisabled(b, current === 0));
+            nextBtns.forEach((b) => setDisabled(b, current === items.length - 1));
+
+            updateSectionPills(sectionId);
+
+            const scroll = !(opts && opts.noScroll);
+            if (scroll) active.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        }
+
+        prevBtns.forEach((btn) => btn.addEventListener('click', () => show(current - 1)));
+        nextBtns.forEach((btn) => btn.addEventListener('click', () => show(current + 1)));
+
+        root.addEventListener('click', (e) => {
+            const t = e.target;
+            if (!(t instanceof HTMLElement)) return;
+            const secBtn = t.closest('[data-wizard-section]');
+            if (!secBtn) return;
+            const id = secBtn.getAttribute('data-wizard-section');
+            const idx = items.findIndex((el) => el.getAttribute('data-section-id') === id);
+            if (idx !== -1) show(idx);
+        });
+
+        root.addEventListener('change', (e) => {
+            const el = e.target;
+            if (!(el instanceof HTMLInputElement)) return;
+            if (el.type === 'radio' && current < items.length - 1) {
+                setTimeout(() => show(current + 1), 180);
+            }
+        });
+
+        show(current, { noScroll: true });
+
+        // Общее согласие на спецкатегории данных рендерится дважды (для разделов
+        // "sexual" и "religious"), держим оба чекбокса синхронизированными.
+        const consentCheckboxes = Array.from(
+            root.querySelectorAll('input[name="special_category_consent"]')
+        );
+        if (consentCheckboxes.length > 1) {
+            consentCheckboxes.forEach((cb, idx) => {
+                cb.addEventListener('change', () => {
+                    consentCheckboxes.forEach((other) => {
+                        other.checked = cb.checked;
+                    });
+                });
+            });
+        }
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Оплата услуг{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-2xl" data-reveal>
+  <div>
+    <h1 class="text-2xl font-semibold tracking-tight">Кошелёк и оплата</h1>
+    <p class="mt-1 text-sm text-slate-300">Внутренний кошелёк Сайта. Пополнение через ЮKassa: банковские карты, СБП и другие доступные способы.</p>
+  </div>
+
+  <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+    <div class="text-sm text-slate-300">Баланс кошелька</div>
+    <div class="mt-1 text-4xl font-semibold tracking-tight {% if wallet_balance < 0 %}text-rose-300{% endif %}">{{ wallet_balance }}₽</div>
+    {% if wallet_balance < 0 %}
+    <div class="mt-2 text-xs text-rose-200">Отрицательный баланс — задолженность за услуги подбора. Пополните кошелёк.</div>
+    {% endif %}
+
+    <div class="mt-4 rounded-2xl border border-white/10 bg-slate-950/30 p-4 text-xs text-slate-300">
+      Совершая оплату, вы подтверждаете, что ознакомлены и согласны с условиями оплаты и возврата средств, изложенными в
+      <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_terms' %}" target="_blank" rel="noopener">Пользовательском соглашении</a>
+      (Приложение № 3 «Тарифы и порядок оказания платных услуг»). Списание с баланса происходит только за фактически оказанные услуги Сайта.
+      Возврат неиспользованных средств возможен по обращению в поддержку в порядке, предусмотренном Пользовательским соглашением.
+    </div>
+
+    <form method="post" action="{% url 'yookassa_create_payment' %}" class="mt-4 flex flex-col gap-3 sm:flex-row">
+      {% csrf_token %}
+      <input type="number" name="amount" min="{{ topup_min }}" max="{{ topup_max }}" step="1" placeholder="Сумма пополнения, ₽ (от {{ topup_min }})" class="flex-1" required />
+      <button type="submit" class="rounded-xl bg-fuchsia-500 px-4 py-3 text-sm font-medium text-white hover:bg-fuchsia-400 sm:w-auto">Пополнить через ЮKassa</button>
+    </form>
+    <div class="mt-2 text-xs text-slate-400">От {{ topup_min }}₽ до {{ topup_max }}₽ за один платёж. Способ оплаты выбирается на странице ЮKassa.</div>
+  </div>
+
+  <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+    <div class="text-sm font-semibold">Подробный анализ совместимости — {{ subscription_price }}₽/мес</div>
+    <p class="mt-2 text-sm text-slate-300">
+      Первый месяц бесплатный: доступны графики, разбивка по вопросам, анкета «Кто мне подходит» и Excel-выгрузка.
+      После пробного периода всё это открывается по подписке. Без подписки виден только общий процент совместимости.
+    </p>
+
+    {% if has_full_access %}
+    <div class="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+      {% if trial_active %}
+      Бесплатный пробный период активен до {{ subscription.trial_ends_at|date:"d.m.Y" }}.
+      {% endif %}
+      {% if paid_active %}
+      Подписка оплачена до {{ subscription.paid_until|date:"d.m.Y" }}.
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="mt-4 rounded-2xl border border-amber-300/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+      Пробный период закончился. Доступен только общий процент совместимости.
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'payment_self_search' %}" class="mt-4">
+      {% csrf_token %}
+      <button type="submit" class="w-full rounded-xl bg-white/10 px-4 py-3 text-sm font-medium hover:bg-white/15">
+        {% if has_full_access %}Продлить ещё на месяц за {{ subscription_price }}₽{% else %}Оформить подписку за {{ subscription_price }}₽{% endif %}
+      </button>
+    </form>
+    <div class="mt-2 text-xs text-slate-400">Списание происходит с баланса кошелька. Если средств недостаточно — сначала пополните баланс выше.</div>
+  </div>
+
+  <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+    <div class="text-sm font-semibold">Подбор анкет администратором</div>
+    <p class="mt-2 text-sm text-slate-300">
+      Поверхностный — 500₽, точечный — 2000₽, углублённый — 10000₽. Оплата — за каждую взаимную симпатию, списанием с кошелька.
+      Для запуска подбора на балансе должна быть сумма не меньше стоимости тарифа.
+    </p>
+    <a class="mt-4 inline-block rounded-xl bg-white/10 px-4 py-3 text-sm font-medium hover:bg-white/15" href="{% url 'admin_search' %}">Заказать подбор</a>
+  </div>
+
+  {% if payments %}
+  <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+    <div class="text-sm font-semibold">Последние пополнения</div>
+    <div class="mt-3 space-y-2 text-sm">
+      {% for p in payments %}
+      <div class="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-2">
+        <span>{{ p.amount }}₽ <span class="text-xs text-slate-400">· {{ p.created_at|date:"d.m.Y H:i" }}</span></span>
+        <span class="text-xs {% if p.status == 'succeeded' %}text-emerald-300{% elif p.status == 'pending' %}text-amber-300{% else %}text-rose-300{% endif %}">{{ p.get_status_display }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if transactions %}
+  <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+    <div class="text-sm font-semibold">История операций</div>
+    <div class="mt-3 space-y-2 text-sm">
+      {% for t in transactions %}
+      <div class="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-2">
+        <span>{{ t.description|default:t.get_reason_display }} <span class="text-xs text-slate-400">· {{ t.created_at|date:"d.m.Y H:i" }}</span></span>
+        <span class="whitespace-nowrap {% if t.amount < 0 %}text-rose-300{% else %}text-emerald-300{% endif %}">{% if t.amount > 0 %}+{% endif %}{{ t.amount }}₽</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

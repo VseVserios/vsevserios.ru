@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Подбор администратором{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-2xl" data-reveal>
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Подбор администратором</h1>
+      <p class="mt-1 text-sm text-slate-300">Администратор вручную подбирает анкеты и присылает их в вашу ленту. Оплата — только за результат: за каждую взаимную симпатию.</p>
+    </div>
+    <a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{% url 'payment' %}">Кошелёк: {{ wallet_balance }}₽</a>
+  </div>
+
+  <div class="mt-6 grid gap-3 sm:grid-cols-3" data-reveal>
+    {% for value, label, price in tiers %}
+    <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <div class="text-sm font-semibold">{{ label }}</div>
+      <div class="mt-1 text-2xl font-semibold">{{ price|floatformat:"-2" }}₽</div>
+      <div class="mt-1 text-xs text-slate-400">за одну взаимную симпатию</div>
+      <div class="mt-2 text-xs text-slate-300">
+        {% if value == 'surface' %}По общей совместимости.
+        {% elif value == 'targeted' %}Общая совместимость + 2 обязательных критерия.
+        {% else %}Учитываются все ваши пожелания.{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6" data-reveal>
+    <div class="text-sm font-semibold">Заявка на подбор</div>
+    <p class="mt-1 text-xs text-slate-400">
+      Для запуска на балансе должна быть сумма не меньше стоимости тарифа. Списание — после взаимной симпатии. Если 5 анкет подряд отклонены —
+      списывается стоимость тарифа как компенсация работы администратора. Подробнее — в
+      <a class="underline underline-offset-4 hover:text-white" href="{% url 'legal_terms' %}" target="_blank" rel="noopener">Пользовательском соглашении</a> (Приложение № 3).
+    </p>
+    <form method="post" class="mt-4 space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="mb-1 block text-sm text-slate-200">{{ form.tier.label }}</label>
+        {{ form.tier }}
+        {% if form.tier.errors %}<div class="mt-1 text-sm text-rose-300">{{ form.tier.errors }}</div>{% endif %}
+      </div>
+      <div>
+        <label class="mb-1 block text-sm text-slate-200">{{ form.required_criteria.label }}</label>
+        {{ form.required_criteria }}
+        {% if form.required_criteria.errors %}<div class="mt-1 text-sm text-rose-300">{{ form.required_criteria.errors }}</div>{% endif %}
+      </div>
+      <button type="submit" class="w-full rounded-xl bg-fuchsia-500 px-4 py-3 font-medium text-white hover:bg-fuchsia-400">Отправить заявку</button>
+    </form>
+  </div>
+
+  <div class="mt-6 space-y-3" data-reveal>
+    {% for order in orders %}
+    <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div class="text-sm font-semibold">{{ order.get_tier_display }} — {{ order.price|floatformat:"-2" }}₽</div>
+          <div class="mt-1 text-xs text-slate-400">Заявка от {{ order.created_at|date:"d.m.Y H:i" }}</div>
+          {% if order.required_criteria %}<div class="mt-1 whitespace-pre-line text-xs text-slate-300">{{ order.required_criteria }}</div>{% endif %}
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="rounded-lg border border-white/10 bg-slate-950/30 px-3 py-1 text-xs {% if order.status == 'active' %}text-emerald-300{% elif order.status == 'requested' %}text-amber-300{% elif order.status == 'cancelled' %}text-rose-300{% else %}text-slate-300{% endif %}">{{ order.get_status_display }}</span>
+          {% if order.is_open %}
+          <form method="post" action="{% url 'admin_search_cancel' order.id %}">
+            {% csrf_token %}
+            <button type="submit" class="rounded-xl bg-rose-500/15 px-3 py-2 text-xs font-medium text-rose-200 hover:bg-rose-500/25">Отменить</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-slate-300">Заявок пока нет.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

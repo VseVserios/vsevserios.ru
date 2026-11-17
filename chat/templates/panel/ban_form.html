@@ -1,0 +1,61 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Панель — Бан{% endblock %}
+
+{% block panel_heading %}Бан{% endblock %}
+{% block panel_subtitle %}Создание бана пользователя.{% endblock %}
+
+{% block panel_top_actions %}
+<a class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10" href="{{ back_url }}">Назад</a>
+{% endblock %}
+
+{% block panel_content %}
+<div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+    <form method="post" class="space-y-5">
+        {% csrf_token %}
+
+        {% if user_fixed %}
+        <div>
+            <div class="text-sm text-slate-300">Пользователь</div>
+            <div class="mt-1 text-lg font-semibold">{{ user_fixed.username }}</div>
+        </div>
+        {% else %}
+        <div>
+            {{ form.user.label_tag }}
+            {{ form.user }}
+            {% if form.user.errors %}
+            <div class="mt-1 text-sm text-rose-300">{{ form.user.errors }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="grid gap-4 md:grid-cols-2">
+            <div>
+                {{ form.reason.label_tag }}
+                {{ form.reason }}
+                {% if form.reason.errors %}
+                <div class="mt-1 text-sm text-rose-300">{{ form.reason.errors }}</div>
+                {% endif %}
+            </div>
+            <div>
+                {{ form.expires_at.label_tag }}
+                {{ form.expires_at }}
+                {% if form.expires_at.errors %}
+                <div class="mt-1 text-sm text-rose-300">{{ form.expires_at.errors }}</div>
+                {% endif %}
+                <div class="mt-1 text-xs text-slate-400">Пусто = бессрочно</div>
+            </div>
+        </div>
+
+        <div>
+            {{ form.note.label_tag }}
+            {{ form.note }}
+            {% if form.note.errors %}
+            <div class="mt-1 text-sm text-rose-300">{{ form.note.errors }}</div>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="rounded-xl bg-rose-500 px-5 py-3 font-medium text-white hover:bg-rose-400">Забанить</button>
+    </form>
+</div>
+{% endblock %}
