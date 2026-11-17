@@ -319,6 +319,7 @@ class AdminSearchOrder(models.Model):
     }
 
     class Status(models.TextChoices):
+        REQUESTED = "requested", "Ожидает подтверждения"
         ACTIVE = "active", "Активен"
         COMPLETED = "completed", "Завершён"
         CANCELLED = "cancelled", "Отменён"
@@ -353,6 +354,10 @@ class AdminSearchOrder(models.Model):
         if not self.price:
             self.price = self.TIER_PRICES.get(self.tier, Decimal("0"))
         return super().save(*args, **kwargs)
+
+    @property
+    def is_open(self) -> bool:
+        return self.status in (self.Status.REQUESTED, self.Status.ACTIVE)
 
     def __str__(self) -> str:
         return f"AdminSearchOrder({self.client_id}:{self.tier})"

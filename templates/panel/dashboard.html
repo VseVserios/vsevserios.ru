@@ -89,6 +89,8 @@
                         Новый пользователь
                         {% elif n.event == 'questionnaire_completed' %}
                         Анкета заполнена
+                        {% elif n.event == 'search_order_requested' %}
+                        Заявка на подбор
                         {% else %}
                         {{ n.event }}
                         {% endif %}
@@ -96,7 +98,7 @@
                     <div class="text-xs text-slate-400">{{ n.created_at|date:'d.m.Y H:i' }}</div>
                 </div>
                 <div class="mt-1 text-xs text-slate-400">
-                    <a class="hover:text-white" href="{% url 'panel_user_detail' n.user_id %}">{{ n.user.username }}</a>
+                    <a class="hover:text-white" href="{% if n.event == 'search_order_requested' %}{% url 'panel_user_search_orders' n.user_id %}{% else %}{% url 'panel_user_detail' n.user_id %}{% endif %}">{{ n.user.username }}</a>
                     {% if n.questionnaire_kind %}· {{ n.questionnaire_kind }}{% endif %}
                 </div>
             </div>

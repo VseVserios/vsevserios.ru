@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 
 from django.contrib.auth.models import AbstractUser
@@ -170,7 +171,8 @@ class YookassaPayment(models.Model):
 
     class PaymentMethod(models.TextChoices):
         BANK_CARD = "bank_card", "Банковская карта"
-        SBERBANK = "sberbank", "СБП (Сбер)"
+        SBP = "sbp", "СБП"
+        SBERBANK = "sberbank", "SberPay"
         YOO_MONEY = "yoo_money", "ЮMoney"
         ALFABANK = "alfabank", "Альфа-Банк"
         TINKOFF_BANK = "tinkoff_bank", "Т-Банк"
@@ -180,6 +182,7 @@ class YookassaPayment(models.Model):
         on_delete=models.CASCADE,
         related_name="yookassa_payments",
     )
+    public_id = models.UUIDField(default=uuid.uuid4, editable=False, db_index=True)
     payment_id = models.CharField(max_length=255, unique=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=3, default="RUB")

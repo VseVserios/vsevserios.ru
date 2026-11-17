@@ -125,8 +125,7 @@ EMAIL_HOST = os.environ.get("DJANGO_EMAIL_HOST", "smtp.yandex.ru")
 EMAIL_PORT = int(os.environ.get("DJANGO_EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.environ.get(
     "DJANGO_EMAIL_HOST_USER", "vsevseryoz@yandex.ru")
-EMAIL_HOST_PASSWORD = os.environ.get(
-    "DJANGO_EMAIL_HOST_PASSWORD", "viektjkurxzawkya")
+EMAIL_HOST_PASSWORD = os.environ.get("DJANGO_EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = os.environ.get(
     "DJANGO_EMAIL_USE_TLS", "1").strip() not in ("0", "false", "False")
 EMAIL_USE_SSL = os.environ.get(
@@ -147,12 +146,23 @@ EMAIL_VERIFICATION_MAX_SENDS = int(
 REQUIRE_TERMS_AND_PRIVACY = os.environ.get(
     "REQUIRE_TERMS_AND_PRIVACY", "true").lower() == "true"
 
-# ЮKassa настройки
-YOOKASSA_SHOP_ID = os.environ.get("YOOKASSA_SHOP_ID", "1499327")
-YOOKASSA_API_KEY = os.environ.get("YOOKASSA_API_KEY", "live_G8NeOYypJR6_xf9bBEMeytWMqUdUv3VdmYLBkLNHrZo")
-YOOKASSA_SBP_LEGAL_ID = os.environ.get("YOOKASSA_SBP_LEGAL_ID", "LA0005860413")
-YOOKASSA_SBP_MERCHANT_ID = os.environ.get("YOOKASSA_SBP_MERCHANT_ID", "MA0007242544")
-YOOKASSA_SBP_MCC = os.environ.get("YOOKASSA_SBP_MCC", "7273")
+# ЮKassa: учётные данные задаются только через окружение (.env), в коде их быть не должно.
+YOOKASSA_SHOP_ID = os.environ.get("YOOKASSA_SHOP_ID", "")
+YOOKASSA_API_KEY = os.environ.get("YOOKASSA_API_KEY", "")
+# Отправлять ли чек (54-ФЗ) вместе с платежом; включать, если в ЮKassa подключены чеки.
+YOOKASSA_SEND_RECEIPT = os.environ.get(
+    "YOOKASSA_SEND_RECEIPT", "0").strip().lower() in ("1", "true", "yes")
+YOOKASSA_VAT_CODE = int(os.environ.get("YOOKASSA_VAT_CODE", "1"))
+YOOKASSA_TAX_SYSTEM_CODE = os.environ.get("YOOKASSA_TAX_SYSTEM_CODE", "").strip()
+
+WALLET_TOPUP_MIN = 100
+WALLET_TOPUP_MAX = 100000
+
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_CONTENT_TYPE_NOSNIFF = True
 
 LOGGING = {
     "version": 1,
